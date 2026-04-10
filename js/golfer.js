@@ -105,8 +105,8 @@ async function loadUpcomingMatches() {
     .select(`
       id, round, score, status, deadline,
       tournaments(id, name),
-      player1:members!matches_player1_id_fkey(id, first_name, last_name, handicap, phone),
-      player2:members!matches_player2_id_fkey(id, first_name, last_name, handicap, phone)
+      player1:members!matches_player1_id_fkey(id, first_name, last_name, handicap, phone, email, contact_preference),
+      player2:members!matches_player2_id_fkey(id, first_name, last_name, handicap, phone, email, contact_preference)
     `)
     .or(`player1_id.eq.${memberId},player2_id.eq.${memberId}`)
     .in('status', ['pending', 'in_progress'])
@@ -143,8 +143,11 @@ async function loadUpcomingMatches() {
     const msgText = `Hi ${opponent.first_name}, we're matched in ${match.tournaments?.name || 'the tournament'} (${roundName}). When suits you to play?`;
     const hasPhone = opponent.phone && opponent.phone.trim().length > 0;
     const phoneClean = hasPhone ? opponent.phone.replace(/\s/g, '') : '';
+    const pref = opponent.contact_preference || 'whatsapp';
     const whatsappUrl = hasPhone ? `https://wa.me/${phoneClean}?text=${encodeURIComponent(msgText)}` : null;
     const smsUrl = hasPhone ? `sms:${phoneClean}?body=${encodeURIComponent(msgText)}` : null;
+    const emailUrl = opponent.email ? `mailto:${opponent.email}?subject=${encodeURIComponent(match.tournaments?.name + ' - ' + roundName)}&body=${encodeURIComponent(msgText)}` : null;
+    const contactButtons = buildContactButtons(pref, whatsappUrl, smsUrl, emailUrl, hasPhone);
 
     tableHTML += `
       <tr>
@@ -158,10 +161,7 @@ async function loadUpcomingMatches() {
         </td>
         <td>${deadline}</td>
         <td>${statusBadge}</td>
-        <td>${hasPhone
-          ? `<div style="display:flex;gap:0.4rem;"><a href="${whatsappUrl}" target="_blank" class="btn btn-sm btn-whatsapp">&#128172; WhatsApp</a><a href="${smsUrl}" class="btn btn-sm btn-secondary">&#128241; SMS</a></div>`
-          : `<span class="btn btn-sm btn-secondary" style="cursor:default;" title="No phone number on file">&#128222; No Phone</span>`
-        }</td>
+        <td>${contactButtons.desktop}</td>
       </tr>`;
 
     mobileHTML += `
@@ -182,10 +182,7 @@ async function loadUpcomingMatches() {
         </div>
         <div class="match-card-mobile-footer">
           <span class="match-card-mobile-deadline">&#128197; Due: ${deadline}</span>
-          ${hasPhone
-            ? `<div style="display:flex;gap:0.5rem;"><a href="${whatsappUrl}" target="_blank" class="btn btn-whatsapp">&#128172; WhatsApp</a><a href="${smsUrl}" class="btn btn-secondary">&#128241; SMS</a></div>`
-            : `<span class="btn btn-secondary" style="cursor:default;" title="No phone number on file">&#128222; No Phone</span>`
-          }
+          ${contactButtons.mobile}
         </div>
       </div>`;
   }
@@ -303,7 +300,7 @@ async function loadOpenTournaments() {
 
   const { data: tournaments } = await supabase
     .from('tournaments')
-    .select('*, tournament_entries(count)')
+    .select('*, tournament_entries(count), whatsapp_group_link')
     .eq('club_id', currentMember.club_id)
     .in('status', ['entries_open', 'scheduled'])
     .order('entry_deadline', { ascending: true });
@@ -357,6 +354,7 @@ async function loadOpenTournaments() {
         ${isOpen ? `<div style="margin-top:0.5rem;background:var(--gray-200);border-radius:var(--radius-full);height:6px;overflow:hidden;">
           <div style="width:${pct}%;height:100%;background:var(--green-500);border-radius:var(--radius-full);"></div>
         </div>` : ''}
+        ${t.whatsapp_group_link ? `<a href="${t.whatsapp_group_link}" target="_blank" class="btn btn-sm btn-whatsapp mt-1">&#128172; Join WhatsApp Group</a>` : ''}
       </div>`;
   }).join('');
 }
@@ -414,6 +412,7 @@ async function loadProfile() {
           <span>&#9971; Handicap: ${currentMember.handicap}</span>
           <span>&#128222; ${currentMember.phone || 'N/A'}</span>
           <span>&#128231; ${currentMember.email}</span>
+          <span>&#128172; Prefers: ${({'whatsapp':'WhatsApp','sms':'SMS','email':'Email'})[currentMember.contact_preference] || 'WhatsApp'}</span>
         </div>
       </div>
     </div>
@@ -515,6 +514,7 @@ function openEditProfile() {
   document.getElementById('editHandicap').value = currentMember.handicap;
   document.getElementById('editPhone').value = currentMember.phone || '';
   document.getElementById('editEmail').value = currentMember.email;
+  document.getElementById('editContactPref').value = currentMember.contact_preference || 'whatsapp';
   document.getElementById('editProfileModal').classList.add('active');
 }
 
@@ -523,6 +523,7 @@ async function saveProfile() {
   var lastName = document.getElementById('editLastName').value.trim();
   var handicap = parseInt(document.getElementById('editHandicap').value) || 0;
   var phone = document.getElementById('editPhone').value.trim();
+  var contactPref = document.getElementById('editContactPref').value;
 
   if (!firstName || !lastName) {
     alert('Name is required.');
@@ -531,7 +532,7 @@ async function saveProfile() {
 
   var { error } = await supabase
     .from('members')
-    .update({ first_name: firstName, last_name: lastName, handicap: handicap, phone: phone })
+    .update({ first_name: firstName, last_name: lastName, handicap: handicap, phone: phone, contact_preference: contactPref })
     .eq('id', currentMember.id);
 
   if (error) {
@@ -547,6 +548,45 @@ async function saveProfile() {
   loadProfile();
   document.getElementById('dashboard-greeting').textContent = 'Welcome back, ' + currentMember.first_name;
   alert('Profile updated!');
+}
+
+// Build contact buttons based on opponent's preference
+function buildContactButtons(pref, whatsappUrl, smsUrl, emailUrl, hasPhone) {
+  var prefLabels = { whatsapp: 'WhatsApp', sms: 'SMS', email: 'Email' };
+  var prefIcon = { whatsapp: '&#128172;', sms: '&#128241;', email: '&#128231;' };
+
+  // Primary button based on preference
+  var primaryBtn = '';
+  var secondaryBtns = '';
+
+  if (pref === 'whatsapp' && whatsappUrl) {
+    primaryBtn = `<a href="${whatsappUrl}" target="_blank" class="btn btn-sm btn-whatsapp">${prefIcon.whatsapp} WhatsApp</a>`;
+    if (smsUrl) secondaryBtns += `<a href="${smsUrl}" class="btn btn-sm btn-secondary">${prefIcon.sms} SMS</a>`;
+    if (emailUrl) secondaryBtns += `<a href="${emailUrl}" class="btn btn-sm btn-secondary">${prefIcon.email} Email</a>`;
+  } else if (pref === 'sms' && smsUrl) {
+    primaryBtn = `<a href="${smsUrl}" class="btn btn-sm btn-primary">${prefIcon.sms} SMS</a>`;
+    if (whatsappUrl) secondaryBtns += `<a href="${whatsappUrl}" target="_blank" class="btn btn-sm btn-whatsapp">${prefIcon.whatsapp} WhatsApp</a>`;
+    if (emailUrl) secondaryBtns += `<a href="${emailUrl}" class="btn btn-sm btn-secondary">${prefIcon.email} Email</a>`;
+  } else if (pref === 'email' && emailUrl) {
+    primaryBtn = `<a href="${emailUrl}" class="btn btn-sm btn-primary">${prefIcon.email} Email</a>`;
+    if (whatsappUrl) secondaryBtns += `<a href="${whatsappUrl}" target="_blank" class="btn btn-sm btn-whatsapp">${prefIcon.whatsapp} WhatsApp</a>`;
+    if (smsUrl) secondaryBtns += `<a href="${smsUrl}" class="btn btn-sm btn-secondary">${prefIcon.sms} SMS</a>`;
+  } else if (hasPhone) {
+    // Fallback: show WhatsApp if they have a phone
+    primaryBtn = `<a href="${whatsappUrl}" target="_blank" class="btn btn-sm btn-whatsapp">${prefIcon.whatsapp} WhatsApp</a>`;
+    if (smsUrl) secondaryBtns += `<a href="${smsUrl}" class="btn btn-sm btn-secondary">${prefIcon.sms} SMS</a>`;
+  } else if (emailUrl) {
+    primaryBtn = `<a href="${emailUrl}" class="btn btn-sm btn-primary">${prefIcon.email} Email</a>`;
+  } else {
+    primaryBtn = `<span class="btn btn-sm btn-secondary" style="cursor:default;">&#128222; No Contact</span>`;
+  }
+
+  var prefLabel = `<span style="font-size:0.65rem;color:var(--gray-400);display:block;margin-top:0.2rem;">Prefers ${prefLabels[pref] || 'WhatsApp'}</span>`;
+
+  return {
+    desktop: `<div style="display:flex;gap:0.4rem;align-items:center;">${primaryBtn}${secondaryBtns}</div>${prefLabel}`,
+    mobile: `<div style="display:flex;flex-direction:column;gap:0.4rem;align-items:stretch;">${primaryBtn}${secondaryBtns}${prefLabel}</div>`
+  };
 }
 
 function getTimeAgo(date) {

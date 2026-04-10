@@ -237,6 +237,15 @@
           <label class="form-label">Email</label>
           <input type="email" id="editEmail" class="form-input" disabled>
         </div>
+        <div class="form-group">
+          <label class="form-label">Preferred Contact Method</label>
+          <select class="form-select" id="editContactPref">
+            <option value="whatsapp">&#128172; WhatsApp</option>
+            <option value="sms">&#128241; SMS</option>
+            <option value="email">&#128231; Email</option>
+          </select>
+          <p style="font-size:0.75rem;color:var(--gray-500);margin-top:0.25rem;">Other players will see this as your preferred way to be contacted.</p>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="document.getElementById('editProfileModal').classList.remove('active')">Cancel</button>

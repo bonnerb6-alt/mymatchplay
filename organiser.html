@@ -206,6 +206,51 @@
     </div>
   </div>
 
+  <!-- WhatsApp Group Modal -->
+  <div class="modal-overlay" id="whatsappGroupModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>&#128172; WhatsApp Group</h3>
+        <button class="modal-close" onclick="document.getElementById('whatsappGroupModal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="waGroupTournamentId">
+
+        <div style="background:var(--green-50);border:1px solid var(--green-200);border-radius:var(--radius);padding:1rem;margin-bottom:1rem;">
+          <strong style="font-size:1.05rem;" id="waGroupName"></strong>
+          <p style="font-size:0.8rem;color:var(--gray-500);margin-top:0.25rem;">Use this name when creating your WhatsApp group</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Step 1: Copy player phone numbers</label>
+          <textarea class="form-textarea" id="waPhoneNumbers" readonly style="min-height:60px;font-size:0.8rem;"></textarea>
+          <button class="btn btn-sm btn-secondary mt-1" onclick="copyPhoneNumbers()">&#128203; Copy Phone Numbers</button>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Step 2: Copy welcome message for the group</label>
+          <textarea class="form-textarea" id="waGroupMessage" readonly style="min-height:120px;font-size:0.8rem;"></textarea>
+          <button class="btn btn-sm btn-secondary mt-1" onclick="copyGroupMessage()">&#128203; Copy Message</button>
+        </div>
+
+        <div style="background:#fef3c7;border:1px solid var(--gold);border-radius:var(--radius);padding:0.75rem;margin-bottom:1rem;font-size:0.8rem;">
+          <strong>Step 3:</strong> Open WhatsApp, create a new group, add the players, paste the welcome message, then copy the group invite link and paste it below.
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Step 4: Paste the WhatsApp group invite link</label>
+          <input type="url" id="waGroupLink" class="form-input" placeholder="https://chat.whatsapp.com/...">
+        </div>
+
+        <pre id="waPlayerList" style="display:none;"></pre>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('whatsappGroupModal').classList.remove('active')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveGroupLink()">Save Group Link</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Edit Member Modal -->
   <div class="modal-overlay" id="editMemberModal">
     <div class="modal">
