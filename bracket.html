@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Brackets - MyMatchPlayPal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Bracket connector lines */
+    .bracket-connectors {
+      position: relative;
+    }
+
+    .bracket-match-wrapper {
+      position: relative;
+    }
+
+    /* Round spacing adjustments */
+    .bracket-round:nth-child(2) .bracket-match-wrapper { margin-top: 1.75rem; }
+    .bracket-round:nth-child(2) .bracket-match-wrapper + .bracket-match-wrapper { margin-top: 3.5rem; }
+    .bracket-round:nth-child(3) .bracket-match-wrapper { margin-top: 4.5rem; }
+    .bracket-round:nth-child(3) .bracket-match-wrapper + .bracket-match-wrapper { margin-top: 7rem; }
+    .bracket-round:nth-child(4) .bracket-match-wrapper { margin-top: 10rem; }
+
+    .tournament-selector {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .tournament-chip {
+      padding: 0.5rem 1.25rem;
+      border-radius: var(--radius-full);
+      border: 2px solid var(--gray-200);
+      background: var(--white);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: var(--font-sans);
+      color: var(--gray-600);
+    }
+
+    .tournament-chip:hover {
+      border-color: var(--green-400);
+      color: var(--green-700);
+    }
+
+    .tournament-chip.active {
+      background: var(--green-600);
+      border-color: var(--green-600);
+      color: var(--white);
+    }
+
+    .bracket-legend {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+      font-size: 0.8rem;
+      color: var(--gray-500);
+    }
+
+    .bracket-legend span {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .trophy-display {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .trophy-display .trophy-icon {
+      font-size: 3rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .trophy-display h3 {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      color: var(--green-800);
+    }
+
+    .trophy-display p {
+      font-size: 0.85rem;
+      color: var(--gray-500);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-brand">
+        <div class="brand-icon">&#9971;</div>
+        MyMatchPlayPal
+      </a>
+      <ul class="navbar-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="bracket.html" class="active">Live Brackets</a></li>
+        <li><a href="golfer.html">Golfer</a></li>
+        <li><a href="organiser.html">Organiser</a></li>
+      </ul>
+      <div class="navbar-actions">
+        <a href="golfer.html" class="btn btn-sm btn-primary">Sign In</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container page-content">
+    <!-- Page Header -->
+    <div class="dashboard-header">
+      <h1>&#127959; Digital Clubhouse Wall</h1>
+      <p>Live tournament brackets &mdash; follow every match in real time.</p>
+    </div>
+
+    <!-- Tournament Selector -->
+    <div class="tournament-selector">
+      <button class="tournament-chip active" onclick="selectTournament(event)">Spring Matchplay 2026</button>
+      <button class="tournament-chip" onclick="selectTournament(event)">Captain's Cup 2026</button>
+      <button class="tournament-chip" onclick="selectTournament(event)">Winter Cup 2025</button>
+    </div>
+
+    <!-- Tournament Info Bar -->
+    <div class="card mb-3">
+      <div class="card-body" style="display:flex;justify-content:space-between;align-items:center;padding:1rem 1.5rem;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <h3 style="font-size:1.15rem;font-weight:700;color:var(--gray-900);">Spring Matchplay 2026</h3>
+          <span style="font-size:0.85rem;color:var(--gray-500);">Greenview Golf Club &bull; 16 Players &bull; Started 15 Mar 2026</span>
+        </div>
+        <div style="display:flex;gap:0.75rem;align-items:center;">
+          <span class="badge badge-green"><span class="status-dot live"></span> Quarter Finals</span>
+          <span style="font-size:0.85rem;color:var(--gray-500);">Deadline: 18 Apr 2026</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="bracket-legend">
+      <span><div class="legend-dot" style="background:var(--green-500);"></div> Winner</span>
+      <span><div class="legend-dot" style="background:var(--gray-300);"></div> Eliminated</span>
+      <span><div class="legend-dot" style="background:var(--gold);"></div> In Progress</span>
+      <span><div class="legend-dot" style="background:var(--gray-200);"></div> Upcoming</span>
+      <span style="font-style:italic;">BYE = Automatic advance</span>
+    </div>
+
+    <!-- Bracket -->
+    <div class="card">
+      <div class="bracket-container">
+        <div class="bracket">
+
+          <!-- Round 1 -->
+          <div class="bracket-round">
+            <div class="bracket-round-title">Round 1</div>
+
+            <div class="bracket-match-wrapper">
+              <div class="bracket-match">
+                <div class="bracket-player winner">
+                  <span class="player-name"><span class="seed">(1)</span> J. Murphy</span>
+                  <span class="player-score">&#9989;</span>
+                </div>
+                <div class="bracket-player loser">
+                  <span class="player-name"><span class="seed">(16)</span> T. Doyle</span>
+                  <span class="player-score">&nbsp;</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bracket-match-wrapper">
+              <div class="bracket-match">
+                <div class="bracket-player winner">
+                  <span class="player-name"><span class="seed">(8)</span> P. O'Brien</span>
+                  <span class="player-score">&#9989;</span>
+                </div>
+                <div class="bracket-player loser">
+                  <span class="player-name"><span class="seed">(9)</span> L. Byrne</span>
+                  <span class="player-score">&nbsp;</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bracket-match-wrapper">
+              <div class="bracket-match">
+                <div class="bracket-player winner">
+                  <span class="player-name"><span class="seed">(4)</span> S. Walsh</span>
+                  <span class="player-score">&#9989;</span>
+                </div>
+                <div class="bracket-player loser">
+                  <span class="player-name"><span class="seed">(13)</span> N. Foley</span>
+                  <span class="player-score">&nbsp;</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bracket-match-wrapper">
+              <div class="bracket-match">
+                <div class="bracket-player winner">
+                  <span class="player-name"><span class="seed">(5)</span> D. Kelly</span>
+                  <span class="player-score">&#9989;</span>
+                </div>
+                <div class="bracket-player loser">
+                  <span class="player-name"><span class="seed">(12)</span> C. Dunne</span>
+                  <span class="player-score">&nbsp;</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bracket-match-wrapper">
+              <div class="bracket-match">
+                <div class="bracket-player winner">
+                  <span class="player-name"><span class="seed">(2)</span> M. Ryan</span>
+                  <span class="player-score">&#9989;</span>
+                </div>
+                <div class="bracket-player loser">
+                  <span class="player-name"><span class="seed">(15)</span> G. Power</span>
+                  <span class="player-score">&nbsp;</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bracket-match-wrapper">
+              <div class="bracket-match">
+                <div class="bracket-player winner">
+                  <span class="player-name"><span class="seed">(7)</span> R. Collins</span>
+                  <span class="player-score">&#9989;</span>
+                </div>
+                <div class="bracket-player loser">
+                  <span class="player-name"><span class="seed">(10)</span> F. Healy</span>
+                  <span class="player-score">&nbsp;</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bracket-match-wrapper">
+              <div class="bracket-match">
+                <div class="bracket-player winner">
+                  <span class="player-name"><span class="seed">(3)</span> B. Nolan</span>
+                  <span class="player-score">&#9989;</span>
+                </div>
+                <div class="bracket-player loser">
+                  <span class="player-name"><span class="seed">(14)</span> A. Keane</span>
+                  <span class="player-score">&nbsp;</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bracket-match-wrapper">
+              <div class="bracket-match">
+                <div class="bracket-player winner">
+                  <span class="player-name"><span class="seed">(6)</span> E. Brennan</span>
+                  <span class="player-score">&#9989;</span>
+                </div>
+                <div class="bracket-player loser">
+                  <span class="player-name"><span class="seed">(11)</span> K. Flynn</span>
+                  <span class="player-score">&nbsp;</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Round 2 (Quarter Finals) -->
+          <div class="bracket-round">
+            <div class="bracket-round-title">Quarter Finals</div>
+
+            <div class="bracket-match-wrapper">
+              <div class="bracket-match" style="border-color:var(--gold);">
+                <div class="bracket-player">
+                  <span class="player-name"><span class="seed">(1)</span> J. Murphy</span>
+                  <span class="player-score" style="color:var(--gold);">?</span>
+                </div>
+                <div class="bracket-player">
+                  <span class="player-name"><span class="seed">(8)</span> P. O'Brien</span>
+                  <span class="player-score" style="color:var(--gold);">?</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bracket-match-wrapper">
+              <div class="bracket-match" style="border-color:var(--gold);">
+                <div class="bracket-player">
+                  <span class="player-name"><span class="seed">(4)</span> S. Walsh</span>
+                  <span class="player-score" style="color:var(--gold);">?</span>
+                </div>
+                <div class="bracket-player">
+                  <span class="player-name"><span class="seed">(5)</span> D. Kelly</span>
+                  <span class="player-score" style="color:var(--gold);">?</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bracket-match-wrapper">
+              <div class="bracket-match">
+                <div class="bracket-player winner">
+                  <span class="player-name"><span class="seed">(2)</span> M. Ryan</span>
+                  <span class="player-score">&#9989;</span>
+                </div>
+                <div class="bracket-player loser">
+                  <span class="player-name"><span class="seed">(7)</span> R. Collins</span>
+                  <span class="player-score">&nbsp;</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bracket-match-wrapper">
+              <div class="bracket-match" style="border-color:var(--gold);">
+                <div class="bracket-player">
+                  <span class="player-name"><span class="seed">(3)</span> B. Nolan</span>
+                  <span class="player-score" style="color:var(--gold);">?</span>
+                </div>
+                <div class="bracket-player">
+                  <span class="player-name"><span class="seed">(6)</span> E. Brennan</span>
+                  <span class="player-score" style="color:var(--gold);">?</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Semi Finals -->
+          <div class="bracket-round">
+            <div class="bracket-round-title">Semi Finals</div>
+
+            <div class="bracket-match-wrapper">
+              <div class="bracket-match" style="border-style:dashed;border-color:var(--gray-300);">
+                <div class="bracket-player" style="color:var(--gray-400);">
+                  <span class="player-name">TBD</span>
+                  <span class="player-score">&nbsp;</span>
+                </div>
+                <div class="bracket-player" style="color:var(--gray-400);">
+                  <span class="player-name">TBD</span>
+                  <span class="player-score">&nbsp;</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bracket-match-wrapper">
+              <div class="bracket-match" style="border-style:dashed;border-color:var(--gray-300);">
+                <div class="bracket-player">
+                  <span class="player-name"><span class="seed">(2)</span> M. Ryan</span>
+                  <span class="player-score">&nbsp;</span>
+                </div>
+                <div class="bracket-player" style="color:var(--gray-400);">
+                  <span class="player-name">TBD</span>
+                  <span class="player-score">&nbsp;</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Final -->
+          <div class="bracket-round">
+            <div class="bracket-round-title">Final</div>
+
+            <div class="bracket-match-wrapper">
+              <div class="bracket-match" style="border-style:dashed;border-color:var(--gray-300);">
+                <div class="bracket-player" style="color:var(--gray-400);">
+                  <span class="player-name">TBD</span>
+                  <span class="player-score">&nbsp;</span>
+                </div>
+                <div class="bracket-player" style="color:var(--gray-400);">
+                  <span class="player-name">TBD</span>
+                  <span class="player-score">&nbsp;</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Trophy -->
+            <div class="trophy-display">
+              <div class="trophy-icon">&#127942;</div>
+              <h3>Champion</h3>
+              <p>To be decided</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Match Details Section -->
+    <div class="grid grid-2 mt-3">
+      <div class="card">
+        <div class="card-header">
+          <h3>&#128197; Round Deadlines</h3>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:0.75rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--gray-100);">
+              <span style="font-weight:600;">Round 1</span>
+              <span><span class="badge badge-gray">Completed</span> 28 Mar 2026</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--gray-100);">
+              <span style="font-weight:600;">Quarter Finals</span>
+              <span><span class="badge badge-gold"><span class="status-dot pending"></span> Active</span> 18 Apr 2026</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--gray-100);">
+              <span style="font-weight:600;">Semi Finals</span>
+              <span style="color:var(--gray-400);">2 May 2026</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;">
+              <span style="font-weight:600;">Final</span>
+              <span style="color:var(--gray-400);">16 May 2026</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>&#128221; Recent Results</h3>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:0.5rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem;background:var(--green-50);border-radius:var(--radius);font-size:0.85rem;">
+              <span><strong>M. Ryan</strong> beat R. Collins</span>
+              <span style="font-weight:600;color:var(--green-700);">2 &amp; 1</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem;background:var(--green-50);border-radius:var(--radius);font-size:0.85rem;">
+              <span><strong>J. Murphy</strong> beat T. Doyle</span>
+              <span style="font-weight:600;color:var(--green-700);">3 &amp; 2</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem;background:var(--green-50);border-radius:var(--radius);font-size:0.85rem;">
+              <span><strong>S. Walsh</strong> beat N. Foley</span>
+              <span style="font-weight:600;color:var(--green-700);">4 &amp; 3</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem;background:var(--green-50);border-radius:var(--radius);font-size:0.85rem;">
+              <span><strong>B. Nolan</strong> beat A. Keane</span>
+              <span style="font-weight:600;color:var(--green-700);">1 Up</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem;background:var(--green-50);border-radius:var(--radius);font-size:0.85rem;">
+              <span><strong>P. O'Brien</strong> beat L. Byrne</span>
+              <span style="font-weight:600;color:var(--green-700);">5 &amp; 4</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer" style="margin-top:3rem;">
+    <div class="footer-bottom" style="border-top:none;padding-top:0;">
+      &copy; 2026 MyMatchPlayPal. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    function selectTournament(e) {
+      document.querySelectorAll('.tournament-chip').forEach(c => c.classList.remove('active'));
+      e.target.classList.add('active');
+    }
+  </script>
+
+</body>
+</html>

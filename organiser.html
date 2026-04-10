@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Organiser Dashboard - MyMatchPlayPal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-brand">
+        <div class="brand-icon">&#9971;</div>
+        MyMatchPlayPal
+      </a>
+      <ul class="navbar-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="bracket.html">Live Brackets</a></li>
+        <li><a href="golfer.html">Golfer</a></li>
+        <li><a href="organiser.html" class="active">Organiser</a></li>
+      </ul>
+      <div class="navbar-actions">
+        <div class="nav-avatar" style="background:var(--gold);color:var(--green-900);border-color:var(--gold-light);">MC</div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Dashboard Layout -->
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div style="display:flex;align-items:center;gap:0.75rem;padding:0 0.75rem;margin-bottom:1.25rem;">
+          <div class="profile-avatar organiser" style="width:48px;height:48px;font-size:1.1rem;">MC</div>
+          <div>
+            <div style="font-weight:600;font-size:0.95rem;">Mary Connolly</div>
+            <div style="font-size:0.75rem;color:var(--gold);">Match Secretary</div>
+          </div>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Management</div>
+        <ul class="sidebar-nav">
+          <li><a href="#" class="active"><span class="nav-icon">&#127968;</span> Dashboard</a></li>
+          <li><a href="#"><span class="nav-icon">&#127942;</span> Tournaments</a></li>
+          <li><a href="#"><span class="nav-icon">&#128101;</span> Members</a></li>
+          <li><a href="bracket.html"><span class="nav-icon">&#127959;</span> Brackets</a></li>
+          <li><a href="#"><span class="nav-icon">&#128221;</span> Results</a></li>
+          <li><a href="#"><span class="nav-icon">&#128276;</span> Notifications</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Settings</div>
+        <ul class="sidebar-nav">
+          <li><a href="#"><span class="nav-icon">&#9881;</span> Club Settings</a></li>
+          <li><a href="#"><span class="nav-icon">&#128101;</span> Manage Admins</a></li>
+          <li><a href="index.html"><span class="nav-icon">&#128682;</span> Sign Out</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+      <!-- Header -->
+      <div class="dashboard-header" style="display:flex;justify-content:space-between;align-items:start;">
+        <div>
+          <h1>Organiser Dashboard</h1>
+          <p>Greenview Golf Club &mdash; Match Secretary Panel</p>
+        </div>
+        <button class="btn btn-primary" onclick="document.getElementById('createModal').classList.add('active')">+ Create Tournament</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="stat-icon green">&#127942;</div>
+          <div class="stat-value">5</div>
+          <div class="stat-label">Total Tournaments</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon gold">&#9889;</div>
+          <div class="stat-value">3</div>
+          <div class="stat-label">Active Right Now</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue">&#128101;</div>
+          <div class="stat-value">48</div>
+          <div class="stat-label">Registered Members</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red">&#128221;</div>
+          <div class="stat-value">12</div>
+          <div class="stat-label">Pending Results</div>
+        </div>
+      </div>
+
+      <!-- Tabs: Tournaments / Members -->
+      <div class="card mb-3">
+        <div class="card-body" style="padding-bottom:0;">
+          <div class="tabs">
+            <button class="tab active" onclick="switchTab(event, 'tournaments')">&#127942; Tournaments</button>
+            <button class="tab" onclick="switchTab(event, 'members')">&#128101; Members</button>
+            <button class="tab" onclick="switchTab(event, 'activity')">&#128276; Activity Log</button>
+          </div>
+        </div>
+
+        <!-- Tournaments Tab -->
+        <div id="tournaments" class="tab-panel active">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tournament</th>
+                  <th>Status</th>
+                  <th>Entries</th>
+                  <th>Bracket</th>
+                  <th>Deadline</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Spring Matchplay 2026</strong></td>
+                  <td><span class="badge badge-green"><span class="status-dot live"></span> In Progress</span></td>
+                  <td>16 / 16</td>
+                  <td>Quarter Finals</td>
+                  <td>18 Apr 2026</td>
+                  <td>
+                    <div style="display:flex;gap:0.5rem;">
+                      <a href="bracket.html" class="btn btn-sm btn-secondary">View Bracket</a>
+                      <button class="btn btn-sm btn-primary">Manage</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Captain's Cup 2026</strong></td>
+                  <td><span class="badge badge-green"><span class="status-dot live"></span> In Progress</span></td>
+                  <td>32 / 32</td>
+                  <td>Round of 16</td>
+                  <td>25 Apr 2026</td>
+                  <td>
+                    <div style="display:flex;gap:0.5rem;">
+                      <a href="bracket.html" class="btn btn-sm btn-secondary">View Bracket</a>
+                      <button class="btn btn-sm btn-primary">Manage</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Summer Matchplay 2026</strong></td>
+                  <td><span class="badge badge-gold"><span class="status-dot pending"></span> Entries Open</span></td>
+                  <td>18 / 32</td>
+                  <td>&mdash;</td>
+                  <td>30 Apr 2026</td>
+                  <td>
+                    <div style="display:flex;gap:0.5rem;">
+                      <button class="btn btn-sm btn-gold" onclick="alert('Draw generated! 18 players with 14 byes calculated. All players notified.')">Generate Draw</button>
+                      <button class="btn btn-sm btn-secondary">Close Entry</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Presidents Prize Matchplay</strong></td>
+                  <td><span class="badge badge-blue"><span class="status-dot" style="background:var(--blue);"></span> Scheduled</span></td>
+                  <td>0 / 16</td>
+                  <td>&mdash;</td>
+                  <td>Opens 1 May</td>
+                  <td>
+                    <button class="btn btn-sm btn-secondary">Edit</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Winter Cup 2025</strong></td>
+                  <td><span class="badge badge-gray"><span class="status-dot closed"></span> Completed</span></td>
+                  <td>16 / 16</td>
+                  <td>Final</td>
+                  <td>Ended</td>
+                  <td>
+                    <a href="bracket.html" class="btn btn-sm btn-secondary">View Results</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Members Tab -->
+        <div id="members" class="tab-panel">
+          <div style="padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--gray-200);">
+            <input type="text" class="form-input" placeholder="Search members..." style="max-width:300px;">
+            <button class="btn btn-sm btn-primary">+ Add Member</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Handicap</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Matches</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                      <div style="width:28px;height:28px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600;">JM</div>
+                      <strong>James Murphy</strong>
+                    </div>
+                  </td>
+                  <td>12</td>
+                  <td>087 123 4567</td>
+                  <td>james.murphy@email.com</td>
+                  <td>10 (7W-3L)</td>
+                  <td><button class="btn btn-sm btn-secondary">Edit</button></td>
+                </tr>
+                <tr>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                      <div style="width:28px;height:28px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600;">PO</div>
+                      <strong>Patrick O'Brien</strong>
+                    </div>
+                  </td>
+                  <td>14</td>
+                  <td>086 234 5678</td>
+                  <td>p.obrien@email.com</td>
+                  <td>8 (5W-3L)</td>
+                  <td><button class="btn btn-sm btn-secondary">Edit</button></td>
+                </tr>
+                <tr>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                      <div style="width:28px;height:28px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600;">SW</div>
+                      <strong>Sean Walsh</strong>
+                    </div>
+                  </td>
+                  <td>6</td>
+                  <td>085 345 6789</td>
+                  <td>swalsh@email.com</td>
+                  <td>12 (9W-3L)</td>
+                  <td><button class="btn btn-sm btn-secondary">Edit</button></td>
+                </tr>
+                <tr>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                      <div style="width:28px;height:28px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600;">DK</div>
+                      <strong>David Kelly</strong>
+                    </div>
+                  </td>
+                  <td>8</td>
+                  <td>083 456 7890</td>
+                  <td>d.kelly@email.com</td>
+                  <td>6 (4W-2L)</td>
+                  <td><button class="btn btn-sm btn-secondary">Edit</button></td>
+                </tr>
+                <tr>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                      <div style="width:28px;height:28px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600;">TD</div>
+                      <strong>Tom Doyle</strong>
+                    </div>
+                  </td>
+                  <td>18</td>
+                  <td>089 567 8901</td>
+                  <td>tdoyle@email.com</td>
+                  <td>4 (1W-3L)</td>
+                  <td><button class="btn btn-sm btn-secondary">Edit</button></td>
+                </tr>
+                <tr>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                      <div style="width:28px;height:28px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600;">MR</div>
+                      <strong>Mick Ryan</strong>
+                    </div>
+                  </td>
+                  <td>10</td>
+                  <td>087 678 9012</td>
+                  <td>m.ryan@email.com</td>
+                  <td>9 (6W-3L)</td>
+                  <td><button class="btn btn-sm btn-secondary">Edit</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Activity Log Tab -->
+        <div id="activity" class="tab-panel">
+          <div class="card-body">
+            <div class="notification-list">
+              <div class="notification-item">
+                <div class="notification-icon" style="background:var(--green-100);color:var(--green-700);">&#9989;</div>
+                <div class="notification-content">
+                  <h4>Score Reported</h4>
+                  <p>J. Murphy beat R. Collins 2&amp;1 in Spring Matchplay R2. Bracket updated.</p>
+                </div>
+                <span class="notification-time">1h ago</span>
+              </div>
+              <div class="notification-item">
+                <div class="notification-icon" style="background:#eff6ff;color:var(--blue);">&#128101;</div>
+                <div class="notification-content">
+                  <h4>New Entry</h4>
+                  <p>B. McCarthy entered Summer Matchplay 2026 (18/32).</p>
+                </div>
+                <span class="notification-time">3h ago</span>
+              </div>
+              <div class="notification-item">
+                <div class="notification-icon" style="background:#eff6ff;color:var(--blue);">&#128101;</div>
+                <div class="notification-content">
+                  <h4>New Entry</h4>
+                  <p>K. Brennan entered Summer Matchplay 2026 (17/32).</p>
+                </div>
+                <span class="notification-time">5h ago</span>
+              </div>
+              <div class="notification-item">
+                <div class="notification-icon" style="background:#fef3c7;color:#92400e;">&#128197;</div>
+                <div class="notification-content">
+                  <h4>Deadline Reminder Sent</h4>
+                  <p>Automatic reminder sent to 4 players with outstanding QF matches.</p>
+                </div>
+                <span class="notification-time">1d ago</span>
+              </div>
+              <div class="notification-item">
+                <div class="notification-icon" style="background:var(--green-100);color:var(--green-700);">&#127922;</div>
+                <div class="notification-content">
+                  <h4>Draw Generated</h4>
+                  <p>Captain's Cup 2026 bracket generated. 32 players, 0 byes. All notified.</p>
+                </div>
+                <span class="notification-time">3d ago</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Organiser Profile -->
+      <div class="card mt-3">
+        <div class="card-header">
+          <h3>&#128100; Organiser Profile</h3>
+          <button class="btn btn-sm btn-secondary">Edit Profile</button>
+        </div>
+        <div class="card-body">
+          <div class="profile-header">
+            <div class="profile-avatar organiser">MC</div>
+            <div class="profile-info">
+              <h2>Mary Connolly</h2>
+              <div class="profile-role">Match Secretary &mdash; Greenview Golf Club</div>
+              <div class="profile-meta">
+                <span>&#127942; 5 Tournaments Organised</span>
+                <span>&#128101; 48 Members Managed</span>
+                <span>&#128197; Since Jan 2025</span>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-3 mt-2">
+            <div style="padding:1.25rem;border:1px solid var(--gray-200);border-radius:var(--radius-lg);text-align:center;">
+              <div style="font-size:2rem;font-weight:700;color:var(--green-700);">5</div>
+              <div style="font-size:0.85rem;color:var(--gray-500);">Tournaments Created</div>
+            </div>
+            <div style="padding:1.25rem;border:1px solid var(--gray-200);border-radius:var(--radius-lg);text-align:center;">
+              <div style="font-size:2rem;font-weight:700;color:var(--gold);">87</div>
+              <div style="font-size:0.85rem;color:var(--gray-500);">Total Matches Managed</div>
+            </div>
+            <div style="padding:1.25rem;border:1px solid var(--gray-200);border-radius:var(--radius-lg);text-align:center;">
+              <div style="font-size:2rem;font-weight:700;color:var(--blue);">96%</div>
+              <div style="font-size:0.85rem;color:var(--gray-500);">On-Time Completion</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Create Tournament Modal -->
+  <div class="modal-overlay" id="createModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>&#127942; Create New Tournament</h3>
+        <button class="modal-close" onclick="document.getElementById('createModal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Tournament Name</label>
+          <input type="text" class="form-input" placeholder="e.g. Autumn Matchplay 2026">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bracket Size</label>
+          <select class="form-select">
+            <option>8 Players</option>
+            <option>16 Players</option>
+            <option selected>32 Players</option>
+            <option>64 Players</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Entry Deadline</label>
+          <input type="date" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Round Deadline (days per round)</label>
+          <select class="form-select">
+            <option>7 days</option>
+            <option selected>14 days</option>
+            <option>21 days</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description (optional)</label>
+          <textarea class="form-textarea" placeholder="Any additional details for members..."></textarea>
+        </div>
+        <div style="background:var(--green-50);border:1px solid var(--green-200);border-radius:var(--radius);padding:0.75rem;font-size:0.85rem;color:var(--green-800);">
+          &#128161; <strong>Smart Byes:</strong> If entries don't reach the bracket size, the system will automatically calculate and assign byes fairly.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('createModal').classList.remove('active')">Cancel</button>
+        <button class="btn btn-primary" onclick="alert('Tournament created! Members will be notified that entries are open.'); document.getElementById('createModal').classList.remove('active');">Create Tournament</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function switchTab(e, tabId) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      e.target.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+  </script>
+
+</body>
+</html>

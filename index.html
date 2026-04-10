@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyMatchPlayPal - Automated Matchplay Management for Golf Clubs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-brand">
+        <div class="brand-icon">&#9971;</div>
+        MyMatchPlayPal
+      </a>
+      <ul class="navbar-links">
+        <li><a href="index.html" class="active">Home</a></li>
+        <li><a href="bracket.html">Live Brackets</a></li>
+        <li><a href="golfer.html">Golfer</a></li>
+        <li><a href="organiser.html">Organiser</a></li>
+      </ul>
+      <div class="navbar-actions">
+        <a href="golfer.html" class="btn btn-sm btn-primary">Sign In</a>
+        <button class="menu-toggle" onclick="document.querySelector('.navbar-links').classList.toggle('show')">&#9776;</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-text">
+        <h1>Your Golf Club's <span>Digital Clubhouse Wall</span></h1>
+        <p>Replace WhatsApp chaos and paper brackets with an automated matchplay management platform. From sign-up to final putt &mdash; MyMatchPlayPal handles the draw, the brackets, and the coordination.</p>
+        <div class="hero-buttons">
+          <a href="golfer.html" class="btn btn-lg btn-primary">I'm a Golfer</a>
+          <a href="organiser.html" class="btn btn-lg btn-outline">I'm an Organiser</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-mockup">
+          <div class="hero-mockup-header">
+            <div class="hero-mockup-avatar">&#9971;</div>
+            <div class="hero-mockup-info">
+              <h4>Spring Matchplay 2026</h4>
+              <p>Quarter Finals &bull; 16 Players</p>
+            </div>
+          </div>
+          <div class="hero-mockup-matches">
+            <div class="hero-match-card">
+              <div class="match-title">Quarter Final &mdash; Match 1</div>
+              <div class="match-vs">J. Murphy vs P. O'Brien</div>
+              <div class="match-status">&#9989; Result: Murphy wins 3&amp;2</div>
+            </div>
+            <div class="hero-match-card">
+              <div class="match-title">Quarter Final &mdash; Match 2</div>
+              <div class="match-vs">S. Walsh vs D. Kelly</div>
+              <div class="match-status">&#128197; Awaiting result...</div>
+            </div>
+            <div class="hero-match-card">
+              <div class="match-title">Quarter Final &mdash; Match 3</div>
+              <div class="match-vs">M. Ryan vs T. Doyle</div>
+              <div class="match-status">&#128172; Arrange your match</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features" id="features">
+    <div class="section-header">
+      <h2>Everything Your Club Needs</h2>
+      <p>Modernise matchplay management with tools built for golf clubs of every size.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">&#127922;</div>
+        <h3>Automated Draw Engine</h3>
+        <p>Smart byes calculation, randomized brackets, and support for any field size. One click generates a fair draw every time.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#127942;</div>
+        <h3>Digital Clubhouse Wall</h3>
+        <p>Interactive tournament brackets viewable in real-time. No more trekking to the clubhouse to check the draw sheet.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128241;</div>
+        <h3>WhatsApp Integration</h3>
+        <p>One-touch "Arrange Match" button opens a WhatsApp chat with your opponent, pre-filled with tournament details.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128221;</div>
+        <h3>Self-Service Results</h3>
+        <p>Winners input their own scores. The bracket updates instantly and opponents are automatically notified.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128276;</div>
+        <h3>Smart Notifications</h3>
+        <p>Automatic alerts for new tournaments, draw announcements, match deadlines, and opponent readiness.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128200;</div>
+        <h3>Handicap & Stats</h3>
+        <p>Track match records, win streaks, and tournament history. Future integration with national handicap systems.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="features" id="how-it-works" style="background: var(--green-50);">
+    <div class="section-header">
+      <h2>How It Works</h2>
+      <p>Four simple steps from sign-up to silverware.</p>
+    </div>
+    <div class="feature-grid" style="grid-template-columns: repeat(4, 1fr);">
+      <div class="feature-card" style="text-align:center; background: var(--white);">
+        <div class="feature-icon" style="margin: 0 auto 1rem; background: var(--green-600); color: white; font-weight: 700; font-size: 1.25rem;">1</div>
+        <h3>Sign Up</h3>
+        <p>Members receive a notification and enter the competition with one tap.</p>
+      </div>
+      <div class="feature-card" style="text-align:center; background: var(--white);">
+        <div class="feature-icon" style="margin: 0 auto 1rem; background: var(--green-600); color: white; font-weight: 700; font-size: 1.25rem;">2</div>
+        <h3>Draw</h3>
+        <p>Secretary closes entries. The system generates randomized brackets and notifies all players.</p>
+      </div>
+      <div class="feature-card" style="text-align:center; background: var(--white);">
+        <div class="feature-icon" style="margin: 0 auto 1rem; background: var(--green-600); color: white; font-weight: 700; font-size: 1.25rem;">3</div>
+        <h3>Play</h3>
+        <p>Players use the "Arrange Match" link to coordinate with opponents via WhatsApp.</p>
+      </div>
+      <div class="feature-card" style="text-align:center; background: var(--white);">
+        <div class="feature-icon" style="margin: 0 auto 1rem; background: var(--green-600); color: white; font-weight: 700; font-size: 1.25rem;">4</div>
+        <h3>Advance</h3>
+        <p>Winner reports the score. The system updates the bracket and notifies the next opponent.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <h2>Ready to Modernise Your Club?</h2>
+    <p>Join golf clubs already using MyMatchPlayPal to run stress-free matchplay competitions.</p>
+    <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+      <a href="organiser.html" class="btn btn-lg btn-primary">Get Started as Organiser</a>
+      <a href="golfer.html" class="btn btn-lg btn-outline">View Golfer Demo</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <h3>&#9971; MyMatchPlayPal</h3>
+        <p>The automated matchplay management system for golf clubs. Replacing WhatsApp chaos with digital brackets since 2026.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#how-it-works">How It Works</a></li>
+          <li><a href="bracket.html">Live Brackets</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Profiles</h4>
+        <ul>
+          <li><a href="golfer.html">Golfer Dashboard</a></li>
+          <li><a href="organiser.html">Organiser Dashboard</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Future</h4>
+        <ul>
+          <li><a href="#">Handicap Tracking</a></li>
+          <li><a href="#">Payment Gateway</a></li>
+          <li><a href="#">Multi-Sport</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      &copy; 2026 MyMatchPlayPal. All rights reserved.
+    </div>
+  </footer>
+
+</body>
+</html>
