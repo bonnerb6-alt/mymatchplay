@@ -87,7 +87,8 @@ function updateNavForAuth(member) {
       : '';
 
     actionsEl.innerHTML = `
-      <div class="nav-avatar" style="${avatarStyle}" onclick="signOut()" title="Sign Out">${initials}</div>
+      <div class="nav-avatar" style="${avatarStyle}">${initials}</div>
+      <a href="#" onclick="signOut();return false;" class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:var(--white);font-size:0.75rem;padding:0.3rem 0.6rem;">Sign Out</a>
     `;
     if (menuToggle) actionsEl.appendChild(menuToggle);
 
