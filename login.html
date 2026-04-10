@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In - MyMatchPlayPal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    .login-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--green-900) 0%, var(--fairway) 40%, var(--putting-green) 100%);
+      padding: 1.5rem;
+    }
+
+    .login-card {
+      background: var(--white);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      width: 100%;
+      max-width: 440px;
+      overflow: hidden;
+    }
+
+    .login-header {
+      background: var(--green-900);
+      color: var(--white);
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .login-header .brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .login-header .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--green-500);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+    }
+
+    .login-header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .login-header p {
+      font-size: 0.85rem;
+      color: var(--green-300);
+      margin-top: 0.25rem;
+    }
+
+    .login-body {
+      padding: 2rem;
+    }
+
+    .login-tabs {
+      display: flex;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid var(--gray-200);
+    }
+
+    .login-tab {
+      flex: 1;
+      padding: 0.75rem;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--gray-500);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      transition: all 0.2s;
+    }
+
+    .login-tab.active {
+      color: var(--green-700);
+      border-bottom-color: var(--green-600);
+    }
+
+    .login-footer {
+      text-align: center;
+      padding: 0 2rem 1.5rem;
+    }
+
+    .login-footer a {
+      font-size: 0.85rem;
+      color: var(--gray-500);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="brand">
+          <div class="brand-icon">&#9971;</div>
+          <h1>MyMatchPlayPal</h1>
+        </div>
+        <p>Sign in to your golf club dashboard</p>
+      </div>
+
+      <div class="login-body">
+        <div class="login-tabs">
+          <button class="login-tab active" onclick="showLoginPanel('signin')">Sign In</button>
+          <button class="login-tab" onclick="showLoginPanel('signup')">Sign Up</button>
+        </div>
+
+        <!-- Sign In -->
+        <div id="signinPanel">
+          <form onsubmit="handleSignIn(event)">
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" id="signInEmail" class="form-input" placeholder="your@email.com" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <input type="password" id="signInPassword" class="form-input" placeholder="Your password" required>
+            </div>
+            <div id="signInError" style="color:var(--red);font-size:0.85rem;margin-bottom:0.75rem;"></div>
+            <button type="submit" class="btn btn-primary" style="width:100%;padding:0.75rem;">Sign In</button>
+          </form>
+        </div>
+
+        <!-- Sign Up -->
+        <div id="signupPanel" style="display:none;">
+          <form onsubmit="handleSignUp(event)">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+              <div class="form-group">
+                <label class="form-label">First Name</label>
+                <input type="text" id="signUpFirstName" class="form-input" placeholder="James" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Last Name</label>
+                <input type="text" id="signUpLastName" class="form-input" placeholder="Murphy" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" id="signUpEmail" class="form-input" placeholder="your@email.com" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone</label>
+              <input type="tel" id="signUpPhone" class="form-input" placeholder="087 123 4567">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Handicap</label>
+              <input type="number" id="signUpHandicap" class="form-input" placeholder="12" min="0" max="54">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <input type="password" id="signUpPassword" class="form-input" placeholder="Min 6 characters" required minlength="6">
+            </div>
+            <div id="signUpError" style="color:var(--red);font-size:0.85rem;margin-bottom:0.75rem;"></div>
+            <div id="signUpSuccess" style="color:var(--green-700);font-size:0.85rem;margin-bottom:0.75rem;"></div>
+            <button type="submit" class="btn btn-primary" style="width:100%;padding:0.75rem;">Create Account</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="login-footer">
+        <a href="index.html">&larr; Back to home</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/supabase-client.js"></script>
+  <script>
+    // Check if already logged in
+    (async function() {
+      var member = await getCurrentMember();
+      if (member) {
+        window.location.href = member.role === 'organiser' ? 'organiser.html' : 'golfer.html';
+      }
+    })();
+
+    function showLoginPanel(panel) {
+      document.getElementById('signinPanel').style.display = panel === 'signin' ? 'block' : 'none';
+      document.getElementById('signupPanel').style.display = panel === 'signup' ? 'block' : 'none';
+      document.querySelectorAll('.login-tab').forEach(function(t, i) {
+        t.classList.toggle('active', (panel === 'signin' && i === 0) || (panel === 'signup' && i === 1));
+      });
+    }
+
+    async function handleSignIn(e) {
+      e.preventDefault();
+      var email = document.getElementById('signInEmail').value;
+      var password = document.getElementById('signInPassword').value;
+      var errorEl = document.getElementById('signInError');
+      var btn = e.target.querySelector('button[type="submit"]');
+
+      errorEl.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+
+      try {
+        await signIn(email, password);
+        var member = await getCurrentMember();
+        if (!member) {
+          errorEl.textContent = 'No member profile found. Contact your club organiser.';
+          btn.disabled = false;
+          btn.textContent = 'Sign In';
+          return;
+        }
+        window.location.href = member.role === 'organiser' ? 'organiser.html' : 'golfer.html';
+      } catch (err) {
+        errorEl.textContent = err.message || 'Invalid email or password.';
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    }
+
+    async function handleSignUp(e) {
+      e.preventDefault();
+      var firstName = document.getElementById('signUpFirstName').value;
+      var lastName = document.getElementById('signUpLastName').value;
+      var email = document.getElementById('signUpEmail').value;
+      var phone = document.getElementById('signUpPhone').value;
+      var handicap = parseInt(document.getElementById('signUpHandicap').value) || 0;
+      var password = document.getElementById('signUpPassword').value;
+      var errorEl = document.getElementById('signUpError');
+      var successEl = document.getElementById('signUpSuccess');
+      var btn = e.target.querySelector('button[type="submit"]');
+
+      errorEl.textContent = '';
+      successEl.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+
+      try {
+        var data = await signUp(email, password, { first_name: firstName, last_name: lastName });
+        var user = data.user;
+
+        if (!user) throw new Error('Sign up failed.');
+
+        var result = await supabase
+          .from('members')
+          .insert({
+            auth_id: user.id,
+            club_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+            first_name: firstName,
+            last_name: lastName,
+            handicap: handicap,
+            phone: phone,
+            email: email,
+            role: 'golfer'
+          });
+
+        if (result.error) throw result.error;
+
+        window.location.href = 'golfer.html';
+      } catch (err) {
+        errorEl.textContent = err.message || 'Could not create account.';
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+    }
+  </script>
+</body>
+</html>

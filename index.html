@@ -7,7 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
@@ -20,12 +19,12 @@
       </a>
       <ul class="navbar-links">
         <li><a href="index.html" class="active">Home</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#how-it-works">How It Works</a></li>
         <li><a href="bracket.html">Live Brackets</a></li>
-        <li><a href="golfer.html">Golfer</a></li>
-        <li><a href="organiser.html">Organiser</a></li>
       </ul>
       <div class="navbar-actions">
-        <a href="#" class="btn btn-sm btn-primary" onclick="showAuthModal('signin');return false;" id="nav-signin-btn">Sign In</a>
+        <a href="login.html" class="btn btn-sm btn-primary">Sign In</a>
         <button class="menu-toggle" onclick="document.querySelector('.navbar-links').classList.toggle('show')">&#9776;</button>
       </div>
     </div>
@@ -38,8 +37,8 @@
         <h1>Your Golf Club's <span>Digital Clubhouse Wall</span></h1>
         <p>Replace WhatsApp chaos and paper brackets with an automated matchplay management platform. From sign-up to final putt &mdash; MyMatchPlayPal handles the draw, the brackets, and the coordination.</p>
         <div class="hero-buttons">
-          <a href="#" class="btn btn-lg btn-primary" onclick="showAuthModal('signup');return false;">I'm a Golfer</a>
-          <a href="#" class="btn btn-lg btn-outline" onclick="showAuthModal('signin');return false;">I'm an Organiser</a>
+          <a href="login.html" class="btn btn-lg btn-primary">Get Started Free</a>
+          <a href="#how-it-works" class="btn btn-lg btn-outline">See How It Works</a>
         </div>
       </div>
       <div class="hero-visual">
@@ -148,8 +147,8 @@
     <h2>Ready to Modernise Your Club?</h2>
     <p>Join golf clubs already using MyMatchPlayPal to run stress-free matchplay competitions.</p>
     <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
-      <a href="organiser.html" class="btn btn-lg btn-primary">Get Started as Organiser</a>
-      <a href="golfer.html" class="btn btn-lg btn-outline">View Golfer Demo</a>
+      <a href="login.html" class="btn btn-lg btn-primary">Get Started Free</a>
+      <a href="bracket.html" class="btn btn-lg btn-outline">View Live Brackets</a>
     </div>
   </section>
 
@@ -169,14 +168,14 @@
         </ul>
       </div>
       <div class="footer-col">
-        <h4>Profiles</h4>
+        <h4>Get Started</h4>
         <ul>
-          <li><a href="golfer.html">Golfer Dashboard</a></li>
-          <li><a href="organiser.html">Organiser Dashboard</a></li>
+          <li><a href="login.html">Sign In</a></li>
+          <li><a href="login.html">Create Account</a></li>
         </ul>
       </div>
       <div class="footer-col">
-        <h4>Future</h4>
+        <h4>Coming Soon</h4>
         <ul>
           <li><a href="#">Handicap Tracking</a></li>
           <li><a href="#">Payment Gateway</a></li>
@@ -189,20 +188,5 @@
     </div>
   </footer>
 
-  <script src="js/supabase-client.js"></script>
-  <script src="js/auth.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', async function() {
-      injectAuthModal();
-      // If already logged in, redirect to dashboard
-      const member = await getCurrentMember();
-      if (member) {
-        updateNavForAuth(member);
-        // Replace Sign In button with avatar
-        const signInBtn = document.getElementById('nav-signin-btn');
-        if (signInBtn) signInBtn.style.display = 'none';
-      }
-    });
-  </script>
 </body>
 </html>

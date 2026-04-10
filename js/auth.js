@@ -109,7 +109,7 @@ async function handleSignUp(e) {
 async function requireAuth(requiredRole) {
   const member = await getCurrentMember();
   if (!member) {
-    window.location.href = 'index.html';
+    window.location.href = 'login.html';
     return null;
   }
   if (requiredRole && member.role !== requiredRole) {

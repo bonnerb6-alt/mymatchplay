@@ -58,7 +58,7 @@ async function signUp(email, password, metadata) {
 async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
-  window.location.href = 'index.html';
+  window.location.href = 'login.html';
 }
 
 // Update nav bar based on auth state
