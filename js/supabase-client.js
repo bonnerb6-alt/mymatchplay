@@ -2,10 +2,18 @@
 // MyMatchPlayPal - Supabase Client
 // ============================================
 
-const SUPABASE_URL = 'https://kjlnfhriagwiqqbvvbhg.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtqbG5maHJpYWd3aXFxYnZ2YmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4NDM4MzMsImV4cCI6MjA5MTQxOTgzM30.rK4_dawPeERbRsAXkZmYq8n8ikDYkgEBrLut0I6rUrc';
+var SUPABASE_URL = 'https://kjlnfhriagwiqqbvvbhg.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtqbG5maHJpYWd3aXFxYnZ2YmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4NDM4MzMsImV4cCI6MjA5MTQxOTgzM30.rK4_dawPeERbRsAXkZmYq8n8ikDYkgEBrLut0I6rUrc';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// The CDN exposes window.supabase with createClient
+var _sb = window.supabase;
+if (!_sb || !_sb.createClient) {
+  console.error('Supabase JS library not loaded. Check CDN script tag in HTML <head>.');
+  // Prevent further errors by creating a stub
+  var supabase = null;
+} else {
+  var supabase = _sb.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
 
 // Get the current authenticated user
 async function getCurrentUser() {
