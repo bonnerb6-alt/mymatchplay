@@ -49,7 +49,7 @@
       <div class="sidebar-section">
         <div class="sidebar-section-title">Actions</div>
         <ul class="sidebar-nav">
-          <li><a href="#" onclick="document.getElementById('createModal').classList.add('active');return false;"><span class="nav-icon">&#127942;</span> New Tournament</a></li>
+          <li><a href="#" onclick="openCreateTournament();return false;"><span class="nav-icon">&#127942;</span> New Tournament</a></li>
           <li><a href="#" onclick="printDraw();return false;"><span class="nav-icon">&#128424;</span> Print Draw</a></li>
           <li><a href="#" onclick="signOut();return false;"><span class="nav-icon">&#128682;</span> Sign Out</a></li>
         </ul>
@@ -65,7 +65,7 @@
           <p id="org-club-name">Loading...</p>
         </div>
         <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
-          <button class="btn btn-primary" onclick="document.getElementById('createModal').classList.add('active')">+ Create Tournament</button>
+          <button class="btn btn-primary" onclick="openCreateTournament()">+ Create Tournament</button>
           <button class="btn btn-secondary" onclick="printDraw()">&#128424; Print Draw Sheet</button>
         </div>
       </div>
@@ -166,6 +166,10 @@
         <button class="modal-close" onclick="document.getElementById('createModal').classList.remove('active')">&times;</button>
       </div>
       <div class="modal-body">
+        <div class="form-group" id="clubSelectorGroup" style="display:none;">
+          <label class="form-label">Club</label>
+          <select class="form-select" id="newTournamentClub"></select>
+        </div>
         <div class="form-group">
           <label class="form-label">Tournament Name</label>
           <input type="text" id="newTournamentName" class="form-input" placeholder="e.g. Autumn Matchplay 2026">

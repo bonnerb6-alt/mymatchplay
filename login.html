@@ -188,7 +188,14 @@
     (async function() {
       var member = await getCurrentMember();
       if (member) {
-        window.location.href = member.role === 'organiser' ? 'organiser.html' : 'golfer.html';
+        // Check if they're an organiser at any club
+        var { data: memberships } = await supabase
+          .from('club_memberships')
+          .select('role')
+          .eq('member_id', member.id);
+        var isOrganiser = (memberships || []).some(function(m) { return m.role === 'organiser'; })
+          || member.role === 'organiser';
+        window.location.href = isOrganiser ? 'organiser.html' : 'golfer.html';
       }
     })();
 
@@ -220,7 +227,14 @@
           btn.textContent = 'Sign In';
           return;
         }
-        window.location.href = member.role === 'organiser' ? 'organiser.html' : 'golfer.html';
+        // Check if organiser at any club
+        var { data: mships } = await supabase
+          .from('club_memberships')
+          .select('role')
+          .eq('member_id', member.id);
+        var isOrg = (mships || []).some(function(m) { return m.role === 'organiser'; })
+          || member.role === 'organiser';
+        window.location.href = isOrg ? 'organiser.html' : 'golfer.html';
       } catch (err) {
         errorEl.textContent = err.message || 'Invalid email or password.';
         btn.disabled = false;
@@ -262,9 +276,21 @@
             phone: phone,
             email: email,
             role: 'golfer'
-          });
+          })
+          .select();
 
         if (result.error) throw result.error;
+
+        // Also create club_memberships record
+        var memberRecord = result.data ? result.data[0] : null;
+        if (memberRecord) {
+          await supabase.from('club_memberships').insert({
+            member_id: memberRecord.id,
+            club_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+            role: 'golfer',
+            handicap: handicap
+          });
+        }
 
         window.location.href = 'golfer.html';
       } catch (err) {

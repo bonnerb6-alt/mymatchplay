@@ -112,9 +112,22 @@ async function requireAuth(requiredRole) {
     window.location.href = 'login.html';
     return null;
   }
-  if (requiredRole && member.role !== requiredRole) {
-    window.location.href = member.role === 'organiser' ? 'organiser.html' : 'golfer.html';
-    return null;
+  if (requiredRole) {
+    // Check club_memberships for role
+    var { data: memberships } = await supabase
+      .from('club_memberships')
+      .select('role')
+      .eq('member_id', member.id);
+
+    var hasRole = member.role === requiredRole
+      || (memberships || []).some(function(m) { return m.role === requiredRole; });
+
+    if (!hasRole) {
+      var isOrganiser = member.role === 'organiser'
+        || (memberships || []).some(function(m) { return m.role === 'organiser'; });
+      window.location.href = isOrganiser ? 'organiser.html' : 'golfer.html';
+      return null;
+    }
   }
   return member;
 }

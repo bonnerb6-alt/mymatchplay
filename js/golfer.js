@@ -3,10 +3,29 @@
 // ============================================
 
 let currentMember = null;
+let myClubs = []; // All clubs this member belongs to
+let myClubIds = []; // Just the IDs for filtering
 
 async function initGolferDashboard() {
-  currentMember = await requireAuth('golfer');
-  if (!currentMember) return;
+  currentMember = await getCurrentMember();
+  if (!currentMember) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  // Load all club memberships for this member
+  var { data: memberships } = await supabase
+    .from('club_memberships')
+    .select('*, clubs(id, name)')
+    .eq('member_id', currentMember.id);
+
+  // Fallback to old single-club model if no memberships exist
+  if (!memberships || memberships.length === 0) {
+    myClubs = [{ club_id: currentMember.club_id, role: currentMember.role, handicap: currentMember.handicap, clubs: currentMember.clubs }];
+  } else {
+    myClubs = memberships;
+  }
+  myClubIds = myClubs.map(function(c) { return c.club_id; });
 
   updateNavForAuth(currentMember);
   renderSidebar();
@@ -104,7 +123,7 @@ async function loadUpcomingMatches() {
     .from('matches')
     .select(`
       id, round, score, status, deadline,
-      tournaments(id, name),
+      tournaments(id, name, whatsapp_group_link, clubs(name)),
       player1:members!matches_player1_id_fkey(id, first_name, last_name, handicap, phone, email, contact_preference),
       player2:members!matches_player2_id_fkey(id, first_name, last_name, handicap, phone, email, contact_preference)
     `)
@@ -164,12 +183,18 @@ async function loadUpcomingMatches() {
         <td>${contactButtons.desktop}</td>
       </tr>`;
 
+    var clubLabel = match.tournaments?.clubs?.name ? `<span style="font-size:0.7rem;color:var(--gray-400);">${match.tournaments.clubs.name}</span>` : '';
+    var groupLink = match.tournaments?.whatsapp_group_link
+      ? `<a href="${match.tournaments.whatsapp_group_link}" target="_blank" class="btn btn-sm btn-whatsapp" style="font-size:0.75rem;padding:0.3rem 0.6rem;">&#128172; Group Chat</a>`
+      : '';
+
     mobileHTML += `
       <div class="match-card-mobile">
         <div class="match-card-mobile-top">
           <div>
             <strong>${match.tournaments?.name || ''}</strong>
             <span class="match-card-mobile-round">${roundName}</span>
+            ${clubLabel}
           </div>
           ${statusBadge}
         </div>
@@ -184,6 +209,7 @@ async function loadUpcomingMatches() {
           <span class="match-card-mobile-deadline">&#128197; Due: ${deadline}</span>
           ${contactButtons.mobile}
         </div>
+        ${groupLink ? `<div style="padding:0.25rem 0 0;border-top:1px solid var(--gray-100);margin-top:0.25rem;">${groupLink}</div>` : ''}
       </div>`;
   }
 
@@ -300,8 +326,8 @@ async function loadOpenTournaments() {
 
   const { data: tournaments } = await supabase
     .from('tournaments')
-    .select('*, tournament_entries(count), whatsapp_group_link')
-    .eq('club_id', currentMember.club_id)
+    .select('*, tournament_entries(count), whatsapp_group_link, clubs(name)')
+    .in('club_id', myClubIds)
     .in('status', ['entries_open', 'scheduled'])
     .order('entry_deadline', { ascending: true });
 
@@ -346,7 +372,7 @@ async function loadOpenTournaments() {
           <h4 style="font-size:1rem;font-weight:700;">${t.name}</h4>
           ${statusBadge}
         </div>
-        <p style="font-size:0.85rem;color:var(--gray-600);margin-bottom:0.75rem;">${t.bracket_size}-player bracket. ${isOpen ? 'Entry closes' : 'Opens'} ${deadline}. ${t.description || ''}</p>
+        <p style="font-size:0.85rem;color:var(--gray-600);margin-bottom:0.75rem;">${t.clubs?.name ? '<strong>' + t.clubs.name + '</strong> &mdash; ' : ''}${t.bracket_size}-player bracket. ${isOpen ? 'Entry closes' : 'Opens'} ${deadline}. ${t.description || ''}</p>
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <span style="font-size:0.8rem;color:var(--gray-500);">${entryCount} / ${t.bracket_size} entered</span>
           ${actionBtn}
@@ -402,19 +428,34 @@ async function loadProfile() {
   const losses = (totalPlayed || 0) - (wins || 0);
   const winRate = totalPlayed > 0 ? Math.round((wins / totalPlayed) * 100) : 0;
 
+  // Build club memberships list
+  var clubsHTML = myClubs.map(function(c) {
+    var clubName = c.clubs?.name || 'Golf Club';
+    var roleBadge = c.role === 'organiser'
+      ? '<span class="badge badge-gold" style="font-size:0.65rem;">Organiser</span>'
+      : '<span class="badge badge-green" style="font-size:0.65rem;">Golfer</span>';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0.75rem;background:var(--gray-100);border-radius:var(--radius);font-size:0.85rem;">
+      <span>&#9971; <strong>${clubName}</strong> &mdash; Hcp ${c.handicap}</span>
+      ${roleBadge}
+    </div>`;
+  }).join('');
+
   profileEl.innerHTML = `
     <div class="profile-header">
       <div class="profile-avatar golfer">${initials}</div>
       <div class="profile-info">
         <h2>${currentMember.first_name} ${currentMember.last_name}</h2>
-        <div class="profile-role">Member &mdash; ${currentMember.clubs?.name || 'Golf Club'}</div>
+        <div class="profile-role">Member of ${myClubs.length} club${myClubs.length !== 1 ? 's' : ''}</div>
         <div class="profile-meta">
-          <span>&#9971; Handicap: ${currentMember.handicap}</span>
           <span>&#128222; ${currentMember.phone || 'N/A'}</span>
           <span>&#128231; ${currentMember.email}</span>
           <span>&#128172; Prefers: ${({'whatsapp':'WhatsApp','sms':'SMS','email':'Email'})[currentMember.contact_preference] || 'WhatsApp'}</span>
         </div>
       </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0.5rem;margin:1rem 0;">
+      <h4 style="font-size:0.85rem;font-weight:600;color:var(--gray-600);">My Clubs</h4>
+      ${clubsHTML}
     </div>
     <div class="profile-stats-row">
       <div class="profile-stat" style="background:var(--green-50);">
