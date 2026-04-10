@@ -95,9 +95,9 @@ async function handleSignUp(e) {
 
     if (memberError) throw memberError;
 
-    successEl.textContent = 'Account created! You can now sign in.';
-    btn.disabled = false;
-    btn.textContent = 'Sign Up';
+    // User is already authenticated after sign-up, redirect to dashboard
+    hideAuthModal();
+    window.location.href = 'golfer.html';
   } catch (err) {
     errorEl.textContent = err.message || 'Could not create account.';
     btn.disabled = false;
