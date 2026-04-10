@@ -156,8 +156,130 @@
       <span style="font-style:italic;">BYE = Automatic advance</span>
     </div>
 
-    <!-- Bracket -->
-    <div class="card">
+    <!-- Bracket - Mobile Collapsible -->
+    <div class="bracket-mobile">
+      <div class="bracket-accordion">
+        <button class="bracket-accordion-header" onclick="toggleRound(this)">
+          <span>Round 1</span>
+          <span class="badge badge-gray">Completed</span>
+          <span class="accordion-arrow">&#9660;</span>
+        </button>
+        <div class="bracket-accordion-body">
+          <div class="bracket-match-stack">
+            <div class="bracket-match-mobile">
+              <div class="bracket-player winner"><span class="seed">(1)</span> J. Murphy &#9989;</div>
+              <div class="bracket-player loser"><span class="seed">(16)</span> T. Doyle</div>
+            </div>
+            <div class="bracket-match-mobile">
+              <div class="bracket-player winner"><span class="seed">(8)</span> P. O'Brien &#9989;</div>
+              <div class="bracket-player loser"><span class="seed">(9)</span> L. Byrne</div>
+            </div>
+            <div class="bracket-match-mobile">
+              <div class="bracket-player winner"><span class="seed">(4)</span> S. Walsh &#9989;</div>
+              <div class="bracket-player loser"><span class="seed">(13)</span> N. Foley</div>
+            </div>
+            <div class="bracket-match-mobile">
+              <div class="bracket-player winner"><span class="seed">(5)</span> D. Kelly &#9989;</div>
+              <div class="bracket-player loser"><span class="seed">(12)</span> C. Dunne</div>
+            </div>
+            <div class="bracket-match-mobile">
+              <div class="bracket-player winner"><span class="seed">(2)</span> M. Ryan &#9989;</div>
+              <div class="bracket-player loser"><span class="seed">(15)</span> G. Power</div>
+            </div>
+            <div class="bracket-match-mobile">
+              <div class="bracket-player winner"><span class="seed">(7)</span> R. Collins &#9989;</div>
+              <div class="bracket-player loser"><span class="seed">(10)</span> F. Healy</div>
+            </div>
+            <div class="bracket-match-mobile">
+              <div class="bracket-player winner"><span class="seed">(3)</span> B. Nolan &#9989;</div>
+              <div class="bracket-player loser"><span class="seed">(14)</span> A. Keane</div>
+            </div>
+            <div class="bracket-match-mobile">
+              <div class="bracket-player winner"><span class="seed">(6)</span> E. Brennan &#9989;</div>
+              <div class="bracket-player loser"><span class="seed">(11)</span> K. Flynn</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bracket-accordion">
+        <button class="bracket-accordion-header active" onclick="toggleRound(this)">
+          <span>Quarter Finals</span>
+          <span class="badge badge-gold"><span class="status-dot pending"></span> Active</span>
+          <span class="accordion-arrow">&#9660;</span>
+        </button>
+        <div class="bracket-accordion-body open">
+          <div class="bracket-match-stack">
+            <div class="bracket-match-mobile in-progress">
+              <div class="bracket-player"><span class="seed">(1)</span> J. Murphy</div>
+              <div class="match-vs-divider">vs</div>
+              <div class="bracket-player"><span class="seed">(8)</span> P. O'Brien</div>
+            </div>
+            <div class="bracket-match-mobile in-progress">
+              <div class="bracket-player"><span class="seed">(4)</span> S. Walsh</div>
+              <div class="match-vs-divider">vs</div>
+              <div class="bracket-player"><span class="seed">(5)</span> D. Kelly</div>
+            </div>
+            <div class="bracket-match-mobile">
+              <div class="bracket-player winner"><span class="seed">(2)</span> M. Ryan &#9989;</div>
+              <div class="bracket-player loser"><span class="seed">(7)</span> R. Collins</div>
+            </div>
+            <div class="bracket-match-mobile in-progress">
+              <div class="bracket-player"><span class="seed">(3)</span> B. Nolan</div>
+              <div class="match-vs-divider">vs</div>
+              <div class="bracket-player"><span class="seed">(6)</span> E. Brennan</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bracket-accordion">
+        <button class="bracket-accordion-header" onclick="toggleRound(this)">
+          <span>Semi Finals</span>
+          <span class="badge badge-gray">Upcoming</span>
+          <span class="accordion-arrow">&#9660;</span>
+        </button>
+        <div class="bracket-accordion-body">
+          <div class="bracket-match-stack">
+            <div class="bracket-match-mobile tbd">
+              <div class="bracket-player">TBD</div>
+              <div class="match-vs-divider">vs</div>
+              <div class="bracket-player">TBD</div>
+            </div>
+            <div class="bracket-match-mobile tbd">
+              <div class="bracket-player"><span class="seed">(2)</span> M. Ryan</div>
+              <div class="match-vs-divider">vs</div>
+              <div class="bracket-player">TBD</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bracket-accordion">
+        <button class="bracket-accordion-header" onclick="toggleRound(this)">
+          <span>Final</span>
+          <span class="badge badge-gray">Upcoming</span>
+          <span class="accordion-arrow">&#9660;</span>
+        </button>
+        <div class="bracket-accordion-body">
+          <div class="bracket-match-stack">
+            <div class="bracket-match-mobile tbd">
+              <div class="bracket-player">TBD</div>
+              <div class="match-vs-divider">vs</div>
+              <div class="bracket-player">TBD</div>
+            </div>
+          </div>
+          <div class="trophy-display">
+            <div class="trophy-icon">&#127942;</div>
+            <h3>Champion</h3>
+            <p>To be decided</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bracket - Desktop -->
+    <div class="card bracket-desktop">
       <div class="bracket-container">
         <div class="bracket">
 
@@ -385,7 +507,7 @@
 
         </div>
       </div>
-    </div>
+    </div><!-- end bracket-desktop -->
 
     <!-- Match Details Section -->
     <div class="grid grid-2 mt-3">
@@ -458,6 +580,13 @@
     function selectTournament(e) {
       document.querySelectorAll('.tournament-chip').forEach(c => c.classList.remove('active'));
       e.target.classList.add('active');
+    }
+
+    function toggleRound(btn) {
+      var body = btn.nextElementSibling;
+      var isOpen = body.classList.contains('open');
+      body.classList.toggle('open');
+      btn.classList.toggle('active');
     }
   </script>
 

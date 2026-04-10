@@ -1227,6 +1227,202 @@ table tbody tr:hover {
 }
 
 /* ============================================
+   Mobile Collapsible Brackets
+   ============================================ */
+.bracket-mobile {
+  display: none;
+}
+
+.bracket-accordion {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+}
+
+.bracket-accordion-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: none;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gray-800);
+  cursor: pointer;
+  text-align: left;
+}
+
+.bracket-accordion-header.active {
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.accordion-arrow {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: var(--gray-400);
+  transition: transform 0.2s;
+}
+
+.bracket-accordion-header.active .accordion-arrow {
+  transform: rotate(180deg);
+}
+
+.bracket-accordion-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.bracket-accordion-body.open {
+  max-height: 2000px;
+}
+
+.bracket-match-stack {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bracket-match-mobile {
+  background: var(--gray-100);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.bracket-match-mobile .bracket-player {
+  padding: 0.2rem 0;
+  border: none;
+}
+
+.bracket-match-mobile .bracket-player.winner {
+  font-weight: 600;
+  color: var(--green-800);
+}
+
+.bracket-match-mobile .bracket-player.loser {
+  color: var(--gray-400);
+  text-decoration: line-through;
+}
+
+.bracket-match-mobile.in-progress {
+  background: #fef3c7;
+  border-left: 3px solid var(--gold);
+}
+
+.bracket-match-mobile.tbd {
+  background: var(--gray-50);
+  border-left: 3px dashed var(--gray-300);
+  color: var(--gray-400);
+}
+
+.match-vs-divider {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--gray-400);
+  text-align: center;
+  padding: 0.1rem 0;
+  text-transform: uppercase;
+}
+
+/* ============================================
+   Print Styles
+   ============================================ */
+.print-draw-sheet {
+  display: none;
+}
+
+.print-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+}
+
+.print-table th,
+.print-table td {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ccc;
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+.print-table th {
+  background: #f0f0f0;
+  font-weight: 700;
+}
+
+.print-round-header td {
+  background: #e8f5e9;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.print-section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 1.5rem 0 0.5rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 2px solid #333;
+}
+
+.print-draw-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.print-draw-header h1 {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.print-draw-header p {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.print-footer {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #999;
+  border-top: 1px solid #ccc;
+  padding-top: 0.5rem;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .print-draw-sheet,
+  .print-draw-sheet * {
+    visibility: visible;
+  }
+
+  .print-draw-sheet {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 1.5rem;
+    background: white;
+    color: black;
+    font-family: Arial, sans-serif;
+  }
+
+  .print-draw-header h1 {
+    color: black;
+  }
+}
+
+/* ============================================
    Profile Stats Row (always 4 across)
    ============================================ */
 .profile-stats-row {
@@ -1480,6 +1676,15 @@ table tbody tr:hover {
 
   .cta h2 {
     font-size: 1.5rem;
+  }
+
+  /* Bracket: show collapsible, hide desktop */
+  .bracket-desktop {
+    display: none;
+  }
+
+  .bracket-mobile {
+    display: block;
   }
 
   /* Bracket page */
