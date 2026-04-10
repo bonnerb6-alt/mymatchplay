@@ -721,5 +721,11 @@ function getTimeAgo(date) {
   return Math.floor(seconds / 86400) + 'd ago';
 }
 
+// Sidebar active state
+function golferSidebarNav(el) {
+  document.querySelectorAll('.sidebar-nav a').forEach(function(a) { a.classList.remove('active'); });
+  el.classList.add('active');
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', initGolferDashboard);

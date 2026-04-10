@@ -39,12 +39,12 @@
       <div class="sidebar-section">
         <div class="sidebar-section-title">Management</div>
         <ul class="sidebar-nav">
-          <li><a href="#org-section-stats" class="active"><span class="nav-icon">&#127968;</span> Dashboard</a></li>
-          <li><a href="#" onclick="switchTab({target:document.querySelector('.tab')}, 'tournaments');return false;"><span class="nav-icon">&#127942;</span> Tournaments</a></li>
-          <li><a href="#" onclick="switchTab({target:document.querySelectorAll('.tab')[1]}, 'members');return false;"><span class="nav-icon">&#128101;</span> Members</a></li>
+          <li><a href="#org-section-stats" class="active" onclick="sidebarNav(this)"><span class="nav-icon">&#127968;</span> Dashboard</a></li>
+          <li><a href="#" onclick="sidebarNav(this);switchToTab('tournaments');return false;"><span class="nav-icon">&#127942;</span> Tournaments</a></li>
+          <li><a href="#" onclick="sidebarNav(this);switchToTab('members');return false;"><span class="nav-icon">&#128101;</span> Members</a></li>
           <li><a href="bracket.html"><span class="nav-icon">&#127959;</span> Draws</a></li>
-          <li><a href="#" onclick="switchTab({target:document.querySelectorAll('.tab')[2]}, 'requests');return false;"><span class="nav-icon">&#128203;</span> Requests</a></li>
-          <li><a href="#" onclick="switchTab({target:document.querySelectorAll('.tab')[3]}, 'activity');return false;"><span class="nav-icon">&#128276;</span> Activity Log</a></li>
+          <li><a href="#" onclick="sidebarNav(this);switchToTab('requests');return false;"><span class="nav-icon">&#128203;</span> Requests</a></li>
+          <li><a href="#" onclick="sidebarNav(this);switchToTab('activity');return false;"><span class="nav-icon">&#128276;</span> Activity Log</a></li>
         </ul>
       </div>
       <div class="sidebar-section">
@@ -316,8 +316,29 @@
     function switchTab(e, tabId) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-      e.target.classList.add('active');
+      if (e && e.target) e.target.classList.add('active');
       document.getElementById(tabId).classList.add('active');
+      // Also highlight the matching tab button
+      document.querySelectorAll('.tab').forEach(function(t) {
+        if (t.textContent.toLowerCase().indexOf(tabId.substring(0, 4)) !== -1) t.classList.add('active');
+      });
+    }
+
+    function switchToTab(tabId) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      // Highlight the matching tab button
+      var tabs = document.querySelectorAll('.tab');
+      var tabMap = { 'tournaments': 0, 'members': 1, 'requests': 2, 'activity': 3 };
+      if (tabMap[tabId] !== undefined && tabs[tabMap[tabId]]) tabs[tabMap[tabId]].classList.add('active');
+      // Scroll to the tabs area
+      document.querySelector('.tabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function sidebarNav(el) {
+      document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+      el.classList.add('active');
     }
   </script>
   <script src="js/supabase-client.js"></script>
