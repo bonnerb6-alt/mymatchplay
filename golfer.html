@@ -39,18 +39,18 @@
       <div class="sidebar-section">
         <div class="sidebar-section-title">Menu</div>
         <ul class="sidebar-nav">
-          <li><a href="#" class="active"><span class="nav-icon">&#127968;</span> Dashboard</a></li>
-          <li><a href="#"><span class="nav-icon">&#127942;</span> My Tournaments</a></li>
-          <li><a href="#"><span class="nav-icon">&#128197;</span> My Matches</a></li>
+          <li><a href="#section-stats" class="active"><span class="nav-icon">&#127968;</span> Dashboard</a></li>
+          <li><a href="#section-open-tournaments"><span class="nav-icon">&#127942;</span> My Tournaments</a></li>
+          <li><a href="#section-matches"><span class="nav-icon">&#128197;</span> My Matches</a></li>
           <li><a href="bracket.html"><span class="nav-icon">&#127959;</span> Live Brackets</a></li>
-          <li><a href="#"><span class="nav-icon">&#128200;</span> My Stats</a></li>
-          <li><a href="#"><span class="nav-icon">&#128276;</span> Notifications</a></li>
+          <li><a href="#section-profile"><span class="nav-icon">&#128200;</span> My Stats</a></li>
+          <li><a href="#section-notifications"><span class="nav-icon">&#128276;</span> Notifications</a></li>
         </ul>
       </div>
       <div class="sidebar-section">
         <div class="sidebar-section-title">Account</div>
         <ul class="sidebar-nav">
-          <li><a href="#"><span class="nav-icon">&#9881;</span> Profile Settings</a></li>
+          <li><a href="#section-profile" onclick="openEditProfile();"><span class="nav-icon">&#9881;</span> Profile Settings</a></li>
           <li><a href="#" onclick="signOut();return false;"><span class="nav-icon">&#128682;</span> Sign Out</a></li>
         </ul>
       </div>
@@ -65,7 +65,7 @@
       </div>
 
       <!-- Stats -->
-      <div class="stat-cards">
+      <div id="section-stats" class="stat-cards">
         <div class="stat-card">
           <div class="stat-icon green">&#127942;</div>
           <div class="stat-value" id="stat-active">-</div>
@@ -89,7 +89,7 @@
       </div>
 
       <!-- Upcoming Matches - Desktop Table -->
-      <div class="card mb-3 matches-table-desktop">
+      <div id="section-matches" class="card mb-3 matches-table-desktop">
         <div class="card-header">
           <h3>&#128197; Upcoming Matches</h3>
           <span class="badge badge-gold"><span class="status-dot pending"></span> Action Required</span>
@@ -139,7 +139,7 @@
         </div>
 
         <!-- Notifications -->
-        <div class="card">
+        <div id="section-notifications" class="card">
           <div class="card-header">
             <h3>&#128276; Notifications</h3>
           </div>
@@ -181,7 +181,7 @@
         </div>
 
         <!-- Open Tournaments -->
-        <div class="card">
+        <div id="section-open-tournaments" class="card">
           <div class="card-header">
             <h3>&#128227; Open for Entry</h3>
           </div>
@@ -194,9 +194,10 @@
       </div>
 
       <!-- Player Profile Card -->
-      <div class="card mt-3">
+      <div id="section-profile" class="card mt-3">
         <div class="card-header">
           <h3>&#9971; My Golfer Profile</h3>
+          <button class="btn btn-sm btn-secondary" onclick="openEditProfile()">Edit Profile</button>
         </div>
         <div class="card-body" id="golfer-profile">
           <p style="text-align:center;color:var(--gray-400);">Loading...</p>
@@ -204,6 +205,44 @@
       </div>
 
     </main>
+  </div>
+
+  <!-- Edit Profile Modal -->
+  <div class="modal-overlay" id="editProfileModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>&#9881; Edit Profile</h3>
+        <button class="modal-close" onclick="document.getElementById('editProfileModal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+          <div class="form-group">
+            <label class="form-label">First Name</label>
+            <input type="text" id="editFirstName" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Last Name</label>
+            <input type="text" id="editLastName" class="form-input">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Handicap</label>
+          <input type="number" id="editHandicap" class="form-input" min="0" max="54">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="tel" id="editPhone" class="form-input" placeholder="087 123 4567">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" id="editEmail" class="form-input" disabled>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('editProfileModal').classList.remove('active')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+      </div>
+    </div>
   </div>
 
   <script src="js/supabase-client.js"></script>

@@ -10,6 +10,7 @@ async function initGolferDashboard() {
 
   updateNavForAuth(currentMember);
   renderSidebar();
+  document.getElementById('dashboard-greeting').textContent = 'Welcome back, ' + currentMember.first_name;
   await Promise.all([
     loadStats(),
     loadUpcomingMatches(),
@@ -139,9 +140,11 @@ async function loadUpcomingMatches() {
       ? '<span class="badge badge-green"><span class="status-dot live"></span> In Progress</span>'
       : '<span class="badge badge-gold"><span class="status-dot pending"></span> Awaiting</span>';
 
-    const whatsappUrl = opponent.phone
-      ? `https://wa.me/${opponent.phone.replace(/\s/g, '')}?text=${encodeURIComponent(`Hi ${opponent.first_name}, we're matched in ${match.tournaments?.name || 'the tournament'} (${roundName}). When suits you to play?`)}`
-      : '#';
+    const whatsappMsg = encodeURIComponent(`Hi ${opponent.first_name}, we're matched in ${match.tournaments?.name || 'the tournament'} (${roundName}). When suits you to play?`);
+    const hasPhone = opponent.phone && opponent.phone.trim().length > 0;
+    const whatsappUrl = hasPhone
+      ? `https://wa.me/${opponent.phone.replace(/\s/g, '')}?text=${whatsappMsg}`
+      : null;
 
     tableHTML += `
       <tr>
@@ -155,7 +158,10 @@ async function loadUpcomingMatches() {
         </td>
         <td>${deadline}</td>
         <td>${statusBadge}</td>
-        <td><a href="${whatsappUrl}" target="_blank" class="btn btn-sm btn-whatsapp">&#128172; Arrange Match</a></td>
+        <td>${hasPhone
+          ? `<a href="${whatsappUrl}" target="_blank" class="btn btn-sm btn-whatsapp">&#128172; Arrange Match</a>`
+          : `<span class="btn btn-sm btn-secondary" style="cursor:default;" title="No phone number on file">&#128222; No Phone</span>`
+        }</td>
       </tr>`;
 
     mobileHTML += `
@@ -176,7 +182,10 @@ async function loadUpcomingMatches() {
         </div>
         <div class="match-card-mobile-footer">
           <span class="match-card-mobile-deadline">&#128197; Due: ${deadline}</span>
-          <a href="${whatsappUrl}" target="_blank" class="btn btn-whatsapp">&#128172; Arrange Match</a>
+          ${hasPhone
+            ? `<a href="${whatsappUrl}" target="_blank" class="btn btn-whatsapp">&#128172; Arrange Match</a>`
+            : `<span class="btn btn-secondary" style="cursor:default;" title="No phone number on file">&#128222; No Phone</span>`
+          }
         </div>
       </div>`;
   }
@@ -496,6 +505,48 @@ async function submitScore() {
   // Refresh data
   await Promise.all([loadStats(), loadUpcomingMatches(), loadRecentResults(), loadProfile()]);
   populateScoreForm();
+}
+
+// Edit Profile
+function openEditProfile() {
+  if (!currentMember) return;
+  document.getElementById('editFirstName').value = currentMember.first_name;
+  document.getElementById('editLastName').value = currentMember.last_name;
+  document.getElementById('editHandicap').value = currentMember.handicap;
+  document.getElementById('editPhone').value = currentMember.phone || '';
+  document.getElementById('editEmail').value = currentMember.email;
+  document.getElementById('editProfileModal').classList.add('active');
+}
+
+async function saveProfile() {
+  var firstName = document.getElementById('editFirstName').value.trim();
+  var lastName = document.getElementById('editLastName').value.trim();
+  var handicap = parseInt(document.getElementById('editHandicap').value) || 0;
+  var phone = document.getElementById('editPhone').value.trim();
+
+  if (!firstName || !lastName) {
+    alert('Name is required.');
+    return;
+  }
+
+  var { error } = await supabase
+    .from('members')
+    .update({ first_name: firstName, last_name: lastName, handicap: handicap, phone: phone })
+    .eq('id', currentMember.id);
+
+  if (error) {
+    alert('Error saving: ' + error.message);
+    return;
+  }
+
+  // Refresh member data
+  currentMember = await getCurrentMember();
+  document.getElementById('editProfileModal').classList.remove('active');
+  renderSidebar();
+  updateNavForAuth(currentMember);
+  loadProfile();
+  document.getElementById('dashboard-greeting').textContent = 'Welcome back, ' + currentMember.first_name;
+  alert('Profile updated!');
 }
 
 function getTimeAgo(date) {

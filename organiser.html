@@ -39,19 +39,18 @@
       <div class="sidebar-section">
         <div class="sidebar-section-title">Management</div>
         <ul class="sidebar-nav">
-          <li><a href="#" class="active"><span class="nav-icon">&#127968;</span> Dashboard</a></li>
-          <li><a href="#"><span class="nav-icon">&#127942;</span> Tournaments</a></li>
-          <li><a href="#"><span class="nav-icon">&#128101;</span> Members</a></li>
+          <li><a href="#org-section-stats" class="active"><span class="nav-icon">&#127968;</span> Dashboard</a></li>
+          <li><a href="#" onclick="switchTab({target:document.querySelector('.tab')}, 'tournaments');return false;"><span class="nav-icon">&#127942;</span> Tournaments</a></li>
+          <li><a href="#" onclick="switchTab({target:document.querySelectorAll('.tab')[1]}, 'members');return false;"><span class="nav-icon">&#128101;</span> Members</a></li>
           <li><a href="bracket.html"><span class="nav-icon">&#127959;</span> Brackets</a></li>
-          <li><a href="#"><span class="nav-icon">&#128221;</span> Results</a></li>
-          <li><a href="#"><span class="nav-icon">&#128276;</span> Notifications</a></li>
+          <li><a href="#" onclick="switchTab({target:document.querySelectorAll('.tab')[2]}, 'activity');return false;"><span class="nav-icon">&#128276;</span> Activity Log</a></li>
         </ul>
       </div>
       <div class="sidebar-section">
-        <div class="sidebar-section-title">Settings</div>
+        <div class="sidebar-section-title">Actions</div>
         <ul class="sidebar-nav">
-          <li><a href="#"><span class="nav-icon">&#9881;</span> Club Settings</a></li>
-          <li><a href="#"><span class="nav-icon">&#128101;</span> Manage Admins</a></li>
+          <li><a href="#" onclick="document.getElementById('createModal').classList.add('active');return false;"><span class="nav-icon">&#127942;</span> New Tournament</a></li>
+          <li><a href="#" onclick="printDraw();return false;"><span class="nav-icon">&#128424;</span> Print Draw</a></li>
           <li><a href="#" onclick="signOut();return false;"><span class="nav-icon">&#128682;</span> Sign Out</a></li>
         </ul>
       </div>
@@ -72,7 +71,7 @@
       </div>
 
       <!-- Stats -->
-      <div class="stat-cards">
+      <div id="org-section-stats" class="stat-cards">
         <div class="stat-card">
           <div class="stat-icon green">&#127942;</div>
           <div class="stat-value" id="org-stat-total">-</div>
@@ -203,6 +202,52 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="document.getElementById('createModal').classList.remove('active')">Cancel</button>
         <button class="btn btn-primary" onclick="createTournament()">Create Tournament</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Member Modal -->
+  <div class="modal-overlay" id="editMemberModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>&#128101; Edit Member</h3>
+        <button class="modal-close" onclick="document.getElementById('editMemberModal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editMemberId">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+          <div class="form-group">
+            <label class="form-label">First Name</label>
+            <input type="text" id="editMemberFirstName" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Last Name</label>
+            <input type="text" id="editMemberLastName" class="form-input">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Handicap</label>
+          <input type="number" id="editMemberHandicap" class="form-input" min="0" max="54">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="tel" id="editMemberPhone" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" id="editMemberEmail" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Role</label>
+          <select class="form-select" id="editMemberRole">
+            <option value="golfer">Golfer</option>
+            <option value="organiser">Organiser</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('editMemberModal').classList.remove('active')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveMember()">Save Changes</button>
       </div>
     </div>
   </div>
