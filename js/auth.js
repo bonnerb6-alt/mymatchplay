@@ -73,7 +73,10 @@ async function handleSignUp(e) {
   btn.textContent = 'Creating account...';
 
   try {
-    const { user } = await signUp(email, password, { first_name: firstName, last_name: lastName });
+    const data = await signUp(email, password, { first_name: firstName, last_name: lastName });
+    const user = data.user;
+
+    if (!user) throw new Error('Sign up failed - no user returned.');
 
     // Create member record linked to the auth user
     // Default to Greenview Golf Club for demo
@@ -92,7 +95,7 @@ async function handleSignUp(e) {
 
     if (memberError) throw memberError;
 
-    successEl.textContent = 'Account created! Check your email to confirm, then sign in.';
+    successEl.textContent = 'Account created! You can now sign in.';
     btn.disabled = false;
     btn.textContent = 'Sign Up';
   } catch (err) {
