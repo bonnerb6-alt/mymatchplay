@@ -1227,6 +1227,92 @@ table tbody tr:hover {
 }
 
 /* ============================================
+   Mobile Match Cards
+   ============================================ */
+.matches-mobile {
+  display: none;
+}
+
+.match-card-mobile {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.match-card-mobile:last-child {
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.match-card-mobile-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.match-card-mobile-top strong {
+  font-size: 0.95rem;
+  display: block;
+}
+
+.match-card-mobile-round {
+  font-size: 0.8rem;
+  color: var(--gray-500);
+}
+
+.match-card-mobile-opponent {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--green-50);
+  border-radius: var(--radius);
+}
+
+.match-card-mobile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--green-100);
+  color: var(--green-700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.match-card-mobile-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.match-card-mobile-hcp {
+  font-size: 0.8rem;
+  color: var(--gray-500);
+}
+
+.match-card-mobile-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.match-card-mobile-deadline {
+  font-size: 0.8rem;
+  color: var(--gray-500);
+}
+
+.match-card-mobile-footer .btn {
+  padding: 0.625rem 1.25rem;
+  font-size: 0.9rem;
+}
+
+/* ============================================
    Responsive
    ============================================ */
 @media (max-width: 1024px) {
@@ -1283,7 +1369,16 @@ table tbody tr:hover {
     font-size: 1.35rem;
   }
 
-  /* Tables: horizontal scroll */
+  /* Match cards: show mobile, hide desktop table */
+  .matches-table-desktop {
+    display: none;
+  }
+
+  .matches-mobile {
+    display: block;
+  }
+
+  /* Tables: horizontal scroll for remaining tables */
   .table-wrap,
   .card-body:has(table) {
     overflow-x: auto;
