@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -24,7 +25,7 @@
         <li><a href="organiser.html">Organiser</a></li>
       </ul>
       <div class="navbar-actions">
-        <div class="nav-avatar">JM</div>
+        <div class="nav-avatar">--</div>
         <button class="menu-toggle" onclick="document.querySelector('.navbar-links').classList.toggle('show')">&#9776;</button>
       </div>
     </div>
@@ -34,14 +35,8 @@
   <div class="dashboard">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <div class="sidebar-section">
-        <div style="display:flex; align-items:center; gap:0.75rem; padding: 0 0.75rem; margin-bottom:1.25rem;">
-          <div class="profile-avatar golfer" style="width:48px;height:48px;font-size:1.1rem;">JM</div>
-          <div>
-            <div style="font-weight:600; font-size:0.95rem;">James Murphy</div>
-            <div style="font-size:0.75rem; color:var(--gray-500);">Handicap: 12</div>
-          </div>
-        </div>
+      <div class="sidebar-section" id="sidebar-profile">
+        <!-- Populated by JS -->
       </div>
       <div class="sidebar-section">
         <div class="sidebar-section-title">Menu</div>
@@ -58,7 +53,7 @@
         <div class="sidebar-section-title">Account</div>
         <ul class="sidebar-nav">
           <li><a href="#"><span class="nav-icon">&#9881;</span> Profile Settings</a></li>
-          <li><a href="index.html"><span class="nav-icon">&#128682;</span> Sign Out</a></li>
+          <li><a href="#" onclick="signOut();return false;"><span class="nav-icon">&#128682;</span> Sign Out</a></li>
         </ul>
       </div>
     </aside>
@@ -67,7 +62,7 @@
     <main class="dashboard-main">
       <!-- Header -->
       <div class="dashboard-header">
-        <h1>Welcome back, James</h1>
+        <h1 id="dashboard-greeting">Welcome back</h1>
         <p>Here's what's happening with your matchplay competitions.</p>
       </div>
 
@@ -75,22 +70,22 @@
       <div class="stat-cards">
         <div class="stat-card">
           <div class="stat-icon green">&#127942;</div>
-          <div class="stat-value">3</div>
+          <div class="stat-value" id="stat-active">-</div>
           <div class="stat-label">Active Tournaments</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon gold">&#9917;</div>
-          <div class="stat-value">2</div>
+          <div class="stat-value" id="stat-matches">-</div>
           <div class="stat-label">Matches to Play</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon blue">&#128170;</div>
-          <div class="stat-value">7-3</div>
+          <div class="stat-value" id="stat-record">-</div>
           <div class="stat-label">Win-Loss Record</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon red">&#128293;</div>
-          <div class="stat-value">4</div>
+          <div class="stat-value" id="stat-streak">-</div>
           <div class="stat-label">Win Streak</div>
         </div>
       </div>
@@ -113,37 +108,8 @@
                 <th>Action</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td><strong>Spring Matchplay 2026</strong></td>
-                <td>Quarter Final</td>
-                <td>
-                  <div style="display:flex;align-items:center;gap:0.5rem;">
-                    <div style="width:28px;height:28px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600;">PO</div>
-                    Patrick O'Brien (Hcp 14)
-                  </div>
-                </td>
-                <td>18 Apr 2026</td>
-                <td><span class="badge badge-green"><span class="status-dot live"></span> In Progress</span></td>
-                <td>
-                  <a href="#" class="btn btn-sm btn-whatsapp" onclick="event.preventDefault();">&#128172; Arrange Match</a>
-                </td>
-              </tr>
-              <tr>
-                <td><strong>Captain's Cup 2026</strong></td>
-                <td>Round of 16</td>
-                <td>
-                  <div style="display:flex;align-items:center;gap:0.5rem;">
-                    <div style="width:28px;height:28px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600;">DK</div>
-                    David Kelly (Hcp 8)
-                  </div>
-                </td>
-                <td>25 Apr 2026</td>
-                <td><span class="badge badge-gold"><span class="status-dot pending"></span> Awaiting</span></td>
-                <td>
-                  <a href="#" class="btn btn-sm btn-whatsapp" onclick="event.preventDefault();">&#128172; Arrange Match</a>
-                </td>
-              </tr>
+            <tbody id="upcoming-matches-body">
+              <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--gray-400);">Loading...</td></tr>
             </tbody>
           </table>
         </div>
@@ -155,47 +121,8 @@
           <h3>&#128197; Upcoming Matches</h3>
           <span class="badge badge-gold"><span class="status-dot pending"></span> Action Required</span>
         </div>
-
-        <div class="match-card-mobile">
-          <div class="match-card-mobile-top">
-            <div>
-              <strong>Spring Matchplay 2026</strong>
-              <span class="match-card-mobile-round">Quarter Final</span>
-            </div>
-            <span class="badge badge-green"><span class="status-dot live"></span> In Progress</span>
-          </div>
-          <div class="match-card-mobile-opponent">
-            <div class="match-card-mobile-avatar">PO</div>
-            <div>
-              <div class="match-card-mobile-name">Patrick O'Brien</div>
-              <div class="match-card-mobile-hcp">Handicap 14</div>
-            </div>
-          </div>
-          <div class="match-card-mobile-footer">
-            <span class="match-card-mobile-deadline">&#128197; Due: 18 Apr 2026</span>
-            <a href="#" class="btn btn-whatsapp" onclick="event.preventDefault();">&#128172; Arrange Match</a>
-          </div>
-        </div>
-
-        <div class="match-card-mobile">
-          <div class="match-card-mobile-top">
-            <div>
-              <strong>Captain's Cup 2026</strong>
-              <span class="match-card-mobile-round">Round of 16</span>
-            </div>
-            <span class="badge badge-gold"><span class="status-dot pending"></span> Awaiting</span>
-          </div>
-          <div class="match-card-mobile-opponent">
-            <div class="match-card-mobile-avatar">DK</div>
-            <div>
-              <div class="match-card-mobile-name">David Kelly</div>
-              <div class="match-card-mobile-hcp">Handicap 8</div>
-            </div>
-          </div>
-          <div class="match-card-mobile-footer">
-            <span class="match-card-mobile-deadline">&#128197; Due: 25 Apr 2026</span>
-            <a href="#" class="btn btn-whatsapp" onclick="event.preventDefault();">&#128172; Arrange Match</a>
-          </div>
+        <div id="upcoming-matches-mobile" style="background:var(--white);border:1px solid var(--gray-200);border-top:none;border-radius:0 0 var(--radius-lg) var(--radius-lg);padding:0.5rem;">
+          <p style="padding:1rem;text-align:center;color:var(--gray-400);">Loading...</p>
         </div>
       </div>
 
@@ -207,47 +134,8 @@
             <h3>&#127941; Recent Results</h3>
           </div>
           <div class="card-body">
-            <div style="display:flex;flex-direction:column;gap:0.75rem;">
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;background:var(--green-50);border-radius:var(--radius);border-left:3px solid var(--green-500);">
-                <div>
-                  <div style="font-weight:600;font-size:0.9rem;">vs T. Doyle</div>
-                  <div style="font-size:0.75rem;color:var(--gray-500);">Spring Matchplay &bull; Round 1</div>
-                </div>
-                <div style="text-align:right;">
-                  <span class="badge badge-green">Won</span>
-                  <div style="font-size:0.85rem;font-weight:600;margin-top:0.25rem;">3 &amp; 2</div>
-                </div>
-              </div>
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;background:var(--green-50);border-radius:var(--radius);border-left:3px solid var(--green-500);">
-                <div>
-                  <div style="font-weight:600;font-size:0.9rem;">vs R. Collins</div>
-                  <div style="font-size:0.75rem;color:var(--gray-500);">Spring Matchplay &bull; Round 2</div>
-                </div>
-                <div style="text-align:right;">
-                  <span class="badge badge-green">Won</span>
-                  <div style="font-size:0.85rem;font-weight:600;margin-top:0.25rem;">2 &amp; 1</div>
-                </div>
-              </div>
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;border-radius:var(--radius);border-left:3px solid var(--red);background:#fef2f2;">
-                <div>
-                  <div style="font-weight:600;font-size:0.9rem;">vs S. Walsh</div>
-                  <div style="font-size:0.75rem;color:var(--gray-500);">Winter Cup &bull; Semi Final</div>
-                </div>
-                <div style="text-align:right;">
-                  <span class="badge badge-red">Lost</span>
-                  <div style="font-size:0.85rem;font-weight:600;margin-top:0.25rem;">1 Down</div>
-                </div>
-              </div>
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;background:var(--green-50);border-radius:var(--radius);border-left:3px solid var(--green-500);">
-                <div>
-                  <div style="font-weight:600;font-size:0.9rem;">vs B. Nolan</div>
-                  <div style="font-size:0.75rem;color:var(--gray-500);">Winter Cup &bull; Quarter Final</div>
-                </div>
-                <div style="text-align:right;">
-                  <span class="badge badge-green">Won</span>
-                  <div style="font-size:0.85rem;font-weight:600;margin-top:0.25rem;">4 &amp; 3</div>
-                </div>
-              </div>
+            <div id="recent-results" style="display:flex;flex-direction:column;gap:0.75rem;">
+              <p style="text-align:center;color:var(--gray-400);">Loading...</p>
             </div>
           </div>
         </div>
@@ -256,48 +144,16 @@
         <div class="card">
           <div class="card-header">
             <h3>&#128276; Notifications</h3>
-            <span class="badge badge-green">3 New</span>
           </div>
           <div class="card-body">
-            <div class="notification-list">
-              <div class="notification-item unread">
-                <div class="notification-icon" style="background:var(--green-100);color:var(--green-700);">&#127942;</div>
-                <div class="notification-content">
-                  <h4>New Tournament Open</h4>
-                  <p>Summer Matchplay 2026 entries are now open. 24 spots available.</p>
-                </div>
-                <span class="notification-time">2h ago</span>
-              </div>
-              <div class="notification-item unread">
-                <div class="notification-icon" style="background:#fef3c7;color:#92400e;">&#128197;</div>
-                <div class="notification-content">
-                  <h4>Match Deadline Approaching</h4>
-                  <p>Your QF match vs P. O'Brien is due by 18 Apr. Arrange it now!</p>
-                </div>
-                <span class="notification-time">5h ago</span>
-              </div>
-              <div class="notification-item unread">
-                <div class="notification-icon" style="background:var(--green-100);color:var(--green-700);">&#9989;</div>
-                <div class="notification-content">
-                  <h4>Draw Published</h4>
-                  <p>Captain's Cup 2026 bracket is live. You play D. Kelly in R16.</p>
-                </div>
-                <span class="notification-time">1d ago</span>
-              </div>
-              <div class="notification-item">
-                <div class="notification-icon" style="background:var(--gray-100);color:var(--gray-600);">&#128172;</div>
-                <div class="notification-content">
-                  <h4>Opponent Advanced</h4>
-                  <p>P. O'Brien won his R2 match. Your QF match is now ready.</p>
-                </div>
-                <span class="notification-time">3d ago</span>
-              </div>
+            <div id="notifications-list" class="notification-list">
+              <p style="text-align:center;color:var(--gray-400);">Loading...</p>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Report Score Modal Trigger & Open Tournaments -->
+      <!-- Report Score & Open Tournaments -->
       <div class="grid grid-2 mt-3">
         <!-- Report Score -->
         <div class="card">
@@ -307,23 +163,22 @@
           <div class="card-body">
             <div class="form-group">
               <label class="form-label">Select Match</label>
-              <select class="form-select">
-                <option>Spring Matchplay &mdash; QF vs P. O'Brien</option>
-                <option>Captain's Cup &mdash; R16 vs D. Kelly</option>
+              <select class="form-select" id="score-match-select">
+                <option disabled>Loading...</option>
               </select>
             </div>
             <div class="form-group">
               <label class="form-label">Result</label>
-              <select class="form-select">
-                <option>I Won</option>
-                <option>I Lost</option>
+              <select class="form-select" id="score-result">
+                <option value="won">I Won</option>
+                <option value="lost">I Lost</option>
               </select>
             </div>
             <div class="form-group">
               <label class="form-label">Score (e.g. 3&amp;2, 1 Up, 19th Hole)</label>
-              <input type="text" class="form-input" placeholder="e.g. 3&2">
+              <input type="text" class="form-input" id="score-value" placeholder="e.g. 3&2">
             </div>
-            <button class="btn btn-primary" onclick="alert('Score submitted! The bracket will update automatically.')">Submit Score</button>
+            <button class="btn btn-primary" onclick="submitScore()">Submit Score</button>
           </div>
         </div>
 
@@ -333,32 +188,8 @@
             <h3>&#128227; Open for Entry</h3>
           </div>
           <div class="card-body">
-            <div style="display:flex;flex-direction:column;gap:1rem;">
-              <div style="border:1.5px solid var(--green-300);border-radius:var(--radius-lg);padding:1.25rem;background:var(--green-50);">
-                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:0.5rem;">
-                  <h4 style="font-size:1rem;font-weight:700;">Summer Matchplay 2026</h4>
-                  <span class="badge badge-green"><span class="status-dot live"></span> Open</span>
-                </div>
-                <p style="font-size:0.85rem;color:var(--gray-600);margin-bottom:0.75rem;">32-player bracket. Entry closes 30 Apr 2026. Organised by Greenview GC.</p>
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                  <span style="font-size:0.8rem;color:var(--gray-500);">18 / 32 entered</span>
-                  <button class="btn btn-sm btn-primary" onclick="alert('Entered! You will be notified when the draw is made.')">Enter Now</button>
-                </div>
-                <div style="margin-top:0.5rem;background:var(--gray-200);border-radius:var(--radius-full);height:6px;overflow:hidden;">
-                  <div style="width:56%;height:100%;background:var(--green-500);border-radius:var(--radius-full);"></div>
-                </div>
-              </div>
-              <div style="border:1.5px solid var(--gray-200);border-radius:var(--radius-lg);padding:1.25rem;">
-                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:0.5rem;">
-                  <h4 style="font-size:1rem;font-weight:700;">Presidents Prize Matchplay</h4>
-                  <span class="badge badge-gold"><span class="status-dot pending"></span> Opening Soon</span>
-                </div>
-                <p style="font-size:0.85rem;color:var(--gray-600);margin-bottom:0.75rem;">16-player bracket. Opens 1 May 2026. Organised by Greenview GC.</p>
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                  <span style="font-size:0.8rem;color:var(--gray-500);">0 / 16 entered</span>
-                  <button class="btn btn-sm btn-secondary" disabled>Not Open Yet</button>
-                </div>
-              </div>
+            <div id="open-tournaments" style="display:flex;flex-direction:column;gap:1rem;">
+              <p style="text-align:center;color:var(--gray-400);">Loading...</p>
             </div>
           </div>
         </div>
@@ -368,44 +199,17 @@
       <div class="card mt-3">
         <div class="card-header">
           <h3>&#9971; My Golfer Profile</h3>
-          <button class="btn btn-sm btn-secondary">Edit Profile</button>
         </div>
-        <div class="card-body">
-          <div class="profile-header">
-            <div class="profile-avatar golfer">JM</div>
-            <div class="profile-info">
-              <h2>James Murphy</h2>
-              <div class="profile-role">Member &mdash; Greenview Golf Club</div>
-              <div class="profile-meta">
-                <span>&#9971; Handicap: 12</span>
-                <span>&#128222; 087 123 4567</span>
-                <span>&#128231; james.murphy@email.com</span>
-              </div>
-            </div>
-          </div>
-          <div class="profile-stats-row">
-            <div class="profile-stat" style="background:var(--green-50);">
-              <div class="profile-stat-value" style="color:var(--green-700);">10</div>
-              <div class="profile-stat-label">Played</div>
-            </div>
-            <div class="profile-stat" style="background:var(--green-50);">
-              <div class="profile-stat-value" style="color:var(--green-700);">7</div>
-              <div class="profile-stat-label">Wins</div>
-            </div>
-            <div class="profile-stat" style="background:#fef2f2;">
-              <div class="profile-stat-value" style="color:var(--red);">3</div>
-              <div class="profile-stat-label">Losses</div>
-            </div>
-            <div class="profile-stat" style="background:#fef3c7;">
-              <div class="profile-stat-value" style="color:#92400e;">70%</div>
-              <div class="profile-stat-label">Win Rate</div>
-            </div>
-          </div>
+        <div class="card-body" id="golfer-profile">
+          <p style="text-align:center;color:var(--gray-400);">Loading...</p>
         </div>
       </div>
 
     </main>
   </div>
 
+  <script src="js/supabase-client.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/golfer.js"></script>
 </body>
 </html>

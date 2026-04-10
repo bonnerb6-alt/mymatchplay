@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -24,7 +25,7 @@
         <li><a href="organiser.html" class="active">Organiser</a></li>
       </ul>
       <div class="navbar-actions">
-        <div class="nav-avatar" style="background:var(--gold);color:var(--green-900);border-color:var(--gold-light);">MC</div>
+        <div class="nav-avatar" style="background:var(--gold);color:var(--green-900);border-color:var(--gold-light);">--</div>
         <button class="menu-toggle" onclick="document.querySelector('.navbar-links').classList.toggle('show')">&#9776;</button>
       </div>
     </div>
@@ -34,14 +35,8 @@
   <div class="dashboard">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <div class="sidebar-section">
-        <div style="display:flex;align-items:center;gap:0.75rem;padding:0 0.75rem;margin-bottom:1.25rem;">
-          <div class="profile-avatar organiser" style="width:48px;height:48px;font-size:1.1rem;">MC</div>
-          <div>
-            <div style="font-weight:600;font-size:0.95rem;">Mary Connolly</div>
-            <div style="font-size:0.75rem;color:var(--gold);">Match Secretary</div>
-          </div>
-        </div>
+      <div class="sidebar-section" id="org-sidebar-profile">
+        <!-- Populated by JS -->
       </div>
       <div class="sidebar-section">
         <div class="sidebar-section-title">Management</div>
@@ -59,7 +54,7 @@
         <ul class="sidebar-nav">
           <li><a href="#"><span class="nav-icon">&#9881;</span> Club Settings</a></li>
           <li><a href="#"><span class="nav-icon">&#128101;</span> Manage Admins</a></li>
-          <li><a href="index.html"><span class="nav-icon">&#128682;</span> Sign Out</a></li>
+          <li><a href="#" onclick="signOut();return false;"><span class="nav-icon">&#128682;</span> Sign Out</a></li>
         </ul>
       </div>
     </aside>
@@ -67,10 +62,10 @@
     <!-- Main Content -->
     <main class="dashboard-main">
       <!-- Header -->
-      <div class="dashboard-header" style="display:flex;justify-content:space-between;align-items:start;">
+      <div class="dashboard-header" style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:1rem;">
         <div>
           <h1>Organiser Dashboard</h1>
-          <p>Greenview Golf Club &mdash; Match Secretary Panel</p>
+          <p id="org-club-name">Loading...</p>
         </div>
         <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
           <button class="btn btn-primary" onclick="document.getElementById('createModal').classList.add('active')">+ Create Tournament</button>
@@ -82,27 +77,27 @@
       <div class="stat-cards">
         <div class="stat-card">
           <div class="stat-icon green">&#127942;</div>
-          <div class="stat-value">5</div>
+          <div class="stat-value" id="org-stat-total">-</div>
           <div class="stat-label">Total Tournaments</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon gold">&#9889;</div>
-          <div class="stat-value">3</div>
+          <div class="stat-value" id="org-stat-active">-</div>
           <div class="stat-label">Active Right Now</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon blue">&#128101;</div>
-          <div class="stat-value">48</div>
+          <div class="stat-value" id="org-stat-members">-</div>
           <div class="stat-label">Registered Members</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon red">&#128221;</div>
-          <div class="stat-value">12</div>
+          <div class="stat-value" id="org-stat-pending">-</div>
           <div class="stat-label">Pending Results</div>
         </div>
       </div>
 
-      <!-- Tabs: Tournaments / Members -->
+      <!-- Tabs -->
       <div class="card mb-3">
         <div class="card-body" style="padding-bottom:0;">
           <div class="tabs">
@@ -126,66 +121,8 @@
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td><strong>Spring Matchplay 2026</strong></td>
-                  <td><span class="badge badge-green"><span class="status-dot live"></span> In Progress</span></td>
-                  <td>16 / 16</td>
-                  <td>Quarter Finals</td>
-                  <td>18 Apr 2026</td>
-                  <td>
-                    <div style="display:flex;gap:0.5rem;">
-                      <a href="bracket.html" class="btn btn-sm btn-secondary">View Bracket</a>
-                      <button class="btn btn-sm btn-primary">Manage</button>
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td><strong>Captain's Cup 2026</strong></td>
-                  <td><span class="badge badge-green"><span class="status-dot live"></span> In Progress</span></td>
-                  <td>32 / 32</td>
-                  <td>Round of 16</td>
-                  <td>25 Apr 2026</td>
-                  <td>
-                    <div style="display:flex;gap:0.5rem;">
-                      <a href="bracket.html" class="btn btn-sm btn-secondary">View Bracket</a>
-                      <button class="btn btn-sm btn-primary">Manage</button>
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td><strong>Summer Matchplay 2026</strong></td>
-                  <td><span class="badge badge-gold"><span class="status-dot pending"></span> Entries Open</span></td>
-                  <td>18 / 32</td>
-                  <td>&mdash;</td>
-                  <td>30 Apr 2026</td>
-                  <td>
-                    <div style="display:flex;gap:0.5rem;">
-                      <button class="btn btn-sm btn-gold" onclick="alert('Draw generated! 18 players with 14 byes calculated. All players notified.')">Generate Draw</button>
-                      <button class="btn btn-sm btn-secondary">Close Entry</button>
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td><strong>Presidents Prize Matchplay</strong></td>
-                  <td><span class="badge badge-blue"><span class="status-dot" style="background:var(--blue);"></span> Scheduled</span></td>
-                  <td>0 / 16</td>
-                  <td>&mdash;</td>
-                  <td>Opens 1 May</td>
-                  <td>
-                    <button class="btn btn-sm btn-secondary">Edit</button>
-                  </td>
-                </tr>
-                <tr>
-                  <td><strong>Winter Cup 2025</strong></td>
-                  <td><span class="badge badge-gray"><span class="status-dot closed"></span> Completed</span></td>
-                  <td>16 / 16</td>
-                  <td>Final</td>
-                  <td>Ended</td>
-                  <td>
-                    <a href="bracket.html" class="btn btn-sm btn-secondary">View Results</a>
-                  </td>
-                </tr>
+              <tbody id="tournaments-table-body">
+                <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--gray-400);">Loading...</td></tr>
               </tbody>
             </table>
           </div>
@@ -193,10 +130,6 @@
 
         <!-- Members Tab -->
         <div id="members" class="tab-panel">
-          <div style="padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--gray-200);">
-            <input type="text" class="form-input" placeholder="Search members..." style="max-width:300px;">
-            <button class="btn btn-sm btn-primary">+ Add Member</button>
-          </div>
           <div class="table-wrap">
             <table>
               <thead>
@@ -205,89 +138,12 @@
                   <th>Handicap</th>
                   <th>Phone</th>
                   <th>Email</th>
-                  <th>Matches</th>
+                  <th>Role</th>
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td>
-                    <div style="display:flex;align-items:center;gap:0.5rem;">
-                      <div style="width:28px;height:28px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600;">JM</div>
-                      <strong>James Murphy</strong>
-                    </div>
-                  </td>
-                  <td>12</td>
-                  <td>087 123 4567</td>
-                  <td>james.murphy@email.com</td>
-                  <td>10 (7W-3L)</td>
-                  <td><button class="btn btn-sm btn-secondary">Edit</button></td>
-                </tr>
-                <tr>
-                  <td>
-                    <div style="display:flex;align-items:center;gap:0.5rem;">
-                      <div style="width:28px;height:28px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600;">PO</div>
-                      <strong>Patrick O'Brien</strong>
-                    </div>
-                  </td>
-                  <td>14</td>
-                  <td>086 234 5678</td>
-                  <td>p.obrien@email.com</td>
-                  <td>8 (5W-3L)</td>
-                  <td><button class="btn btn-sm btn-secondary">Edit</button></td>
-                </tr>
-                <tr>
-                  <td>
-                    <div style="display:flex;align-items:center;gap:0.5rem;">
-                      <div style="width:28px;height:28px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600;">SW</div>
-                      <strong>Sean Walsh</strong>
-                    </div>
-                  </td>
-                  <td>6</td>
-                  <td>085 345 6789</td>
-                  <td>swalsh@email.com</td>
-                  <td>12 (9W-3L)</td>
-                  <td><button class="btn btn-sm btn-secondary">Edit</button></td>
-                </tr>
-                <tr>
-                  <td>
-                    <div style="display:flex;align-items:center;gap:0.5rem;">
-                      <div style="width:28px;height:28px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600;">DK</div>
-                      <strong>David Kelly</strong>
-                    </div>
-                  </td>
-                  <td>8</td>
-                  <td>083 456 7890</td>
-                  <td>d.kelly@email.com</td>
-                  <td>6 (4W-2L)</td>
-                  <td><button class="btn btn-sm btn-secondary">Edit</button></td>
-                </tr>
-                <tr>
-                  <td>
-                    <div style="display:flex;align-items:center;gap:0.5rem;">
-                      <div style="width:28px;height:28px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600;">TD</div>
-                      <strong>Tom Doyle</strong>
-                    </div>
-                  </td>
-                  <td>18</td>
-                  <td>089 567 8901</td>
-                  <td>tdoyle@email.com</td>
-                  <td>4 (1W-3L)</td>
-                  <td><button class="btn btn-sm btn-secondary">Edit</button></td>
-                </tr>
-                <tr>
-                  <td>
-                    <div style="display:flex;align-items:center;gap:0.5rem;">
-                      <div style="width:28px;height:28px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600;">MR</div>
-                      <strong>Mick Ryan</strong>
-                    </div>
-                  </td>
-                  <td>10</td>
-                  <td>087 678 9012</td>
-                  <td>m.ryan@email.com</td>
-                  <td>9 (6W-3L)</td>
-                  <td><button class="btn btn-sm btn-secondary">Edit</button></td>
-                </tr>
+              <tbody id="members-table-body">
+                <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--gray-400);">Loading...</td></tr>
               </tbody>
             </table>
           </div>
@@ -296,83 +152,8 @@
         <!-- Activity Log Tab -->
         <div id="activity" class="tab-panel">
           <div class="card-body">
-            <div class="notification-list">
-              <div class="notification-item">
-                <div class="notification-icon" style="background:var(--green-100);color:var(--green-700);">&#9989;</div>
-                <div class="notification-content">
-                  <h4>Score Reported</h4>
-                  <p>J. Murphy beat R. Collins 2&amp;1 in Spring Matchplay R2. Bracket updated.</p>
-                </div>
-                <span class="notification-time">1h ago</span>
-              </div>
-              <div class="notification-item">
-                <div class="notification-icon" style="background:#eff6ff;color:var(--blue);">&#128101;</div>
-                <div class="notification-content">
-                  <h4>New Entry</h4>
-                  <p>B. McCarthy entered Summer Matchplay 2026 (18/32).</p>
-                </div>
-                <span class="notification-time">3h ago</span>
-              </div>
-              <div class="notification-item">
-                <div class="notification-icon" style="background:#eff6ff;color:var(--blue);">&#128101;</div>
-                <div class="notification-content">
-                  <h4>New Entry</h4>
-                  <p>K. Brennan entered Summer Matchplay 2026 (17/32).</p>
-                </div>
-                <span class="notification-time">5h ago</span>
-              </div>
-              <div class="notification-item">
-                <div class="notification-icon" style="background:#fef3c7;color:#92400e;">&#128197;</div>
-                <div class="notification-content">
-                  <h4>Deadline Reminder Sent</h4>
-                  <p>Automatic reminder sent to 4 players with outstanding QF matches.</p>
-                </div>
-                <span class="notification-time">1d ago</span>
-              </div>
-              <div class="notification-item">
-                <div class="notification-icon" style="background:var(--green-100);color:var(--green-700);">&#127922;</div>
-                <div class="notification-content">
-                  <h4>Draw Generated</h4>
-                  <p>Captain's Cup 2026 bracket generated. 32 players, 0 byes. All notified.</p>
-                </div>
-                <span class="notification-time">3d ago</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Organiser Profile -->
-      <div class="card mt-3">
-        <div class="card-header">
-          <h3>&#128100; Organiser Profile</h3>
-          <button class="btn btn-sm btn-secondary">Edit Profile</button>
-        </div>
-        <div class="card-body">
-          <div class="profile-header">
-            <div class="profile-avatar organiser">MC</div>
-            <div class="profile-info">
-              <h2>Mary Connolly</h2>
-              <div class="profile-role">Match Secretary &mdash; Greenview Golf Club</div>
-              <div class="profile-meta">
-                <span>&#127942; 5 Tournaments Organised</span>
-                <span>&#128101; 48 Members Managed</span>
-                <span>&#128197; Since Jan 2025</span>
-              </div>
-            </div>
-          </div>
-          <div class="grid grid-3 mt-2">
-            <div style="padding:1.25rem;border:1px solid var(--gray-200);border-radius:var(--radius-lg);text-align:center;">
-              <div style="font-size:2rem;font-weight:700;color:var(--green-700);">5</div>
-              <div style="font-size:0.85rem;color:var(--gray-500);">Tournaments Created</div>
-            </div>
-            <div style="padding:1.25rem;border:1px solid var(--gray-200);border-radius:var(--radius-lg);text-align:center;">
-              <div style="font-size:2rem;font-weight:700;color:var(--gold);">87</div>
-              <div style="font-size:0.85rem;color:var(--gray-500);">Total Matches Managed</div>
-            </div>
-            <div style="padding:1.25rem;border:1px solid var(--gray-200);border-radius:var(--radius-lg);text-align:center;">
-              <div style="font-size:2rem;font-weight:700;color:var(--blue);">96%</div>
-              <div style="font-size:0.85rem;color:var(--gray-500);">On-Time Completion</div>
+            <div id="activity-log" class="notification-list">
+              <p style="text-align:center;color:var(--gray-400);">Loading...</p>
             </div>
           </div>
         </div>
@@ -390,32 +171,32 @@
       <div class="modal-body">
         <div class="form-group">
           <label class="form-label">Tournament Name</label>
-          <input type="text" class="form-input" placeholder="e.g. Autumn Matchplay 2026">
+          <input type="text" id="newTournamentName" class="form-input" placeholder="e.g. Autumn Matchplay 2026">
         </div>
         <div class="form-group">
           <label class="form-label">Bracket Size</label>
-          <select class="form-select">
-            <option>8 Players</option>
-            <option>16 Players</option>
-            <option selected>32 Players</option>
-            <option>64 Players</option>
+          <select class="form-select" id="newBracketSize">
+            <option value="8">8 Players</option>
+            <option value="16">16 Players</option>
+            <option value="32" selected>32 Players</option>
+            <option value="64">64 Players</option>
           </select>
         </div>
         <div class="form-group">
           <label class="form-label">Entry Deadline</label>
-          <input type="date" class="form-input">
+          <input type="date" id="newEntryDeadline" class="form-input">
         </div>
         <div class="form-group">
           <label class="form-label">Round Deadline (days per round)</label>
-          <select class="form-select">
-            <option>7 days</option>
-            <option selected>14 days</option>
-            <option>21 days</option>
+          <select class="form-select" id="newRoundDays">
+            <option value="7">7 days</option>
+            <option value="14" selected>14 days</option>
+            <option value="21">21 days</option>
           </select>
         </div>
         <div class="form-group">
           <label class="form-label">Description (optional)</label>
-          <textarea class="form-textarea" placeholder="Any additional details for members..."></textarea>
+          <textarea class="form-textarea" id="newDescription" placeholder="Any additional details for members..."></textarea>
         </div>
         <div style="background:var(--green-50);border:1px solid var(--green-200);border-radius:var(--radius);padding:0.75rem;font-size:0.85rem;color:var(--green-800);">
           &#128161; <strong>Smart Byes:</strong> If entries don't reach the bracket size, the system will automatically calculate and assign byes fairly.
@@ -423,86 +204,13 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="document.getElementById('createModal').classList.remove('active')">Cancel</button>
-        <button class="btn btn-primary" onclick="alert('Tournament created! Members will be notified that entries are open.'); document.getElementById('createModal').classList.remove('active');">Create Tournament</button>
+        <button class="btn btn-primary" onclick="createTournament()">Create Tournament</button>
       </div>
     </div>
   </div>
 
   <!-- Print Draw Sheet (hidden, shown only when printing) -->
-  <div id="printDrawSheet" class="print-draw-sheet">
-    <div class="print-draw-header">
-      <h1>&#9971; Spring Matchplay 2026</h1>
-      <p>Greenview Golf Club &bull; 16 Players &bull; Draw Sheet</p>
-      <p class="print-date"></p>
-    </div>
-
-    <h2 class="print-section-title">Player Directory</h2>
-    <table class="print-table">
-      <thead>
-        <tr>
-          <th>Seed</th>
-          <th>Name</th>
-          <th>Handicap</th>
-          <th>Phone</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>1</td><td>James Murphy</td><td>12</td><td>087 123 4567</td></tr>
-        <tr><td>2</td><td>Mick Ryan</td><td>10</td><td>087 678 9012</td></tr>
-        <tr><td>3</td><td>Brian Nolan</td><td>9</td><td>088 789 0123</td></tr>
-        <tr><td>4</td><td>Sean Walsh</td><td>6</td><td>085 345 6789</td></tr>
-        <tr><td>5</td><td>David Kelly</td><td>8</td><td>083 456 7890</td></tr>
-        <tr><td>6</td><td>Eoin Brennan</td><td>11</td><td>086 890 1234</td></tr>
-        <tr><td>7</td><td>Ronan Collins</td><td>15</td><td>089 901 2345</td></tr>
-        <tr><td>8</td><td>Patrick O'Brien</td><td>14</td><td>086 234 5678</td></tr>
-        <tr><td>9</td><td>Liam Byrne</td><td>16</td><td>085 012 3456</td></tr>
-        <tr><td>10</td><td>Fergal Healy</td><td>13</td><td>087 345 6789</td></tr>
-        <tr><td>11</td><td>Kevin Flynn</td><td>17</td><td>083 456 7891</td></tr>
-        <tr><td>12</td><td>Colm Dunne</td><td>20</td><td>089 567 8902</td></tr>
-        <tr><td>13</td><td>Niall Foley</td><td>19</td><td>086 678 9013</td></tr>
-        <tr><td>14</td><td>Alan Keane</td><td>22</td><td>085 789 0124</td></tr>
-        <tr><td>15</td><td>Ger Power</td><td>21</td><td>087 890 1235</td></tr>
-        <tr><td>16</td><td>Tom Doyle</td><td>18</td><td>089 567 8901</td></tr>
-      </tbody>
-    </table>
-
-    <h2 class="print-section-title">Draw</h2>
-    <table class="print-table">
-      <thead>
-        <tr>
-          <th>Match</th>
-          <th>Player 1</th>
-          <th>Player 2</th>
-          <th>Result</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="print-round-header"><td colspan="4">Round 1</td></tr>
-        <tr><td>M1</td><td>(1) J. Murphy</td><td>(16) T. Doyle</td><td>Murphy won 3&amp;2</td></tr>
-        <tr><td>M2</td><td>(8) P. O'Brien</td><td>(9) L. Byrne</td><td>O'Brien won 5&amp;4</td></tr>
-        <tr><td>M3</td><td>(4) S. Walsh</td><td>(13) N. Foley</td><td>Walsh won 4&amp;3</td></tr>
-        <tr><td>M4</td><td>(5) D. Kelly</td><td>(12) C. Dunne</td><td>Kelly won 2&amp;1</td></tr>
-        <tr><td>M5</td><td>(2) M. Ryan</td><td>(15) G. Power</td><td>Ryan won 6&amp;5</td></tr>
-        <tr><td>M6</td><td>(7) R. Collins</td><td>(10) F. Healy</td><td>Collins won 1 Up</td></tr>
-        <tr><td>M7</td><td>(3) B. Nolan</td><td>(14) A. Keane</td><td>Nolan won 1 Up</td></tr>
-        <tr><td>M8</td><td>(6) E. Brennan</td><td>(11) K. Flynn</td><td>Brennan won 3&amp;1</td></tr>
-        <tr class="print-round-header"><td colspan="4">Quarter Finals</td></tr>
-        <tr><td>QF1</td><td>(1) J. Murphy</td><td>(8) P. O'Brien</td><td>In progress</td></tr>
-        <tr><td>QF2</td><td>(4) S. Walsh</td><td>(5) D. Kelly</td><td>In progress</td></tr>
-        <tr><td>QF3</td><td>(2) M. Ryan</td><td>(7) R. Collins</td><td>Ryan won 2&amp;1</td></tr>
-        <tr><td>QF4</td><td>(3) B. Nolan</td><td>(6) E. Brennan</td><td>In progress</td></tr>
-        <tr class="print-round-header"><td colspan="4">Semi Finals</td></tr>
-        <tr><td>SF1</td><td>Winner QF1</td><td>Winner QF2</td><td>&mdash;</td></tr>
-        <tr><td>SF2</td><td>(2) M. Ryan</td><td>Winner QF4</td><td>&mdash;</td></tr>
-        <tr class="print-round-header"><td colspan="4">Final</td></tr>
-        <tr><td>F</td><td>Winner SF1</td><td>Winner SF2</td><td>&mdash;</td></tr>
-      </tbody>
-    </table>
-
-    <div class="print-footer">
-      <p>Generated by MyMatchPlayPal &bull; Greenview Golf Club</p>
-    </div>
-  </div>
+  <div id="printDrawSheet" class="print-draw-sheet"></div>
 
   <script>
     function switchTab(e, tabId) {
@@ -511,12 +219,9 @@
       e.target.classList.add('active');
       document.getElementById(tabId).classList.add('active');
     }
-
-    function printDraw() {
-      document.querySelector('.print-date').textContent = 'Printed: ' + new Date().toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' });
-      window.print();
-    }
   </script>
-
+  <script src="js/supabase-client.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/organiser.js"></script>
 </body>
 </html>

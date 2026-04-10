@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -24,7 +25,7 @@
         <li><a href="organiser.html">Organiser</a></li>
       </ul>
       <div class="navbar-actions">
-        <a href="golfer.html" class="btn btn-sm btn-primary">Sign In</a>
+        <a href="#" class="btn btn-sm btn-primary" onclick="showAuthModal('signin');return false;" id="nav-signin-btn">Sign In</a>
         <button class="menu-toggle" onclick="document.querySelector('.navbar-links').classList.toggle('show')">&#9776;</button>
       </div>
     </div>
@@ -37,8 +38,8 @@
         <h1>Your Golf Club's <span>Digital Clubhouse Wall</span></h1>
         <p>Replace WhatsApp chaos and paper brackets with an automated matchplay management platform. From sign-up to final putt &mdash; MyMatchPlayPal handles the draw, the brackets, and the coordination.</p>
         <div class="hero-buttons">
-          <a href="golfer.html" class="btn btn-lg btn-primary">I'm a Golfer</a>
-          <a href="organiser.html" class="btn btn-lg btn-outline">I'm an Organiser</a>
+          <a href="#" class="btn btn-lg btn-primary" onclick="showAuthModal('signup');return false;">I'm a Golfer</a>
+          <a href="#" class="btn btn-lg btn-outline" onclick="showAuthModal('signin');return false;">I'm an Organiser</a>
         </div>
       </div>
       <div class="hero-visual">
@@ -188,5 +189,20 @@
     </div>
   </footer>
 
+  <script src="js/supabase-client.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+      injectAuthModal();
+      // If already logged in, redirect to dashboard
+      const member = await getCurrentMember();
+      if (member) {
+        updateNavForAuth(member);
+        // Replace Sign In button with avatar
+        const signInBtn = document.getElementById('nav-signin-btn');
+        if (signInBtn) signInBtn.style.display = 'none';
+      }
+    });
+  </script>
 </body>
 </html>
