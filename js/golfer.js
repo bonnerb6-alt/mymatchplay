@@ -140,11 +140,11 @@ async function loadUpcomingMatches() {
       ? '<span class="badge badge-green"><span class="status-dot live"></span> In Progress</span>'
       : '<span class="badge badge-gold"><span class="status-dot pending"></span> Awaiting</span>';
 
-    const whatsappMsg = encodeURIComponent(`Hi ${opponent.first_name}, we're matched in ${match.tournaments?.name || 'the tournament'} (${roundName}). When suits you to play?`);
+    const msgText = `Hi ${opponent.first_name}, we're matched in ${match.tournaments?.name || 'the tournament'} (${roundName}). When suits you to play?`;
     const hasPhone = opponent.phone && opponent.phone.trim().length > 0;
-    const whatsappUrl = hasPhone
-      ? `https://wa.me/${opponent.phone.replace(/\s/g, '')}?text=${whatsappMsg}`
-      : null;
+    const phoneClean = hasPhone ? opponent.phone.replace(/\s/g, '') : '';
+    const whatsappUrl = hasPhone ? `https://wa.me/${phoneClean}?text=${encodeURIComponent(msgText)}` : null;
+    const smsUrl = hasPhone ? `sms:${phoneClean}?body=${encodeURIComponent(msgText)}` : null;
 
     tableHTML += `
       <tr>
@@ -159,7 +159,7 @@ async function loadUpcomingMatches() {
         <td>${deadline}</td>
         <td>${statusBadge}</td>
         <td>${hasPhone
-          ? `<a href="${whatsappUrl}" target="_blank" class="btn btn-sm btn-whatsapp">&#128172; Arrange Match</a>`
+          ? `<div style="display:flex;gap:0.4rem;"><a href="${whatsappUrl}" target="_blank" class="btn btn-sm btn-whatsapp">&#128172; WhatsApp</a><a href="${smsUrl}" class="btn btn-sm btn-secondary">&#128241; SMS</a></div>`
           : `<span class="btn btn-sm btn-secondary" style="cursor:default;" title="No phone number on file">&#128222; No Phone</span>`
         }</td>
       </tr>`;
@@ -183,7 +183,7 @@ async function loadUpcomingMatches() {
         <div class="match-card-mobile-footer">
           <span class="match-card-mobile-deadline">&#128197; Due: ${deadline}</span>
           ${hasPhone
-            ? `<a href="${whatsappUrl}" target="_blank" class="btn btn-whatsapp">&#128172; Arrange Match</a>`
+            ? `<div style="display:flex;gap:0.5rem;"><a href="${whatsappUrl}" target="_blank" class="btn btn-whatsapp">&#128172; WhatsApp</a><a href="${smsUrl}" class="btn btn-secondary">&#128241; SMS</a></div>`
             : `<span class="btn btn-secondary" style="cursor:default;" title="No phone number on file">&#128222; No Phone</span>`
           }
         </div>
