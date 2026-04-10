@@ -1590,7 +1590,31 @@ table tbody tr:hover {
   .hero { padding: 3rem 1.5rem; }
   .feature-grid { grid-template-columns: 1fr !important; }
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
-  .stat-cards { grid-template-columns: 1fr 1fr; }
+  .stat-cards {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+  }
+
+  .stat-card {
+    padding: 0.6rem 0.4rem;
+    text-align: center;
+  }
+
+  .stat-card .stat-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 0.85rem;
+    margin: 0 auto 0.4rem;
+  }
+
+  .stat-card .stat-value {
+    font-size: 1.1rem;
+  }
+
+  .stat-card .stat-label {
+    font-size: 0.6rem;
+  }
+
   .navbar-links { display: none; }
   .menu-toggle { display: block; }
   .footer-inner { grid-template-columns: 1fr; gap: 2rem; }
@@ -1716,7 +1740,28 @@ table tbody tr:hover {
 }
 
 @media (max-width: 480px) {
-  .stat-cards { grid-template-columns: 1fr; }
+  .stat-cards {
+    gap: 0.35rem;
+  }
+
+  .stat-card {
+    padding: 0.5rem 0.25rem;
+  }
+
+  .stat-card .stat-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 0.75rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .stat-card .stat-value {
+    font-size: 0.95rem;
+  }
+
+  .stat-card .stat-label {
+    font-size: 0.55rem;
+  }
 
   .hero h1 { font-size: 1.75rem; }
   .hero p { font-size: 1rem; }
