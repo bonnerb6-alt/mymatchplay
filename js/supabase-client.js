@@ -61,6 +61,15 @@ async function signOut() {
   window.location.href = 'login.html';
 }
 
+// Check if user is also an organiser at any club
+async function checkIsOrganiser(memberId) {
+  var { data: memberships } = await supabase
+    .from('club_memberships')
+    .select('role')
+    .eq('member_id', memberId);
+  return (memberships || []).some(function(m) { return m.role === 'organiser'; });
+}
+
 // Update nav bar based on auth state
 function updateNavForAuth(member) {
   const actionsEl = document.querySelector('.navbar-actions');
@@ -72,15 +81,38 @@ function updateNavForAuth(member) {
     : null;
 
   if (member) {
-    const isOrganiser = member.role === 'organiser';
-    const avatarStyle = isOrganiser
+    const isOnOrganiserPage = window.location.pathname.indexOf('organiser') !== -1;
+    const avatarStyle = isOnOrganiserPage
       ? 'background:var(--gold);color:var(--green-900);border-color:var(--gold-light);'
       : '';
 
     actionsEl.innerHTML = `
+      <div id="role-switcher" style="display:none;"></div>
       <div class="nav-avatar" style="${avatarStyle}" onclick="signOut()" title="Sign Out">${initials}</div>
     `;
     if (menuToggle) actionsEl.appendChild(menuToggle);
+
+    // Check if user has organiser role and show switcher
+    checkIsOrganiser(member.id).then(function(isOrg) {
+      var switcher = document.getElementById('role-switcher');
+      if (!switcher) return;
+
+      if (isOrg && !isOnOrganiserPage) {
+        // On golfer page, show switch to organiser
+        switcher.innerHTML = '<a href="organiser.html" class="btn btn-sm" style="background:var(--gold);color:var(--green-900);font-size:0.75rem;padding:0.3rem 0.6rem;" title="Switch to Organiser view">Organiser</a>';
+        switcher.style.display = 'block';
+      } else if (isOnOrganiserPage) {
+        // On organiser page, show switch to golfer
+        switcher.innerHTML = '<a href="golfer.html" class="btn btn-sm btn-primary" style="font-size:0.75rem;padding:0.3rem 0.6rem;" title="Switch to Golfer view">Golfer</a>';
+        switcher.style.display = 'block';
+      }
+
+      // Also check old model
+      if (!isOrg && member.role === 'organiser' && !isOnOrganiserPage) {
+        switcher.innerHTML = '<a href="organiser.html" class="btn btn-sm" style="background:var(--gold);color:var(--green-900);font-size:0.75rem;padding:0.3rem 0.6rem;" title="Switch to Organiser view">Organiser</a>';
+        switcher.style.display = 'block';
+      }
+    });
   }
 }
 

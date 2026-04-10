@@ -188,14 +188,7 @@
     (async function() {
       var member = await getCurrentMember();
       if (member) {
-        // Check if they're an organiser at any club
-        var { data: memberships } = await supabase
-          .from('club_memberships')
-          .select('role')
-          .eq('member_id', member.id);
-        var isOrganiser = (memberships || []).some(function(m) { return m.role === 'organiser'; })
-          || member.role === 'organiser';
-        window.location.href = isOrganiser ? 'organiser.html' : 'golfer.html';
+        window.location.href = 'golfer.html';
       }
     })();
 
@@ -227,14 +220,7 @@
           btn.textContent = 'Sign In';
           return;
         }
-        // Check if organiser at any club
-        var { data: mships } = await supabase
-          .from('club_memberships')
-          .select('role')
-          .eq('member_id', member.id);
-        var isOrg = (mships || []).some(function(m) { return m.role === 'organiser'; })
-          || member.role === 'organiser';
-        window.location.href = isOrg ? 'organiser.html' : 'golfer.html';
+        window.location.href = 'golfer.html';
       } catch (err) {
         errorEl.textContent = err.message || 'Invalid email or password.';
         btn.disabled = false;

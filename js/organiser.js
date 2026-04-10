@@ -13,7 +13,7 @@ async function initOrganiserDashboard() {
     return;
   }
 
-  // Load the club where this member is an organiser (one club only)
+  // Load the club where this member is an organiser
   var { data: memberships } = await supabase
     .from('club_memberships')
     .select('*, clubs(id, name)')
@@ -23,11 +23,14 @@ async function initOrganiserDashboard() {
 
   // Fallback to old model
   if (!memberships || memberships.length === 0) {
-    if (currentOrganiser.role !== 'organiser') {
+    if (currentOrganiser.role === 'organiser') {
+      orgClub = { club_id: currentOrganiser.club_id, clubs: currentOrganiser.clubs };
+    } else {
+      // Not an organiser at any club
+      alert('You do not have organiser access. Redirecting to golfer dashboard.');
       window.location.href = 'golfer.html';
       return;
     }
-    orgClub = { club_id: currentOrganiser.club_id, clubs: currentOrganiser.clubs };
   } else {
     orgClub = memberships[0];
   }

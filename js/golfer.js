@@ -13,7 +13,7 @@ async function initGolferDashboard() {
     return;
   }
 
-  // Load all club memberships for this member
+  // Load all club memberships for this member (golfer can be in multiple clubs)
   var { data: memberships } = await supabase
     .from('club_memberships')
     .select('*, clubs(id, name)')
