@@ -87,30 +87,24 @@ function updateNavForAuth(member) {
       : '';
 
     actionsEl.innerHTML = `
-      <div id="role-switcher" style="display:none;"></div>
       <div class="nav-avatar" style="${avatarStyle}" onclick="signOut()" title="Sign Out">${initials}</div>
     `;
     if (menuToggle) actionsEl.appendChild(menuToggle);
 
-    // Check if user has organiser role and show switcher
+    // Add role switcher to sidebar if user has organiser role
     checkIsOrganiser(member.id).then(function(isOrg) {
-      var switcher = document.getElementById('role-switcher');
-      if (!switcher) return;
+      var sidebarSwitcher = document.getElementById('sidebar-role-switcher');
+      if (!sidebarSwitcher) return;
 
       if (isOrg && !isOnOrganiserPage) {
-        // On golfer page, show switch to organiser
-        switcher.innerHTML = '<a href="organiser.html" class="btn btn-sm" style="background:var(--gold);color:var(--green-900);font-size:0.75rem;padding:0.3rem 0.6rem;" title="Switch to Organiser view">Organiser</a>';
-        switcher.style.display = 'block';
+        sidebarSwitcher.innerHTML = '<a href="organiser.html" style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;border-radius:var(--radius);font-size:0.9rem;color:var(--gold);background:rgba(212,168,67,0.1);font-weight:600;transition:all 0.15s;"><span class="nav-icon" style="width:20px;text-align:center;">&#128274;</span> Switch to Organiser</a>';
       } else if (isOnOrganiserPage) {
-        // On organiser page, show switch to golfer
-        switcher.innerHTML = '<a href="golfer.html" class="btn btn-sm btn-primary" style="font-size:0.75rem;padding:0.3rem 0.6rem;" title="Switch to Golfer view">Golfer</a>';
-        switcher.style.display = 'block';
+        sidebarSwitcher.innerHTML = '<a href="golfer.html" style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;border-radius:var(--radius);font-size:0.9rem;color:var(--green-600);background:var(--green-50);font-weight:600;transition:all 0.15s;"><span class="nav-icon" style="width:20px;text-align:center;">&#9971;</span> Switch to Golfer</a>';
       }
 
       // Also check old model
       if (!isOrg && member.role === 'organiser' && !isOnOrganiserPage) {
-        switcher.innerHTML = '<a href="organiser.html" class="btn btn-sm" style="background:var(--gold);color:var(--green-900);font-size:0.75rem;padding:0.3rem 0.6rem;" title="Switch to Organiser view">Organiser</a>';
-        switcher.style.display = 'block';
+        sidebarSwitcher.innerHTML = '<a href="organiser.html" style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;border-radius:var(--radius);font-size:0.9rem;color:var(--gold);background:rgba(212,168,67,0.1);font-weight:600;transition:all 0.15s;"><span class="nav-icon" style="width:20px;text-align:center;">&#128274;</span> Switch to Organiser</a>';
       }
     });
   }
