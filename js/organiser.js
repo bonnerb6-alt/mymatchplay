@@ -3,8 +3,8 @@
 // ============================================
 
 let currentOrganiser = null;
-let orgClubs = []; // Clubs where this member is organiser
-let orgClubIds = [];
+let orgClub = null; // The single club this organiser manages
+let orgClubId = null;
 
 async function initOrganiserDashboard() {
   currentOrganiser = await getCurrentMember();
@@ -13,12 +13,13 @@ async function initOrganiserDashboard() {
     return;
   }
 
-  // Load clubs where this member is an organiser
+  // Load the club where this member is an organiser (one club only)
   var { data: memberships } = await supabase
     .from('club_memberships')
     .select('*, clubs(id, name)')
     .eq('member_id', currentOrganiser.id)
-    .eq('role', 'organiser');
+    .eq('role', 'organiser')
+    .limit(1);
 
   // Fallback to old model
   if (!memberships || memberships.length === 0) {
@@ -26,16 +27,16 @@ async function initOrganiserDashboard() {
       window.location.href = 'golfer.html';
       return;
     }
-    orgClubs = [{ club_id: currentOrganiser.club_id, clubs: currentOrganiser.clubs }];
+    orgClub = { club_id: currentOrganiser.club_id, clubs: currentOrganiser.clubs };
   } else {
-    orgClubs = memberships;
+    orgClub = memberships[0];
   }
-  orgClubIds = orgClubs.map(function(c) { return c.club_id; });
+  orgClubId = orgClub.club_id;
 
   updateNavForAuth(currentOrganiser);
   renderOrgSidebar();
-  var clubNames = orgClubs.map(function(c) { return c.clubs?.name || 'Golf Club'; }).join(', ');
-  document.getElementById('org-club-name').textContent = clubNames + ' — Match Secretary Panel';
+  var clubName = orgClub.clubs?.name || 'Golf Club';
+  document.getElementById('org-club-name').textContent = clubName + ' — Match Secretary Panel';
   await Promise.all([
     loadOrgStats(),
     loadTournaments(),
@@ -97,7 +98,7 @@ async function loadTournaments() {
   const { data: tournaments } = await supabase
     .from('tournaments')
     .select('*, tournament_entries(count), clubs(name), whatsapp_group_link')
-    .in('club_id', orgClubIds)
+    .eq('club_id', orgClubId)
     .order('created_at', { ascending: false });
 
   if (!tournaments || tournaments.length === 0) {
@@ -147,10 +148,9 @@ async function loadTournaments() {
         actions = `<button class="btn btn-sm btn-primary" onclick="openEntries('${t.id}')">Open Entries</button>`;
     }
 
-    var clubLabel = orgClubs.length > 1 && t.clubs?.name ? `<span style="font-size:0.75rem;color:var(--gray-500);display:block;">${t.clubs.name}</span>` : '';
     return `
       <tr>
-        <td><strong>${t.name}</strong>${clubLabel}</td>
+        <td><strong>${t.name}</strong></td>
         <td>${statusBadge}</td>
         <td>${entryCount} / ${t.bracket_size}</td>
         <td>${roundNames[t.current_round] || 'Round ' + t.current_round}</td>
@@ -167,7 +167,7 @@ async function loadMembers() {
   const { data: members } = await supabase
     .from('members')
     .select('*')
-    .in('club_id', orgClubIds)
+    .eq('club_id', orgClubId)
     .order('last_name', { ascending: true });
 
   if (!members || members.length === 0) {
@@ -237,17 +237,6 @@ async function loadActivityLog() {
 }
 
 function openCreateTournament() {
-  // Populate club selector if multiple clubs
-  var select = document.getElementById('newTournamentClub');
-  var group = document.getElementById('clubSelectorGroup');
-  if (orgClubs.length > 1) {
-    select.innerHTML = orgClubs.map(function(c) {
-      return '<option value="' + c.club_id + '">' + (c.clubs?.name || 'Golf Club') + '</option>';
-    }).join('');
-    group.style.display = 'block';
-  } else {
-    group.style.display = 'none';
-  }
   document.getElementById('createModal').classList.add('active');
 }
 
@@ -258,8 +247,7 @@ async function createTournament() {
   const deadline = document.getElementById('newEntryDeadline').value;
   const roundDays = parseInt(document.getElementById('newRoundDays').value);
   const description = document.getElementById('newDescription').value.trim();
-  const clubSelect = document.getElementById('newTournamentClub');
-  const clubId = clubSelect ? clubSelect.value : orgClubIds[0];
+  const clubId = orgClubId;
 
   if (!name) { alert('Please enter a tournament name.'); return; }
 
@@ -538,7 +526,7 @@ async function createWhatsAppGroup(tournamentId, tournamentName) {
     var { data: members } = await supabase
       .from('members')
       .select('first_name, last_name, phone')
-      .in('club_id', orgClubIds)
+      .eq('club_id', orgClubId)
       .eq('role', 'golfer');
     entries = (members || []).map(function(m) { return { members: m }; });
   }
