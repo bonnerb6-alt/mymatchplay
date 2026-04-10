@@ -20,7 +20,7 @@
       </a>
       <ul class="navbar-links">
         <li><a href="organiser.html" class="active">Dashboard</a></li>
-        <li><a href="bracket.html">Brackets</a></li>
+        <li><a href="bracket.html">Draws</a></li>
       </ul>
       <div class="navbar-actions">
         <div class="nav-avatar" style="background:var(--gold);color:var(--green-900);border-color:var(--gold-light);">--</div>
@@ -42,8 +42,9 @@
           <li><a href="#org-section-stats" class="active"><span class="nav-icon">&#127968;</span> Dashboard</a></li>
           <li><a href="#" onclick="switchTab({target:document.querySelector('.tab')}, 'tournaments');return false;"><span class="nav-icon">&#127942;</span> Tournaments</a></li>
           <li><a href="#" onclick="switchTab({target:document.querySelectorAll('.tab')[1]}, 'members');return false;"><span class="nav-icon">&#128101;</span> Members</a></li>
-          <li><a href="bracket.html"><span class="nav-icon">&#127959;</span> Brackets</a></li>
-          <li><a href="#" onclick="switchTab({target:document.querySelectorAll('.tab')[2]}, 'activity');return false;"><span class="nav-icon">&#128276;</span> Activity Log</a></li>
+          <li><a href="bracket.html"><span class="nav-icon">&#127959;</span> Draws</a></li>
+          <li><a href="#" onclick="switchTab({target:document.querySelectorAll('.tab')[2]}, 'requests');return false;"><span class="nav-icon">&#128203;</span> Requests</a></li>
+          <li><a href="#" onclick="switchTab({target:document.querySelectorAll('.tab')[3]}, 'activity');return false;"><span class="nav-icon">&#128276;</span> Activity Log</a></li>
         </ul>
       </div>
       <div class="sidebar-section">
@@ -101,6 +102,7 @@
           <div class="tabs">
             <button class="tab active" onclick="switchTab(event, 'tournaments')">&#127942; Tournaments</button>
             <button class="tab" onclick="switchTab(event, 'members')">&#128101; Members</button>
+            <button class="tab" onclick="switchTab(event, 'requests')">&#128203; Requests <span id="request-count-badge"></span></button>
             <button class="tab" onclick="switchTab(event, 'activity')">&#128276; Activity Log</button>
           </div>
         </div>
@@ -137,13 +139,22 @@
                   <th>Phone</th>
                   <th>Email</th>
                   <th>Role</th>
-                  <th>Actions</th>
+                  <th style="min-width:120px;">Actions</th>
                 </tr>
               </thead>
               <tbody id="members-table-body">
                 <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--gray-400);">Loading...</td></tr>
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- Requests Tab -->
+        <div id="requests" class="tab-panel">
+          <div class="card-body">
+            <div id="requests-list">
+              <p style="text-align:center;color:var(--gray-400);">Loading...</p>
+            </div>
           </div>
         </div>
 

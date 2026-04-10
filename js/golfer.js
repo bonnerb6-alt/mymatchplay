@@ -36,7 +36,8 @@ async function initGolferDashboard() {
     loadRecentResults(),
     loadNotifications(),
     loadOpenTournaments(),
-    loadProfile()
+    loadProfile(),
+    loadClubSelector()
   ]);
   populateScoreForm();
 }
@@ -545,6 +546,89 @@ async function submitScore() {
   // Refresh data
   await Promise.all([loadStats(), loadUpcomingMatches(), loadRecentResults(), loadProfile()]);
   populateScoreForm();
+}
+
+// Join a Club
+async function loadClubSelector() {
+  var select = document.getElementById('joinClubSelect');
+  if (!select) return;
+
+  // Get all clubs
+  var { data: clubs } = await supabase.from('clubs').select('id, name').order('name');
+
+  // Filter out clubs the member is already in or has pending requests for
+  var existingIds = new Set(myClubIds);
+  var { data: pending } = await supabase
+    .from('membership_requests')
+    .select('club_id')
+    .eq('member_id', currentMember.id)
+    .eq('status', 'pending');
+  (pending || []).forEach(function(r) { existingIds.add(r.club_id); });
+
+  var available = (clubs || []).filter(function(c) { return !existingIds.has(c.id); });
+
+  if (available.length === 0) {
+    select.innerHTML = '<option disabled>No new clubs available</option>';
+  } else {
+    select.innerHTML = '<option value="" disabled selected>Choose a club...</option>' +
+      available.map(function(c) { return '<option value="' + c.id + '">' + c.name + '</option>'; }).join('');
+  }
+
+  // Show pending requests
+  loadPendingRequests();
+}
+
+async function loadPendingRequests() {
+  var container = document.getElementById('pending-requests');
+  if (!container) return;
+
+  var { data: requests } = await supabase
+    .from('membership_requests')
+    .select('*, clubs(name)')
+    .eq('member_id', currentMember.id)
+    .order('requested_at', { ascending: false })
+    .limit(5);
+
+  if (!requests || requests.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = '<div style="font-size:0.8rem;font-weight:600;color:var(--gray-600);margin-bottom:0.5rem;">My Requests</div>' +
+    requests.map(function(r) {
+      var badge = '';
+      if (r.status === 'pending') badge = '<span class="badge badge-gold"><span class="status-dot pending"></span> Pending</span>';
+      else if (r.status === 'approved') badge = '<span class="badge badge-green">Approved</span>';
+      else badge = '<span class="badge badge-red">Rejected</span>';
+
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0.75rem;background:var(--gray-100);border-radius:var(--radius);font-size:0.85rem;margin-bottom:0.35rem;">' +
+        '<span>' + (r.clubs?.name || 'Club') + '</span>' + badge + '</div>';
+    }).join('');
+}
+
+async function requestClubMembership() {
+  var clubId = document.getElementById('joinClubSelect').value;
+  var handicap = parseInt(document.getElementById('joinClubHandicap').value) || 0;
+
+  if (!clubId) {
+    alert('Please select a club.');
+    return;
+  }
+
+  var { error } = await supabase.from('membership_requests').insert({
+    member_id: currentMember.id,
+    club_id: clubId,
+    status: 'pending',
+    message: 'Handicap: ' + handicap
+  });
+
+  if (error) {
+    alert('Error: ' + error.message);
+    return;
+  }
+
+  alert('Request sent! The club organiser will review it.');
+  loadClubSelector();
 }
 
 // Edit Profile

@@ -20,7 +20,7 @@
       </a>
       <ul class="navbar-links">
         <li><a href="golfer.html" class="active">My Dashboard</a></li>
-        <li><a href="bracket.html">Live Brackets</a></li>
+        <li><a href="bracket.html">Live Draws</a></li>
       </ul>
       <div class="navbar-actions">
         <div class="nav-avatar">--</div>
@@ -42,7 +42,7 @@
           <li><a href="#section-stats" class="active"><span class="nav-icon">&#127968;</span> Dashboard</a></li>
           <li><a href="#section-open-tournaments"><span class="nav-icon">&#127942;</span> My Tournaments</a></li>
           <li><a href="#section-matches"><span class="nav-icon">&#128197;</span> My Matches</a></li>
-          <li><a href="bracket.html"><span class="nav-icon">&#127959;</span> Live Brackets</a></li>
+          <li><a href="bracket.html"><span class="nav-icon">&#127959;</span> Live Draws</a></li>
           <li><a href="#section-profile"><span class="nav-icon">&#128200;</span> My Stats</a></li>
           <li><a href="#section-notifications"><span class="nav-icon">&#128276;</span> Notifications</a></li>
         </ul>
@@ -191,6 +191,29 @@
               <p style="text-align:center;color:var(--gray-400);">Loading...</p>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Join a Club -->
+      <div class="card mt-3">
+        <div class="card-header">
+          <h3>&#127960; Join a Golf Club</h3>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:end;">
+            <div class="form-group" style="flex:1;min-width:200px;margin-bottom:0;">
+              <label class="form-label">Select Club</label>
+              <select class="form-select" id="joinClubSelect">
+                <option value="" disabled selected>Loading clubs...</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex:1;min-width:200px;margin-bottom:0;">
+              <label class="form-label">Handicap at this club</label>
+              <input type="number" class="form-input" id="joinClubHandicap" placeholder="12" min="0" max="54">
+            </div>
+            <button class="btn btn-primary" onclick="requestClubMembership()" style="margin-bottom:0;">Request to Join</button>
+          </div>
+          <div id="pending-requests" style="margin-top:1rem;"></div>
         </div>
       </div>
 
