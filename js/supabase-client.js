@@ -92,20 +92,28 @@ function updateNavForAuth(member) {
     `;
     if (menuToggle) actionsEl.appendChild(menuToggle);
 
-    // Add role switcher to sidebar if user has organiser role
+    // Add role switcher to sidebar AND mobile nav
     checkIsOrganiser(member.id).then(function(isOrg) {
-      var sidebarSwitcher = document.getElementById('sidebar-role-switcher');
-      if (!sidebarSwitcher) return;
+      var hasOrgRole = isOrg || member.role === 'organiser';
 
-      if (isOrg && !isOnOrganiserPage) {
+      // Sidebar switcher (desktop)
+      var sidebarSwitcher = document.getElementById('sidebar-role-switcher');
+      if (sidebarSwitcher && hasOrgRole && !isOnOrganiserPage) {
         sidebarSwitcher.innerHTML = '<a href="organiser.html" style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;border-radius:var(--radius);font-size:0.9rem;color:var(--gold);background:rgba(212,168,67,0.1);font-weight:600;transition:all 0.15s;"><span class="nav-icon" style="width:20px;text-align:center;">&#128274;</span> Switch to Organiser</a>';
-      } else if (isOnOrganiserPage) {
+      } else if (sidebarSwitcher && isOnOrganiserPage) {
         sidebarSwitcher.innerHTML = '<a href="golfer.html" style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;border-radius:var(--radius);font-size:0.9rem;color:var(--green-600);background:var(--green-50);font-weight:600;transition:all 0.15s;"><span class="nav-icon" style="width:20px;text-align:center;">&#9971;</span> Switch to Golfer</a>';
       }
 
-      // Also check old model
-      if (!isOrg && member.role === 'organiser' && !isOnOrganiserPage) {
-        sidebarSwitcher.innerHTML = '<a href="organiser.html" style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;border-radius:var(--radius);font-size:0.9rem;color:var(--gold);background:rgba(212,168,67,0.1);font-weight:600;transition:all 0.15s;"><span class="nav-icon" style="width:20px;text-align:center;">&#128274;</span> Switch to Organiser</a>';
+      // Mobile nav switcher (add to hamburger menu)
+      var navLinks = document.querySelector('.navbar-links');
+      if (navLinks && hasOrgRole && !isOnOrganiserPage) {
+        var li = document.createElement('li');
+        li.innerHTML = '<a href="organiser.html" style="color:var(--gold);font-weight:600;">&#128274; Organiser View</a>';
+        navLinks.appendChild(li);
+      } else if (navLinks && isOnOrganiserPage) {
+        var li = document.createElement('li');
+        li.innerHTML = '<a href="golfer.html" style="color:var(--green-400);font-weight:600;">&#9971; Golfer View</a>';
+        navLinks.appendChild(li);
       }
     });
   }
