@@ -756,36 +756,48 @@ async function generateDraw(tournamentId, bracketSize) {
     keyToId[match._tempKey] = inserted.id;
   }
 
-  // Assign players to Round 1
+  // Assign players to Round 1 with proper bye calculation
+  // e.g. 10 players, 16 bracket: QF needs 8, so 10-8=2 real matches, 6 byes
   const round1Matches = allMatches
     .filter(m => m.round === 1)
     .sort((a, b) => a.position - b.position);
 
+  const round1Count = round1Matches.length; // e.g. 8 for 16-bracket
+  const realMatchCount = players.length - round1Count; // e.g. 10-8=2 real matches
+  // realMatchCount players play in round 1, the rest get byes
+
+  console.log('[MMP] Round 1 matches:', round1Count, 'Real matches:', realMatchCount, 'Byes:', round1Count - realMatchCount);
+
+  // First: assign bye players (1 player per match, auto-advance)
+  // Byes go to the top-seeded positions
   let playerIdx = 0;
-  for (const match of round1Matches) {
+  const byeMatchCount = round1Count - realMatchCount;
+
+  for (let i = 0; i < round1Matches.length; i++) {
+    const match = round1Matches[i];
     const matchId = keyToId[match._tempKey];
-    const p1 = playerIdx < players.length ? players[playerIdx++] : null;
-    const p2 = playerIdx < players.length ? players[playerIdx++] : null;
 
-    const updateData = { player1_id: p1 };
+    if (i < byeMatchCount) {
+      // BYE match — one player, auto-advance
+      const p1 = players[playerIdx++];
+      await supabase.from('matches').update({
+        player1_id: p1, winner_id: p1, status: 'bye'
+      }).eq('id', matchId);
 
-    if (p2) {
-      updateData.player2_id = p2;
-      updateData.status = 'in_progress';
+      // Advance to next round
+      if (match._nextKey) {
+        const nextMatchId = keyToId[match._nextKey];
+        const isOddPosition = match.position % 2 === 1;
+        const updateField = isOddPosition ? 'player1_id' : 'player2_id';
+        await supabase.from('matches').update({ [updateField]: p1 }).eq('id', nextMatchId);
+      }
     } else {
-      // BYE - auto-advance
-      updateData.winner_id = p1;
-      updateData.status = 'bye';
-    }
-
-    await supabase.from('matches').update(updateData).eq('id', matchId);
-
-    // If BYE, advance winner to next match
-    if (!p2 && match._nextKey) {
-      const nextMatchId = keyToId[match._nextKey];
-      const isOddPosition = match.position % 2 === 1;
-      const updateField = isOddPosition ? 'player1_id' : 'player2_id';
-      await supabase.from('matches').update({ [updateField]: p1 }).eq('id', nextMatchId);
+      // Real match — two players
+      const p1 = players[playerIdx++];
+      const p2 = players[playerIdx++];
+      await supabase.from('matches').update({
+        player1_id: p1, player2_id: p2, status: 'in_progress'
+      }).eq('id', matchId);
     }
   }
 
