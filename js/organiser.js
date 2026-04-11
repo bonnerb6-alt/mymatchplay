@@ -127,6 +127,7 @@ async function loadTournaments() {
           : `<button class="btn btn-sm btn-whatsapp" onclick="createWhatsAppGroup('${t.id}','${t.name.replace(/'/g, "\\'")}')">&#128172; Create Group</button>`;
         actions = `
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <button class="btn btn-sm btn-primary" onclick="openEnrolTournament('${t.id}','${t.name.replace(/'/g, "\\'")}',${t.bracket_size})">Enrol Members</button>
             <button class="btn btn-sm btn-gold" onclick="generateDraw('${t.id}', ${t.bracket_size})">Generate Draw</button>
             <button class="btn btn-sm btn-secondary" onclick="closeEntries('${t.id}')">Close Entry</button>
             ${groupBtnOpen}
@@ -262,6 +263,68 @@ async function loadActivityLog() {
         <span class="notification-time">${timeAgo}</span>
       </div>`;
   }).join('');
+}
+
+// Enrol members in a tournament
+async function openEnrolTournament(tournamentId, tournamentName, bracketSize) {
+  document.getElementById('enrolTournamentId').value = tournamentId;
+  document.getElementById('enrolTournamentName').textContent = tournamentName + ' (' + bracketSize + ' player bracket)';
+  document.getElementById('enrolTournamentModal').classList.add('active');
+
+  var container = document.getElementById('enrol-member-list');
+  container.innerHTML = '<p style="text-align:center;color:var(--gray-400);">Loading...</p>';
+
+  // Get club members
+  var { data: memberships } = await supabase
+    .from('club_memberships')
+    .select('*, members!inner(id, first_name, last_name, handicap)')
+    .eq('club_id', orgClubId)
+    .eq('status', 'active');
+
+  // Get existing entries
+  var { data: entries } = await supabase
+    .from('tournament_entries')
+    .select('member_id')
+    .eq('tournament_id', tournamentId);
+
+  var enteredIds = new Set((entries || []).map(function(e) { return e.member_id; }));
+  var entryCount = enteredIds.size;
+
+  var members = (memberships || []).map(function(cm) {
+    return { id: cm.members.id, name: cm.members.first_name + ' ' + cm.members.last_name, handicap: cm.members.handicap };
+  }).sort(function(a, b) { return a.name.localeCompare(b.name); });
+
+  container.innerHTML = '<div style="font-size:0.8rem;color:var(--gray-500);margin-bottom:0.75rem;">' + entryCount + ' / ' + bracketSize + ' entered</div>' +
+    members.map(function(m) {
+      var isEntered = enteredIds.has(m.id);
+      var btn = isEntered
+        ? '<button class="btn btn-sm btn-danger" style="font-size:0.7rem;" onclick="removeTournamentEntry(\'' + tournamentId + '\',\'' + m.id + '\',\'' + tournamentName.replace(/'/g, "\\'") + '\',' + bracketSize + ')">Remove</button>'
+        : '<button class="btn btn-sm btn-primary" style="font-size:0.7rem;" onclick="addTournamentEntry(\'' + tournamentId + '\',\'' + m.id + '\',\'' + tournamentName.replace(/'/g, "\\'") + '\',' + bracketSize + ')">Enrol</button>';
+      var badge = isEntered ? '<span class="badge badge-green" style="font-size:0.6rem;">Entered</span>' : '';
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0.75rem;border-bottom:1px solid var(--gray-100);">' +
+        '<div><strong style="font-size:0.85rem;">' + m.name + '</strong> ' + badge + '<br><span style="font-size:0.75rem;color:var(--gray-500);">Handicap ' + m.handicap + '</span></div>' +
+        btn + '</div>';
+    }).join('');
+}
+
+async function addTournamentEntry(tournamentId, memberId, tournamentName, bracketSize) {
+  var { error } = await supabase.from('tournament_entries').insert({
+    tournament_id: tournamentId,
+    member_id: memberId
+  });
+  if (error) { alert('Error: ' + error.message); return; }
+  openEnrolTournament(tournamentId, tournamentName, bracketSize);
+  loadTournaments();
+}
+
+async function removeTournamentEntry(tournamentId, memberId, tournamentName, bracketSize) {
+  var { error } = await supabase.from('tournament_entries')
+    .delete()
+    .eq('tournament_id', tournamentId)
+    .eq('member_id', memberId);
+  if (error) { alert('Error: ' + error.message); return; }
+  openEnrolTournament(tournamentId, tournamentName, bracketSize);
+  loadTournaments();
 }
 
 function openCreateTournament() {
@@ -606,12 +669,31 @@ async function enrolGolfer() {
     return;
   }
 
+  // Send invite email for new members to set up their account
+  if (!(existing && existing.length > 0)) {
+    // Use Supabase magic link as invite — they click it to create their account
+    var { error: inviteErr } = await supabase.auth.signInWithOtp({
+      email: email,
+      options: {
+        shouldCreateUser: true,
+        data: { first_name: firstName, last_name: lastName },
+        emailRedirectTo: window.location.origin + '/mymatchplay/login.html'
+      }
+    });
+
+    if (!inviteErr) {
+      // Link will be sent. When they click it, they'll be signed in and can set a password.
+      alert(firstName + ' ' + lastName + ' has been added!\n\nAn email invitation has been sent to ' + email + ' with a link to set up their account.');
+    } else {
+      alert(firstName + ' ' + lastName + ' has been added to the club!\n\nNote: Could not send invite email (' + inviteErr.message + '). Ask them to sign up at the login page with this email.');
+    }
+  }
+
   document.getElementById('enrolMemberModal').classList.remove('active');
-  // Clear form
   ['enrolFirstName','enrolLastName','enrolEmail','enrolPhone','enrolHandicap'].forEach(function(id) {
     document.getElementById(id).value = '';
   });
-  alert(firstName + ' ' + lastName + ' has been enrolled!');
+  alert(firstName + ' ' + lastName + ' has been added to the club!');
   loadMembers();
   loadOrgStats();
 }
