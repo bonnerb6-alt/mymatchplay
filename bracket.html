@@ -86,6 +86,69 @@
       font-size: 0.85rem;
       color: var(--gray-500);
     }
+    /* Print: bracket landscape */
+    @media print {
+      body * { visibility: hidden; }
+      body.print-bracket .bracket-desktop,
+      body.print-bracket .bracket-desktop *,
+      body.print-bracket #print-bracket-header,
+      body.print-bracket #print-bracket-header * {
+        visibility: visible;
+      }
+      body.print-bracket {
+        margin: 0;
+        padding: 0;
+      }
+      body.print-bracket .bracket-desktop {
+        position: absolute;
+        top: 40px;
+        left: 0;
+        width: 100%;
+        box-shadow: none;
+        border: none;
+      }
+      body.print-bracket #print-bracket-header {
+        visibility: visible;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        font-weight: bold;
+        padding: 8px;
+      }
+      body.print-bracket .bracket-match {
+        border-width: 1px;
+        font-size: 0.75rem;
+      }
+      body.print-bracket .bracket-player {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.7rem;
+      }
+      body.print-bracket .bracket-round-title {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.5rem;
+      }
+
+      /* Print: draw names */
+      body.print-names .print-draw-sheet,
+      body.print-names .print-draw-sheet * {
+        visibility: visible;
+      }
+      body.print-names .print-draw-sheet {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 1.5rem;
+        background: white;
+        color: black;
+        font-family: Arial, sans-serif;
+      }
+    }
   </style>
 </head>
 <body>
@@ -126,6 +189,17 @@
       <!-- Populated by JS -->
     </div>
 
+    <!-- Print Buttons (organiser only) -->
+    <div id="print-buttons" style="display:none;margin-bottom:1rem;">
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+        <button class="btn btn-sm btn-secondary" onclick="printBracket()">&#128424; Print Bracket (A4 Landscape)</button>
+        <button class="btn btn-sm btn-secondary" onclick="printDrawNames()">&#128196; Print Draw Names</button>
+      </div>
+    </div>
+
+    <!-- Printable Draw Names (hidden, shown only when printing) -->
+    <div id="printDrawNames" class="print-draw-sheet"></div>
+
     <!-- Legend -->
     <div class="bracket-legend">
       <span><div class="legend-dot" style="background:var(--green-500);"></div> Winner</span>
@@ -139,6 +213,8 @@
     <div class="bracket-mobile" id="bracket-mobile-container">
       <p style="padding:2rem;text-align:center;color:var(--gray-400);">Loading bracket...</p>
     </div>
+
+    <div id="print-bracket-header" style="display:none;"></div>
 
     <!-- Bracket - Desktop -->
     <div class="card bracket-desktop">

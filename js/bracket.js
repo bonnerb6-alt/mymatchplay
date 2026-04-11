@@ -17,9 +17,14 @@ async function initBracket() {
       // Get all clubs the member belongs to
       var { data: memberships } = await supabase
         .from('club_memberships')
-        .select('club_id')
+        .select('club_id, role')
         .eq('member_id', member.id);
       bracketClubIds = (memberships || []).map(function(m) { return m.club_id; });
+
+      // Show print buttons if organiser or admin
+      var isOrg = (memberships || []).some(function(m) { return m.role === 'organiser'; }) || member.role === 'organiser' || member.is_admin;
+      var printBtns = document.getElementById('print-buttons');
+      if (printBtns && isOrg) printBtns.style.display = 'block';
     }
     if (bracketClubIds.length === 0) bracketClubIds = [bracketClubId];
     await loadTournamentSelector();
@@ -430,6 +435,112 @@ function subscribeToUpdates(tournamentId) {
       loadBracketData(tournamentId);
     })
     .subscribe();
+}
+
+// Print bracket as A4 landscape
+async function printBracket() {
+  if (!currentTournamentId) { alert('Select a tournament first.'); return; }
+
+  var { data: tournament } = await supabase.from('tournaments').select('name, clubs(name)').eq('id', currentTournamentId).single();
+  var headerEl = document.getElementById('print-bracket-header');
+  if (headerEl) {
+    headerEl.style.display = 'block';
+    headerEl.textContent = (tournament?.clubs?.name || '') + ' — ' + (tournament?.name || 'Tournament');
+  }
+
+  // Set landscape
+  var style = document.createElement('style');
+  style.id = 'print-landscape';
+  style.textContent = '@page { size: A4 landscape; margin: 10mm; }';
+  document.head.appendChild(style);
+
+  document.body.classList.add('print-bracket');
+  window.print();
+  document.body.classList.remove('print-bracket');
+  if (headerEl) headerEl.style.display = 'none';
+
+  var ls = document.getElementById('print-landscape');
+  if (ls) ls.remove();
+}
+
+// Print draw names sheet
+async function printDrawNames() {
+  if (!currentTournamentId) { alert('Select a tournament first.'); return; }
+
+  var { data: tournament } = await supabase.from('tournaments')
+    .select('name, bracket_size, clubs(name, logo_url)')
+    .eq('id', currentTournamentId).single();
+
+  var { data: matches } = await supabase.from('matches')
+    .select('round, position, status, score, player1:members!matches_player1_id_fkey(first_name, last_name, handicap, phone), player2:members!matches_player2_id_fkey(first_name, last_name, handicap, phone), winner:members!matches_winner_id_fkey(first_name, last_name)')
+    .eq('tournament_id', currentTournamentId)
+    .order('round').order('position');
+
+  var { data: entries } = await supabase.from('tournament_entries')
+    .select('seed, members(first_name, last_name, handicap, phone)')
+    .eq('tournament_id', currentTournamentId)
+    .order('seed');
+
+  var clubName = tournament?.clubs?.name || 'Golf Club';
+  var logo = tournament?.clubs?.logo_url ? '<img src="' + tournament.clubs.logo_url + '" style="width:50px;height:50px;object-fit:contain;margin:0 auto 0.5rem;display:block;">' : '';
+
+  // Build player directory
+  var playerRows = (entries || []).map(function(e) {
+    return '<tr><td>' + (e.seed || '-') + '</td><td>' + e.members.first_name + ' ' + e.members.last_name + '</td><td>' + e.members.handicap + '</td><td>' + (e.members.phone || '-') + '</td></tr>';
+  }).join('');
+
+  // Build draw
+  var totalRounds = Math.log2(tournament.bracket_size);
+  var rNames = {};
+  for (var r = 1; r <= totalRounds; r++) {
+    if (r === totalRounds) rNames[r] = 'Final';
+    else if (r === totalRounds - 1) rNames[r] = 'Semi Finals';
+    else if (r === totalRounds - 2) rNames[r] = 'Quarter Finals';
+    else rNames[r] = 'Round ' + r;
+  }
+
+  var drawRows = '';
+  var curRound = 0;
+  (matches || []).forEach(function(m) {
+    if (m.round !== curRound) {
+      curRound = m.round;
+      drawRows += '<tr style="background:#e8f5e9;"><td colspan="4" style="font-weight:bold;">' + (rNames[m.round] || 'Round ' + m.round) + '</td></tr>';
+    }
+    var p1 = m.player1 ? m.player1.first_name + ' ' + m.player1.last_name : 'TBD';
+    var p2 = m.player2 ? m.player2.first_name + ' ' + m.player2.last_name : (m.status === 'bye' ? 'BYE' : 'TBD');
+    var result = m.status === 'completed' ? (m.winner ? m.winner.first_name[0] + '. ' + m.winner.last_name + ' won ' + (m.score || '') : 'Done') : (m.status === 'bye' ? 'BYE' : '—');
+    drawRows += '<tr><td>' + (rNames[m.round] || 'R' + m.round) + ' M' + m.position + '</td><td>' + p1 + '</td><td>' + p2 + '</td><td>' + result + '</td></tr>';
+  });
+
+  var printSheet = document.getElementById('printDrawNames');
+  printSheet.innerHTML =
+    '<div style="text-align:center;margin-bottom:1rem;">' + logo +
+      '<h1 style="font-size:1.4rem;margin:0;">' + tournament.name + '</h1>' +
+      '<p style="color:#666;font-size:0.9rem;">' + clubName + ' &bull; ' + tournament.bracket_size + ' Players</p>' +
+      '<p style="font-size:0.8rem;color:#999;">Printed: ' + new Date().toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' }) + '</p>' +
+    '</div>' +
+    '<h2 style="font-size:1rem;border-bottom:2px solid #333;padding-bottom:0.3rem;margin:1rem 0 0.5rem;">Player Directory</h2>' +
+    '<table style="width:100%;border-collapse:collapse;margin-bottom:1.5rem;">' +
+      '<thead><tr style="background:#f0f0f0;"><th style="padding:0.4rem;border:1px solid #ccc;text-align:left;">Seed</th><th style="padding:0.4rem;border:1px solid #ccc;text-align:left;">Name</th><th style="padding:0.4rem;border:1px solid #ccc;text-align:left;">Hcp</th><th style="padding:0.4rem;border:1px solid #ccc;text-align:left;">Phone</th></tr></thead>' +
+      '<tbody>' + playerRows + '</tbody></table>' +
+    '<h2 style="font-size:1rem;border-bottom:2px solid #333;padding-bottom:0.3rem;margin:1rem 0 0.5rem;">Draw</h2>' +
+    '<table style="width:100%;border-collapse:collapse;">' +
+      '<thead><tr style="background:#f0f0f0;"><th style="padding:0.4rem;border:1px solid #ccc;text-align:left;">Match</th><th style="padding:0.4rem;border:1px solid #ccc;text-align:left;">Player 1</th><th style="padding:0.4rem;border:1px solid #ccc;text-align:left;">Player 2</th><th style="padding:0.4rem;border:1px solid #ccc;text-align:left;">Result</th></tr></thead>' +
+      '<tbody>' + drawRows + '</tbody></table>' +
+    '<div style="margin-top:2rem;text-align:center;font-size:0.75rem;color:#999;border-top:1px solid #ccc;padding-top:0.5rem;">Generated by MyMatchPlayPal &bull; ' + clubName + '</div>';
+
+  // Set portrait for names
+  var style = document.createElement('style');
+  style.id = 'print-portrait';
+  style.textContent = '@page { size: A4 portrait; margin: 15mm; }';
+  document.head.appendChild(style);
+
+  document.body.classList.add('print-names');
+  window.print();
+  document.body.classList.remove('print-names');
+
+  var ps = document.getElementById('print-portrait');
+  if (ps) ps.remove();
 }
 
 document.addEventListener('DOMContentLoaded', initBracket);
