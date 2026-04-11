@@ -247,8 +247,8 @@ function renderDesktopBracket(matches, tournament, seedMap) {
       if (match.status === 'in_progress') borderStyle = 'border-color:var(--gold);';
       else if (match.status === 'pending' && !match.player1 && !match.player2) borderStyle = 'border-style:dashed;border-color:var(--gray-300);';
 
-      const p1Score = match.winner_id === match.player1?.id ? '&#9989;' : (match.status === 'in_progress' ? '<span style="color:var(--gold);">?</span>' : '&nbsp;');
-      const p2Score = match.winner_id === match.player2?.id ? '&#9989;' : (match.status === 'in_progress' ? '<span style="color:var(--gold);">?</span>' : '&nbsp;');
+      const p1Score = match.winner_id === match.player1?.id ? '&#9989;' : (match.status === 'in_progress' ? '&nbsp;' : '&nbsp;');
+      const p2Score = match.winner_id === match.player2?.id ? '&#9989;' : (match.status === 'in_progress' ? '&nbsp;' : '&nbsp;');
 
       const topMargin = round > 1 && idx === 0 ? `margin-top:${(marginMultiplier - 1) * 1.75}rem;` : '';
       const gapMargin = round > 1 && idx > 0 ? `margin-top:${(marginMultiplier * 2 - 1) * 1.5}rem;` : '';
