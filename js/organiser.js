@@ -222,6 +222,7 @@ async function loadTournaments() {
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
             <a href="bracket.html" class="btn btn-sm btn-secondary">View Bracket</a>
             <button class="btn btn-sm btn-primary" onclick="openRoundDeadlines('${t.id}','${t.name.replace(/'/g, "\\'")}',${t.bracket_size})">Set Deadlines</button>
+            <button class="btn btn-sm btn-gold" onclick="redraw('${t.id}', ${t.bracket_size})">Re-Draw</button>
             ${groupBtn}
           </div>`;
         break;
@@ -362,6 +363,18 @@ async function loadActivityLog() {
         <span class="notification-time">${timeAgo}</span>
       </div>`;
   }).join('');
+}
+
+// Re-Draw
+async function redraw(tournamentId, bracketSize) {
+  var confirmation = prompt('This will delete all current matches and results, and generate a new random draw.\n\nType REDRAW to confirm:');
+  if (confirmation !== 'REDRAW') {
+    if (confirmation !== null) alert('Cancelled. You must type REDRAW exactly.');
+    return;
+  }
+  // Reset tournament status so generateDraw works
+  await supabase.from('tournaments').update({ status: 'entries_open' }).eq('id', tournamentId);
+  await generateDraw(tournamentId, bracketSize);
 }
 
 // Delete Tournament
