@@ -92,6 +92,17 @@ function updateNavForAuth(member) {
     `;
     if (menuToggle) actionsEl.appendChild(menuToggle);
 
+    // Add admin link if superuser
+    if (member.is_admin) {
+      var navLinks = document.querySelector('.navbar-links');
+      var isAdminPage = window.location.pathname.indexOf('admin') !== -1;
+      if (navLinks && !isAdminPage) {
+        var adminLi = document.createElement('li');
+        adminLi.innerHTML = '<a href="admin.html" style="color:#e94560;font-weight:600;">&#128272; Admin</a>';
+        navLinks.appendChild(adminLi);
+      }
+    }
+
     // Add role switcher to sidebar AND mobile nav
     checkIsOrganiser(member.id).then(function(isOrg) {
       var hasOrgRole = isOrg || member.role === 'organiser';

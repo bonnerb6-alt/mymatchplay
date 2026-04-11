@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - MyMatchPlayPal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    .admin-navbar { background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%); border-bottom: 3px solid #e94560; }
+    .admin-badge { background: #e94560; color: white; font-size: 0.65rem; padding: 0.15rem 0.5rem; border-radius: var(--radius-full); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .payment-trial { background: #eff6ff; color: #1e40af; }
+    .payment-active { background: var(--green-100); color: var(--green-800); }
+    .payment-overdue { background: #fef2f2; color: #991b1b; }
+    .payment-cancelled { background: var(--gray-100); color: var(--gray-600); }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar admin-navbar">
+    <div class="navbar-inner">
+      <a href="admin.html" class="navbar-brand">
+        <div class="brand-icon" style="background:#e94560;">&#9971;</div>
+        <span>MyMatchPlayPal <span class="admin-badge">ADMIN</span></span>
+      </a>
+      <ul class="navbar-links">
+        <li><a href="admin.html" class="active">Clubs</a></li>
+        <li><a href="golfer.html">Golfer View</a></li>
+        <li><a href="organiser.html">Organiser View</a></li>
+      </ul>
+      <div class="navbar-actions">
+        <a href="#" onclick="signOut();return false;" class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:var(--white);font-size:0.75rem;">Sign Out</a>
+        <button class="menu-toggle" onclick="document.querySelector('.navbar-links').classList.toggle('show')">&#9776;</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container page-content">
+    <div class="dashboard-header" style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:1rem;">
+      <div>
+        <h1>&#128272; Admin Panel</h1>
+        <p>Manage golf clubs, subscriptions, and payments.</p>
+      </div>
+      <button class="btn btn-primary" onclick="document.getElementById('addClubModal').classList.add('active')">+ Add Golf Club</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stat-cards" style="margin-bottom:2rem;">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#eff6ff;">&#9971;</div>
+        <div class="stat-value" id="admin-total-clubs">-</div>
+        <div class="stat-label">Total Clubs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">&#9989;</div>
+        <div class="stat-value" id="admin-active-clubs">-</div>
+        <div class="stat-label">Active (Paid)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#fef2f2;">&#9888;</div>
+        <div class="stat-value" id="admin-overdue-clubs">-</div>
+        <div class="stat-label">Overdue</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#eff6ff;">&#128101;</div>
+        <div class="stat-value" id="admin-total-members">-</div>
+        <div class="stat-label">Total Members</div>
+      </div>
+    </div>
+
+    <!-- Clubs Table -->
+    <div class="card">
+      <div class="card-header">
+        <h3>&#9971; Golf Clubs</h3>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Club Name</th>
+              <th>Contact</th>
+              <th>Members</th>
+              <th>Tournaments</th>
+              <th>Payment Status</th>
+              <th>Expires</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="clubs-table-body">
+            <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--gray-400);">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Club Modal -->
+  <div class="modal-overlay" id="addClubModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>&#9971; Add Golf Club</h3>
+        <button class="modal-close" onclick="document.getElementById('addClubModal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Club Name</label>
+          <input type="text" id="newClubName" class="form-input" placeholder="e.g. Greenview Golf Club">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contact Name</label>
+          <input type="text" id="newClubContact" class="form-input" placeholder="e.g. Mary Connolly">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contact Email</label>
+          <input type="email" id="newClubEmail" class="form-input" placeholder="secretary@club.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contact Phone</label>
+          <input type="tel" id="newClubPhone" class="form-input" placeholder="087 000 0000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stripe Payment Link (optional)</label>
+          <input type="url" id="newClubStripeLink" class="form-input" placeholder="https://buy.stripe.com/...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea class="form-textarea" id="newClubNotes" placeholder="Any notes about this club..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('addClubModal').classList.remove('active')">Cancel</button>
+        <button class="btn btn-primary" onclick="addClub()">Add Club</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Club Modal -->
+  <div class="modal-overlay" id="editClubModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>&#9881; Edit Club</h3>
+        <button class="modal-close" onclick="document.getElementById('editClubModal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editClubId">
+        <div class="form-group">
+          <label class="form-label">Club Name</label>
+          <input type="text" id="editClubName" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contact Name</label>
+          <input type="text" id="editClubContact" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contact Email</label>
+          <input type="email" id="editClubEmail" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contact Phone</label>
+          <input type="tel" id="editClubPhone" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Payment Status</label>
+          <select class="form-select" id="editClubPayment">
+            <option value="trial">Trial</option>
+            <option value="active">Active (Paid)</option>
+            <option value="overdue">Overdue</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Subscription Expires</label>
+          <input type="date" id="editClubExpires" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stripe Payment Link</label>
+          <input type="url" id="editClubStripeLink" class="form-input" placeholder="https://buy.stripe.com/...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea class="form-textarea" id="editClubNotes"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('editClubModal').classList.remove('active')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveClub()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/supabase-client.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    var adminMember = null;
+
+    async function initAdmin() {
+      adminMember = await getCurrentMember();
+      if (!adminMember || !adminMember.is_admin) {
+        alert('Access denied. Admin only.');
+        window.location.href = 'golfer.html';
+        return;
+      }
+      loadAdminStats();
+      loadClubs();
+    }
+
+    async function loadAdminStats() {
+      var { count: totalClubs } = await supabase.from('clubs').select('*', { count: 'exact', head: true });
+      var { count: activeClubs } = await supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('payment_status', 'active');
+      var { count: overdueClubs } = await supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('payment_status', 'overdue');
+      var { count: totalMembers } = await supabase.from('members').select('*', { count: 'exact', head: true });
+
+      document.getElementById('admin-total-clubs').textContent = totalClubs || 0;
+      document.getElementById('admin-active-clubs').textContent = activeClubs || 0;
+      document.getElementById('admin-overdue-clubs').textContent = overdueClubs || 0;
+      document.getElementById('admin-total-members').textContent = totalMembers || 0;
+    }
+
+    async function loadClubs() {
+      var container = document.getElementById('clubs-table-body');
+
+      var { data: clubs } = await supabase
+        .from('clubs')
+        .select('*, club_memberships(count)')
+        .order('name');
+
+      // Get tournament counts per club
+      var { data: tournaments } = await supabase
+        .from('tournaments')
+        .select('club_id');
+
+      var tournamentCounts = {};
+      (tournaments || []).forEach(function(t) {
+        tournamentCounts[t.club_id] = (tournamentCounts[t.club_id] || 0) + 1;
+      });
+
+      if (!clubs || clubs.length === 0) {
+        container.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--gray-400);">No clubs yet. Add one!</td></tr>';
+        return;
+      }
+
+      container.innerHTML = clubs.map(function(c) {
+        var memberCount = c.club_memberships?.[0]?.count || 0;
+        var tournamentCount = tournamentCounts[c.id] || 0;
+        var expires = c.subscription_expires ? new Date(c.subscription_expires).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+
+        var paymentBadge = '';
+        switch (c.payment_status) {
+          case 'active': paymentBadge = '<span class="badge payment-active">Active</span>'; break;
+          case 'overdue': paymentBadge = '<span class="badge payment-overdue">Overdue</span>'; break;
+          case 'cancelled': paymentBadge = '<span class="badge payment-cancelled">Cancelled</span>'; break;
+          default: paymentBadge = '<span class="badge payment-trial">Trial</span>';
+        }
+
+        var stripeBtn = c.stripe_payment_link
+          ? '<a href="' + c.stripe_payment_link + '" target="_blank" class="btn btn-sm" style="background:#635bff;color:white;font-size:0.7rem;">Stripe</a>'
+          : '';
+
+        var contactInfo = c.contact_name || c.contact_email || '';
+        if (c.contact_name && c.contact_email) contactInfo = c.contact_name + '<br><span style="font-size:0.75rem;color:var(--gray-500);">' + c.contact_email + '</span>';
+
+        // Escape single quotes in values for onclick
+        var safeName = (c.name || '').replace(/'/g, "\\'");
+        var safeContact = (c.contact_name || '').replace(/'/g, "\\'");
+        var safeEmail = c.contact_email || '';
+        var safePhone = c.contact_phone || '';
+        var safeStripe = c.stripe_payment_link || '';
+        var safeNotes = (c.notes || '').replace(/'/g, "\\'");
+
+        return '<tr>' +
+          '<td><strong>' + c.name + '</strong>' + (c.notes ? '<br><span style="font-size:0.7rem;color:var(--gray-400);">' + c.notes.substring(0, 50) + '</span>' : '') + '</td>' +
+          '<td>' + contactInfo + '</td>' +
+          '<td>' + memberCount + '</td>' +
+          '<td>' + tournamentCount + '</td>' +
+          '<td>' + paymentBadge + '</td>' +
+          '<td>' + expires + '</td>' +
+          '<td><div style="display:flex;gap:0.3rem;flex-wrap:wrap;">' +
+            '<button class="btn btn-sm btn-secondary" style="font-size:0.7rem;" onclick="openEditClub(\'' + c.id + '\',\'' + safeName + '\',\'' + safeContact + '\',\'' + safeEmail + '\',\'' + safePhone + '\',\'' + c.payment_status + '\',\'' + (c.subscription_expires || '') + '\',\'' + safeStripe + '\',\'' + safeNotes + '\')">Edit</button>' +
+            stripeBtn +
+          '</div></td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    async function addClub() {
+      var name = document.getElementById('newClubName').value.trim();
+      if (!name) { alert('Club name is required.'); return; }
+
+      var { error } = await supabase.from('clubs').insert({
+        name: name,
+        contact_name: document.getElementById('newClubContact').value.trim() || null,
+        contact_email: document.getElementById('newClubEmail').value.trim() || null,
+        contact_phone: document.getElementById('newClubPhone').value.trim() || null,
+        stripe_payment_link: document.getElementById('newClubStripeLink').value.trim() || null,
+        notes: document.getElementById('newClubNotes').value.trim() || null,
+        payment_status: 'trial'
+      });
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      document.getElementById('addClubModal').classList.remove('active');
+      // Clear form
+      ['newClubName','newClubContact','newClubEmail','newClubPhone','newClubStripeLink','newClubNotes'].forEach(function(id) {
+        document.getElementById(id).value = '';
+      });
+      alert('Club added!');
+      loadClubs();
+      loadAdminStats();
+    }
+
+    function openEditClub(id, name, contact, email, phone, payment, expires, stripe, notes) {
+      document.getElementById('editClubId').value = id;
+      document.getElementById('editClubName').value = name;
+      document.getElementById('editClubContact').value = contact;
+      document.getElementById('editClubEmail').value = email;
+      document.getElementById('editClubPhone').value = phone;
+      document.getElementById('editClubPayment').value = payment;
+      document.getElementById('editClubExpires').value = expires;
+      document.getElementById('editClubStripeLink').value = stripe;
+      document.getElementById('editClubNotes').value = notes;
+      document.getElementById('editClubModal').classList.add('active');
+    }
+
+    async function saveClub() {
+      var id = document.getElementById('editClubId').value;
+      var { error } = await supabase.from('clubs').update({
+        name: document.getElementById('editClubName').value.trim(),
+        contact_name: document.getElementById('editClubContact').value.trim() || null,
+        contact_email: document.getElementById('editClubEmail').value.trim() || null,
+        contact_phone: document.getElementById('editClubPhone').value.trim() || null,
+        payment_status: document.getElementById('editClubPayment').value,
+        subscription_expires: document.getElementById('editClubExpires').value || null,
+        stripe_payment_link: document.getElementById('editClubStripeLink').value.trim() || null,
+        notes: document.getElementById('editClubNotes').value.trim() || null
+      }).eq('id', id);
+
+      if (error) { alert('Error: ' + error.message); return; }
+
+      document.getElementById('editClubModal').classList.remove('active');
+      alert('Club updated!');
+      loadClubs();
+      loadAdminStats();
+    }
+
+    document.addEventListener('DOMContentLoaded', initAdmin);
+  </script>
+</body>
+</html>
