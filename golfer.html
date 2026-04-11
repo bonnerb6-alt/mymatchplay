@@ -2,162 +2,126 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Golfer Dashboard - MyMatchPlayPal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Dashboard - MyMatchPlayPal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
-  <nav class="navbar">
-    <div class="navbar-inner">
-      <a href="golfer.html" class="navbar-brand" style="text-decoration:none;">
-        <div class="brand-icon">&#9971;</div>
-        <span>MyMatchPlayPal</span>
-      </a>
-      <ul class="navbar-links">
-        <li><a href="golfer.html" class="active">Dashboard</a></li>
-        <li><a href="results.html">Results</a></li>
-        <li><a href="profile.html">Profile</a></li>
-      </ul>
-      <div class="navbar-actions">
-        <div class="nav-avatar">--</div>
-        <a href="#" onclick="signOut();return false;" class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:var(--white);font-size:0.75rem;padding:0.3rem 0.6rem;">Sign Out</a>
-        <button class="menu-toggle" onclick="document.querySelector('.navbar-links').classList.toggle('show')">&#9776;</button>
-      </div>
+  <!-- Top Nav -->
+  <nav class="top-nav">
+    <a href="golfer.html" class="top-nav-brand">
+      <div class="icon" id="nav-logo">&#9971;</div>
+      <span>MyMatchPlayPal</span>
+    </a>
+    <div class="top-nav-actions">
+      <div class="avatar" id="nav-avatar">--</div>
+      <button class="signout-btn" onclick="signOut()">Sign Out</button>
     </div>
   </nav>
 
-  <div class="dashboard">
-    <aside class="sidebar">
-      <div class="sidebar-section" id="sidebar-profile"></div>
-      <div class="sidebar-section">
-        <div class="sidebar-section-title">Menu</div>
-        <ul class="sidebar-nav">
-          <li><a href="#section-stats" class="active" onclick="golferSidebarNav(this)"><span class="nav-icon">&#127968;</span> Dashboard</a></li>
-          <li><a href="#section-matches" onclick="golferSidebarNav(this)"><span class="nav-icon">&#128197;</span> My Matches</a></li>
-          <li><a href="#section-my-tournaments" onclick="golferSidebarNav(this)"><span class="nav-icon">&#127942;</span> My Tournaments</a></li>
-          <li><a href="#section-open-tournaments" onclick="golferSidebarNav(this)"><span class="nav-icon">&#128227;</span> Enter Competitions</a></li>
-          <li><a href="results.html"><span class="nav-icon">&#127941;</span> Results</a></li>
-        </ul>
-      </div>
-      <div class="sidebar-section">
-        <div class="sidebar-section-title">Account</div>
-        <ul class="sidebar-nav">
-          <li><a href="profile.html"><span class="nav-icon">&#128100;</span> My Profile</a></li>
-          <li><a href="#" onclick="signOut();return false;"><span class="nav-icon">&#128682;</span> Sign Out</a></li>
-        </ul>
-      </div>
-      <div class="sidebar-section" id="sidebar-role-switcher" style="padding:0 1rem;"></div>
-    </aside>
+  <!-- Main Content -->
+  <div class="page">
 
-    <main class="dashboard-main">
-      <div class="dashboard-header">
-        <h1 id="dashboard-greeting">Welcome back</h1>
-        <p>Here's what's happening with your matchplay competitions.</p>
-      </div>
+    <!-- Greeting -->
+    <div class="page-header">
+      <h1 id="greeting">Dashboard</h1>
+      <p>Your matchplay overview</p>
+    </div>
 
-      <!-- Stats -->
-      <div id="section-stats" class="stat-cards">
-        <div class="stat-card">
-          <div class="stat-icon green">&#127942;</div>
-          <div class="stat-value" id="stat-active">-</div>
-          <div class="stat-label">Active Tournaments</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon gold">&#9917;</div>
-          <div class="stat-value" id="stat-matches">-</div>
-          <div class="stat-label">Matches to Play</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon blue">&#128170;</div>
-          <div class="stat-value" id="stat-record">-</div>
-          <div class="stat-label">Win-Loss Record</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon red">&#128293;</div>
-          <div class="stat-value" id="stat-streak">-</div>
-          <div class="stat-label">Win Streak</div>
-        </div>
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="value" id="s-tournaments">-</div>
+        <div class="label">Tournaments</div>
       </div>
-
-      <!-- My Matches — Action Required -->
-      <div id="section-matches" class="card mb-3">
-        <div class="card-header">
-          <h3>&#128197; My Matches — Action Required</h3>
-        </div>
-        <div class="card-body" id="action-matches">
-          <p style="text-align:center;color:var(--gray-400);">Loading...</p>
-        </div>
+      <div class="stat-box">
+        <div class="value" id="s-matches">-</div>
+        <div class="label">To Play</div>
       </div>
-
-      <!-- My Tournaments — Registered -->
-      <div id="section-my-tournaments" class="card mb-3">
-        <div class="card-header">
-          <h3>&#127942; My Tournaments</h3>
-        </div>
-        <div class="card-body" id="my-tournaments">
-          <p style="text-align:center;color:var(--gray-400);">Loading...</p>
-        </div>
+      <div class="stat-box">
+        <div class="value" id="s-record">-</div>
+        <div class="label">W-L</div>
       </div>
-
-      <!-- Tournaments for Entry -->
-      <div id="section-open-tournaments" class="card mb-3">
-        <div class="card-header">
-          <h3>&#128227; Tournaments for Entry</h3>
-        </div>
-        <div class="card-body">
-          <div id="open-tournaments" style="display:flex;flex-direction:column;gap:1rem;">
-            <p style="text-align:center;color:var(--gray-400);">Loading...</p>
-          </div>
-        </div>
+      <div class="stat-box">
+        <div class="value" id="s-streak">-</div>
+        <div class="label">Streak</div>
       </div>
+    </div>
 
-      <!-- Report Score -->
-      <div class="card mb-3">
-        <div class="card-header">
-          <h3>&#128221; Report a Score</h3>
+    <!-- My Matches -->
+    <div class="card">
+      <div class="card-head">
+        <h2>My Matches</h2>
+      </div>
+      <div class="card-body" id="matches-list">
+        <div class="card-empty">Loading...</div>
+      </div>
+    </div>
+
+    <!-- My Tournaments -->
+    <div class="card">
+      <div class="card-head">
+        <h2>My Tournaments</h2>
+      </div>
+      <div class="card-body" id="my-tournaments">
+        <div class="card-empty">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Enter Competitions -->
+    <div class="card">
+      <div class="card-head">
+        <h2>Enter Competitions</h2>
+      </div>
+      <div class="card-body" id="open-tournaments">
+        <div class="card-empty">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Report Score -->
+    <div class="card">
+      <div class="card-head">
+        <h2>Report Score</h2>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">Select Match</label>
+          <select class="form-select" id="score-match-select">
+            <option disabled selected>Loading...</option>
+          </select>
         </div>
-        <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
           <div class="form-group">
-            <label class="form-label">Select Match</label>
-            <select class="form-select" id="score-match-select">
-              <option disabled>Loading...</option>
+            <label class="form-label">Result</label>
+            <select class="form-select" id="score-result">
+              <option value="won">I Won</option>
+              <option value="lost">I Lost</option>
             </select>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-            <div class="form-group">
-              <label class="form-label">Result</label>
-              <select class="form-select" id="score-result">
-                <option value="won">I Won</option>
-                <option value="lost">I Lost</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Score</label>
-              <input type="text" class="form-input" id="score-value" placeholder="e.g. 3&2, 1 Up">
-            </div>
+          <div class="form-group">
+            <label class="form-label">Score</label>
+            <input type="text" class="form-input" id="score-value" placeholder="e.g. 3&2">
           </div>
-          <button class="btn btn-primary" onclick="submitScore()">Submit Score</button>
         </div>
+        <button class="btn btn-primary btn-block" onclick="submitScore()">Submit Score</button>
       </div>
+    </div>
 
-    </main>
   </div>
 
   <!-- View Bracket Modal -->
   <div class="modal-overlay" id="bracketModal">
-    <div class="modal" style="max-width:90%;width:900px;max-height:90vh;">
+    <div class="modal" style="max-width:95%;width:900px;">
       <div class="modal-header">
-        <h3 id="bracketModalTitle">Tournament Bracket</h3>
+        <h3 id="bracketModalTitle">Bracket</h3>
         <button class="modal-close" onclick="document.getElementById('bracketModal').classList.remove('active')">&times;</button>
       </div>
-      <div class="modal-body" style="overflow-x:auto;padding:1rem;">
-        <div id="bracketModalContent">
-          <p style="text-align:center;color:var(--gray-400);">Loading...</p>
-        </div>
+      <div class="modal-body" style="overflow-x:auto;">
+        <div id="bracketModalContent"><div class="card-empty">Loading...</div></div>
       </div>
     </div>
   </div>
@@ -170,15 +134,34 @@
         <button class="modal-close" onclick="document.getElementById('entrantsModal').classList.remove('active')">&times;</button>
       </div>
       <div class="modal-body">
-        <div id="entrantsModalContent">
-          <p style="text-align:center;color:var(--gray-400);">Loading...</p>
-        </div>
+        <div id="entrantsModalContent"><div class="card-empty">Loading...</div></div>
       </div>
     </div>
   </div>
 
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <a href="golfer.html" class="active">
+      <span class="nav-icon">&#127968;</span>
+      Home
+    </a>
+    <a href="results.html">
+      <span class="nav-icon">&#127941;</span>
+      Results
+    </a>
+    <a href="profile.html">
+      <span class="nav-icon">&#128100;</span>
+      Profile
+    </a>
+    <a href="#" id="org-link" style="display:none;" onclick="return false;">
+      <span class="nav-icon">&#128274;</span>
+      Organiser
+    </a>
+  </nav>
+
   <script src="js/supabase-client.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/draw-engine.js"></script>
   <script src="js/golfer.js"></script>
 </body>
 </html>

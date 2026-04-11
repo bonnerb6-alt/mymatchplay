@@ -612,6 +612,8 @@ async function createTournament() {
 
   if (!name) { alert('Please enter a tournament name.'); return; }
 
+  const byeMode = document.getElementById('newByeMode')?.value || 'handicap';
+
   const { error } = await supabase
     .from('tournaments')
     .insert({
@@ -622,7 +624,8 @@ async function createTournament() {
       status: 'entries_open',
       entry_deadline: deadline || null,
       round_days: roundDays,
-      description: description || null
+      description: description || null,
+      bye_mode: byeMode
     });
 
   if (error) { alert('Error: ' + error.message); return; }
@@ -647,16 +650,12 @@ async function closeEntries(tournamentId) {
 }
 
 async function generateDraw(tournamentId, bracketSize) {
-  if (!confirm('Generate the draw? This will create the bracket and notify all players.')) return;
+  if (!confirm('Generate the draw? This will create the bracket.')) return;
 
-  // Delete any existing matches for this tournament (in case of re-draw)
-  var { error: delErr } = await supabase.from('matches').delete().eq('tournament_id', tournamentId);
-  console.log('[MMP] Delete old matches:', delErr ? delErr.message : 'OK');
-
-  // Get entries
-  const { data: entries } = await supabase
+  // Get entries with handicap data
+  var { data: entries } = await supabase
     .from('tournament_entries')
-    .select('member_id')
+    .select('member_id, members(id, first_name, last_name, handicap)')
     .eq('tournament_id', tournamentId);
 
   if (!entries || entries.length < 2) {
@@ -664,164 +663,24 @@ async function generateDraw(tournamentId, bracketSize) {
     return;
   }
 
-  // Shuffle entries (Fisher-Yates)
-  const players = entries.map(e => e.member_id);
-  for (let i = players.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [players[i], players[j]] = [players[j], players[i]];
-  }
+  // Get tournament bye_mode
+  var { data: tournament } = await supabase.from('tournaments').select('bye_mode').eq('id', tournamentId).single();
+  var byeMode = tournament?.bye_mode || 'handicap';
 
-  // Auto-size bracket — round up to nearest power of 2
-  // e.g. 5 players → 8, 7 → 8, 9 → 16, 17 → 32
-  var effectiveSize = 2;
-  while (effectiveSize < players.length) effectiveSize *= 2;
-  bracketSize = effectiveSize;
+  // Build player array
+  var players = entries.map(function(e) {
+    return { id: e.members.id, handicap: e.members.handicap || 99, first_name: e.members.first_name, last_name: e.members.last_name };
+  });
 
-  console.log('[MMP] Players:', players.length, 'Bracket size:', bracketSize, 'Byes:', bracketSize - players.length);
+  // Use the draw engine
+  var result = await generateTournamentDraw(tournamentId, players, bracketSize, byeMode);
 
-  // Update the tournament's bracket_size to the effective size
-  var { data: sizeData, error: sizeErr } = await supabase.from('tournaments').update({ bracket_size: bracketSize }).eq('id', tournamentId).select('bracket_size').single();
-  console.log('[MMP] Bracket size update:', sizeErr ? sizeErr.message : 'OK → ' + (sizeData ? sizeData.bracket_size : bracketSize));
-  if (sizeErr) {
-    alert('Could not update bracket size: ' + sizeErr.message);
-    return;
-  }
-
-  // Calculate rounds
-  const totalRounds = Math.log2(bracketSize);
-  const byes = bracketSize - players.length;
-
-  // Generate all match shells from Final backward
-  const allMatches = [];
-
-  // Create matches round by round starting from the Final
-  for (let round = totalRounds; round >= 1; round--) {
-    const matchesInRound = bracketSize / Math.pow(2, round);
-    for (let pos = 1; pos <= matchesInRound; pos++) {
-      allMatches.push({
-        tournament_id: tournamentId,
-        round: round,
-        position: pos,
-        player1_id: null,
-        player2_id: null,
-        winner_id: null,
-        status: 'pending',
-        _tempKey: `${round}-${pos}`
-      });
-    }
-  }
-
-  // Link matches: match at round R, pos P feeds into round R+1, pos ceil(P/2)
-  for (const match of allMatches) {
-    if (match.round < totalRounds) {
-      const nextPos = Math.ceil(match.position / 2);
-      const nextMatch = allMatches.find(m => m.round === match.round + 1 && m.position === nextPos);
-      if (nextMatch) {
-        match._nextKey = nextMatch._tempKey;
-      }
-    }
-  }
-
-  // Insert from Final backward so next_match_id references exist
-  // Sort: highest round first
-  allMatches.sort((a, b) => b.round - a.round || a.position - b.position);
-
-  const keyToId = {};
-
-  for (const match of allMatches) {
-    const insertData = {
-      tournament_id: match.tournament_id,
-      round: match.round,
-      position: match.position,
-      player1_id: match.player1_id,
-      player2_id: match.player2_id,
-      winner_id: match.winner_id,
-      status: match.status,
-      next_match_id: match._nextKey ? keyToId[match._nextKey] : null
-    };
-
-    const { data: inserted, error } = await supabase
-      .from('matches')
-      .insert(insertData)
-      .select('id')
-      .single();
-
-    if (error) {
-      console.error('[MMP] Match insert error:', error, 'Data:', insertData);
-      alert('Error generating draw: ' + error.message);
-      return;
-    }
-    console.log('[MMP] Inserted match:', match._tempKey, '->', inserted.id);
-
-    keyToId[match._tempKey] = inserted.id;
-  }
-
-  // Assign players to Round 1 with proper bye calculation
-  // e.g. 10 players, 16 bracket: QF needs 8, so 10-8=2 real matches, 6 byes
-  const round1Matches = allMatches
-    .filter(m => m.round === 1)
-    .sort((a, b) => a.position - b.position);
-
-  const round1Count = round1Matches.length; // e.g. 8 for 16-bracket
-  const realMatchCount = players.length - round1Count; // e.g. 10-8=2 real matches
-  // realMatchCount players play in round 1, the rest get byes
-
-  console.log('[MMP] Round 1 matches:', round1Count, 'Real matches:', realMatchCount, 'Byes:', round1Count - realMatchCount);
-
-  // First: assign bye players (1 player per match, auto-advance)
-  // Byes go to the top-seeded positions
-  let playerIdx = 0;
-  const byeMatchCount = round1Count - realMatchCount;
-
-  for (let i = 0; i < round1Matches.length; i++) {
-    const match = round1Matches[i];
-    const matchId = keyToId[match._tempKey];
-
-    if (i < byeMatchCount) {
-      // BYE match — one player, auto-advance
-      const p1 = players[playerIdx++];
-      await supabase.from('matches').update({
-        player1_id: p1, winner_id: p1, status: 'bye'
-      }).eq('id', matchId);
-
-      // Advance to next round
-      if (match._nextKey) {
-        const nextMatchId = keyToId[match._nextKey];
-        const isOddPosition = match.position % 2 === 1;
-        const updateField = isOddPosition ? 'player1_id' : 'player2_id';
-        await supabase.from('matches').update({ [updateField]: p1 }).eq('id', nextMatchId);
-      }
-    } else {
-      // Real match — two players
-      const p1 = players[playerIdx++];
-      const p2 = players[playerIdx++];
-      await supabase.from('matches').update({
-        player1_id: p1, player2_id: p2, status: 'in_progress'
-      }).eq('id', matchId);
-    }
-  }
-
-  // Update seeds
-  for (let i = 0; i < players.length; i++) {
-    await supabase
-      .from('tournament_entries')
-      .update({ seed: i + 1 })
-      .eq('tournament_id', tournamentId)
-      .eq('member_id', players[i]);
-  }
-
-  // Update tournament status
-  var { error: statusErr } = await supabase
-    .from('tournaments')
-    .update({ status: 'in_progress', current_round: 1 })
-    .eq('id', tournamentId);
-
-  console.log('[MMP] Tournament status update:', statusErr ? statusErr.message : 'OK');
-  if (statusErr) {
-    alert('Draw generated but could not update tournament status: ' + statusErr.message);
+  if (result.error) {
+    alert('Error generating draw: ' + result.error.message);
   } else {
-    alert('Draw generated! ' + players.length + ' players with ' + byes + ' byes. Bracket is now live.');
+    alert('Draw generated! ' + result.players + ' players, ' + result.byes + ' byes, ' + result.bracketSize + '-player bracket.');
   }
+
   await Promise.all([loadTournaments(), loadOrgStats()]);
 }
 
