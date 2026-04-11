@@ -409,25 +409,27 @@ async function loadOpenTournaments() {
 
   const enteredIds = new Set((myEntries || []).map(e => e.tournament_id));
 
-  container.innerHTML = tournaments.map(t => {
+  // Only show tournaments not yet entered
+  const notEntered = tournaments.filter(t => !enteredIds.has(t.id));
+
+  if (notEntered.length === 0) {
+    container.innerHTML = '<p style="padding:1rem;text-align:center;color:var(--gray-400);">No new tournaments available</p>';
+    return;
+  }
+
+  container.innerHTML = notEntered.map(t => {
     const entryCount = t.tournament_entries?.[0]?.count || 0;
     const pct = Math.round((entryCount / t.bracket_size) * 100);
     const isOpen = t.status === 'entries_open';
-    const alreadyEntered = enteredIds.has(t.id);
     const deadline = t.entry_deadline ? new Date(t.entry_deadline).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' }) : 'TBD';
 
     const statusBadge = isOpen
       ? '<span class="badge badge-green"><span class="status-dot live"></span> Open</span>'
       : '<span class="badge badge-gold"><span class="status-dot pending"></span> Opening Soon</span>';
 
-    let actionBtn;
-    if (alreadyEntered) {
-      actionBtn = '<button class="btn btn-sm btn-secondary" disabled>Entered</button>';
-    } else if (isOpen) {
-      actionBtn = `<button class="btn btn-sm btn-primary" onclick="enterTournament('${t.id}', this)">Enter Now</button>`;
-    } else {
-      actionBtn = '<button class="btn btn-sm btn-secondary" disabled>Not Open Yet</button>';
-    }
+    const actionBtn = isOpen
+      ? `<button class="btn btn-sm btn-primary" onclick="enterTournament('${t.id}', this)">Enter Now</button>`
+      : '<button class="btn btn-sm btn-secondary" disabled>Not Open Yet</button>';
 
     const borderStyle = isOpen ? 'border:1.5px solid var(--green-300);background:var(--green-50);' : 'border:1.5px solid var(--gray-200);';
 
