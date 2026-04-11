@@ -637,7 +637,8 @@ async function generateDraw(tournamentId, bracketSize) {
   if (!confirm('Generate the draw? This will create the bracket and notify all players.')) return;
 
   // Delete any existing matches for this tournament (in case of re-draw)
-  await supabase.from('matches').delete().eq('tournament_id', tournamentId);
+  var { error: delErr } = await supabase.from('matches').delete().eq('tournament_id', tournamentId);
+  console.log('[MMP] Delete old matches:', delErr ? delErr.message : 'OK');
 
   // Get entries
   const { data: entries } = await supabase
@@ -727,9 +728,11 @@ async function generateDraw(tournamentId, bracketSize) {
       .single();
 
     if (error) {
+      console.error('[MMP] Match insert error:', error, 'Data:', insertData);
       alert('Error generating draw: ' + error.message);
       return;
     }
+    console.log('[MMP] Inserted match:', match._tempKey, '->', inserted.id);
 
     keyToId[match._tempKey] = inserted.id;
   }
