@@ -245,6 +245,25 @@
     </div>
   </div>
 
+  <!-- Round Deadlines Modal -->
+  <div class="modal-overlay" id="deadlinesModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>&#128197; Set Round Deadlines</h3>
+        <button class="modal-close" onclick="document.getElementById('deadlinesModal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="deadlinesTournamentId">
+        <p style="font-weight:600;margin-bottom:1rem;" id="deadlinesTournamentName"></p>
+        <div id="deadlines-fields"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('deadlinesModal').classList.remove('active')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveRoundDeadlines()">Save Deadlines</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Enrol Members in Tournament Modal -->
   <div class="modal-overlay" id="enrolTournamentModal">
     <div class="modal">

@@ -221,6 +221,7 @@ async function loadTournaments() {
         actions = `
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
             <a href="bracket.html" class="btn btn-sm btn-secondary">View Bracket</a>
+            <button class="btn btn-sm btn-primary" onclick="openRoundDeadlines('${t.id}','${t.name.replace(/'/g, "\\'")}',${t.bracket_size})">Set Deadlines</button>
             ${groupBtn}
           </div>`;
         break;
@@ -351,6 +352,61 @@ async function loadActivityLog() {
         <span class="notification-time">${timeAgo}</span>
       </div>`;
   }).join('');
+}
+
+// Round Deadlines
+async function openRoundDeadlines(tournamentId, tournamentName, bracketSize) {
+  var totalRounds = Math.log2(bracketSize);
+  var modal = document.getElementById('deadlinesModal');
+  document.getElementById('deadlinesTournamentName').textContent = tournamentName;
+  document.getElementById('deadlinesTournamentId').value = tournamentId;
+
+  // Fetch current deadlines
+  var { data: tournament } = await supabase.from('tournaments').select('round_deadlines').eq('id', tournamentId).single();
+  var deadlines = tournament?.round_deadlines || {};
+
+  var html = '';
+  for (var r = 1; r <= totalRounds; r++) {
+    var rName = getRoundName(r, totalRounds);
+    var val = deadlines[r] || '';
+    html += '<div class="form-group" style="display:flex;align-items:center;gap:0.75rem;">' +
+      '<label style="min-width:120px;font-weight:600;font-size:0.85rem;">' + rName + '</label>' +
+      '<input type="date" class="form-input" id="deadline-round-' + r + '" value="' + val + '" style="flex:1;">' +
+    '</div>';
+  }
+
+  document.getElementById('deadlines-fields').innerHTML = html;
+  modal.classList.add('active');
+}
+
+async function saveRoundDeadlines() {
+  var tournamentId = document.getElementById('deadlinesTournamentId').value;
+
+  // Get bracket size to know how many rounds
+  var { data: tournament } = await supabase.from('tournaments').select('bracket_size').eq('id', tournamentId).single();
+  var totalRounds = Math.log2(tournament.bracket_size);
+
+  var deadlines = {};
+  for (var r = 1; r <= totalRounds; r++) {
+    var input = document.getElementById('deadline-round-' + r);
+    if (input && input.value) deadlines[r] = input.value;
+  }
+
+  // Save to tournament
+  var { error } = await supabase.from('tournaments').update({ round_deadlines: deadlines }).eq('id', tournamentId);
+  if (error) { alert('Error: ' + error.message); return; }
+
+  // Also update match deadlines per round
+  for (var r in deadlines) {
+    await supabase.from('matches')
+      .update({ deadline: deadlines[r] })
+      .eq('tournament_id', tournamentId)
+      .eq('round', parseInt(r));
+  }
+
+  document.getElementById('deadlinesModal').classList.remove('active');
+  alert('Round deadlines saved!');
+  loadTournaments();
 }
 
 // Enrol members in a tournament
@@ -567,6 +623,16 @@ async function generateDraw(tournamentId, bracketSize) {
     const j = Math.floor(Math.random() * (i + 1));
     [players[i], players[j]] = [players[j], players[i]];
   }
+
+  // Auto-size bracket — round up to nearest power of 2
+  var effectiveSize = 2;
+  while (effectiveSize < players.length) effectiveSize *= 2;
+  // Don't exceed the tournament's max bracket size
+  if (effectiveSize > bracketSize) effectiveSize = bracketSize;
+  bracketSize = effectiveSize;
+
+  // Update the tournament's bracket_size to the effective size
+  await supabase.from('tournaments').update({ bracket_size: bracketSize }).eq('id', tournamentId);
 
   // Calculate rounds
   const totalRounds = Math.log2(bracketSize);

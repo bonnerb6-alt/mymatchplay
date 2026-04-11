@@ -94,7 +94,7 @@ async function loadBracketData(tournamentId) {
   // Get tournament info
   const { data: tournament, error: tErr } = await supabase
     .from('tournaments')
-    .select('*, clubs(name, logo_url), tournament_entries(count)')
+    .select('*, clubs(name, logo_url), tournament_entries(count), round_deadlines')
     .eq('id', tournamentId)
     .single();
 
@@ -387,16 +387,24 @@ function renderRoundDeadlines(tournament) {
     if (r === totalRounds) rNames[r] = 'Final';
     else if (r === totalRounds - 1) rNames[r] = 'Semi Finals';
     else if (r === totalRounds - 2) rNames[r] = 'Quarter Finals';
+    else if (r === totalRounds - 3) rNames[r] = 'Round of 16';
     else rNames[r] = 'Round ' + r;
   }
 
-  const startDate = new Date(tournament.created_at);
+  var deadlines = tournament.round_deadlines || {};
+  var startDate = new Date(tournament.created_at);
   let html = '';
 
   for (let r = 1; r <= totalRounds; r++) {
-    const deadline = new Date(startDate);
-    deadline.setDate(deadline.getDate() + r * (tournament.round_days || 14));
-    const dateStr = deadline.toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' });
+    // Use organiser-set deadline, or auto-calculate as fallback
+    var dateStr;
+    if (deadlines[r]) {
+      dateStr = new Date(deadlines[r]).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' });
+    } else {
+      var autoDeadline = new Date(startDate);
+      autoDeadline.setDate(autoDeadline.getDate() + r * (tournament.round_days || 14));
+      dateStr = autoDeadline.toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
 
     let badge;
     if (r < tournament.current_round) badge = '<span class="badge badge-gray">Completed</span>';
@@ -523,30 +531,28 @@ async function printDrawNames() {
   (matches || []).forEach(function(m) {
     if (m.round !== curRound) {
       curRound = m.round;
-      drawRows += '<tr style="background:#e8f5e9;"><td colspan="4" style="font-weight:bold;">' + (rNames[m.round] || 'Round ' + m.round) + '</td></tr>';
+      drawRows += '<tr style="background:#e8f5e9;"><td colspan="4" style="font-weight:bold;padding:0.2rem 0.3rem;font-size:0.75rem;border:1px solid #ccc;">' + (rNames[m.round] || 'Round ' + m.round) + '</td></tr>';
     }
+    var cs = 'padding:0.15rem 0.3rem;border:1px solid #ccc;font-size:0.7rem;';
     var p1 = m.player1 ? m.player1.first_name + ' ' + m.player1.last_name : 'TBD';
     var p2 = m.player2 ? m.player2.first_name + ' ' + m.player2.last_name : (m.status === 'bye' ? 'BYE' : 'TBD');
-    var result = m.status === 'completed' ? (m.winner ? m.winner.first_name[0] + '. ' + m.winner.last_name + ' won ' + (m.score || '') : 'Done') : (m.status === 'bye' ? 'BYE' : '—');
-    drawRows += '<tr><td>' + (rNames[m.round] || 'R' + m.round) + ' M' + m.position + '</td><td>' + p1 + '</td><td>' + p2 + '</td><td>' + result + '</td></tr>';
+    var result = m.status === 'completed' ? (m.winner ? m.winner.first_name[0] + '. ' + m.winner.last_name + ' ' + (m.score || '') : '-') : (m.status === 'bye' ? 'BYE' : '');
+    drawRows += '<tr><td style="' + cs + '">' + m.position + '</td><td style="' + cs + '">' + p1 + '</td><td style="' + cs + '">' + p2 + '</td><td style="' + cs + '">' + result + '</td></tr>';
   });
 
   var printSheet = document.getElementById('printDrawNames');
+  var cellStyle = 'padding:0.15rem 0.3rem;border:1px solid #ccc;font-size:0.7rem;';
+  var headerStyle = cellStyle + 'font-weight:bold;background:#f0f0f0;';
+
   printSheet.innerHTML =
-    '<div style="text-align:center;margin-bottom:1rem;">' + logo +
-      '<h1 style="font-size:1.4rem;margin:0;">' + tournament.name + '</h1>' +
-      '<p style="color:#666;font-size:0.9rem;">' + clubName + ' &bull; ' + tournament.bracket_size + ' Players</p>' +
-      '<p style="font-size:0.8rem;color:#999;">Printed: ' + new Date().toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' }) + '</p>' +
+    '<div style="text-align:center;margin-bottom:0.5rem;">' + logo +
+      '<h1 style="font-size:1.1rem;margin:0;">' + tournament.name + '</h1>' +
+      '<p style="color:#666;font-size:0.75rem;margin:0.1rem 0;">' + clubName + ' &bull; ' + tournament.bracket_size + ' Players &bull; ' + new Date().toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' }) + '</p>' +
     '</div>' +
-    '<h2 style="font-size:1rem;border-bottom:2px solid #333;padding-bottom:0.3rem;margin:1rem 0 0.5rem;">Player Directory</h2>' +
-    '<table style="width:100%;border-collapse:collapse;margin-bottom:1.5rem;">' +
-      '<thead><tr style="background:#f0f0f0;"><th style="padding:0.4rem;border:1px solid #ccc;text-align:left;">Seed</th><th style="padding:0.4rem;border:1px solid #ccc;text-align:left;">Name</th><th style="padding:0.4rem;border:1px solid #ccc;text-align:left;">Hcp</th><th style="padding:0.4rem;border:1px solid #ccc;text-align:left;">Phone</th></tr></thead>' +
-      '<tbody>' + playerRows + '</tbody></table>' +
-    '<h2 style="font-size:1rem;border-bottom:2px solid #333;padding-bottom:0.3rem;margin:1rem 0 0.5rem;">Draw</h2>' +
     '<table style="width:100%;border-collapse:collapse;">' +
-      '<thead><tr style="background:#f0f0f0;"><th style="padding:0.4rem;border:1px solid #ccc;text-align:left;">Match</th><th style="padding:0.4rem;border:1px solid #ccc;text-align:left;">Player 1</th><th style="padding:0.4rem;border:1px solid #ccc;text-align:left;">Player 2</th><th style="padding:0.4rem;border:1px solid #ccc;text-align:left;">Result</th></tr></thead>' +
+      '<thead><tr><th style="' + headerStyle + '">Match</th><th style="' + headerStyle + '">Player 1</th><th style="' + headerStyle + '">Player 2</th><th style="' + headerStyle + '">Result</th></tr></thead>' +
       '<tbody>' + drawRows + '</tbody></table>' +
-    '<div style="margin-top:2rem;text-align:center;font-size:0.75rem;color:#999;border-top:1px solid #ccc;padding-top:0.5rem;">Generated by MyMatchPlayPal &bull; ' + clubName + '</div>';
+    '<div style="margin-top:0.5rem;text-align:center;font-size:0.6rem;color:#999;">MyMatchPlayPal &bull; ' + clubName + '</div>';
 
   // Set portrait for names
   var style = document.createElement('style');
