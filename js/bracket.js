@@ -90,17 +90,22 @@ async function selectBracketTournament(btn, tournamentId) {
 }
 
 async function loadBracketData(tournamentId) {
+  try {
   // Get tournament info
-  const { data: tournament } = await supabase
+  const { data: tournament, error: tErr } = await supabase
     .from('tournaments')
-    .select('*, clubs(name), tournament_entries(count)')
+    .select('*, clubs(name, logo_url), tournament_entries(count)')
     .eq('id', tournamentId)
     .single();
 
-  if (!tournament) return;
+  console.log('[MMP] Tournament:', tournament, 'Error:', tErr);
+  if (!tournament) {
+    document.getElementById('bracket-desktop-container').innerHTML = '<p style="padding:2rem;text-align:center;color:var(--gray-400);">Tournament not found.</p>';
+    return;
+  }
 
   // Get all matches
-  const { data: matches } = await supabase
+  const { data: matches, error: mErr } = await supabase
     .from('matches')
     .select(`
       *,
@@ -112,6 +117,8 @@ async function loadBracketData(tournamentId) {
     .order('round')
     .order('position');
 
+  console.log('[MMP] Matches:', (matches || []).length, 'Error:', mErr);
+
   // Get entries with seeds
   const { data: entries } = await supabase
     .from('tournament_entries')
@@ -122,6 +129,14 @@ async function loadBracketData(tournamentId) {
   (entries || []).forEach(e => { seedMap[e.member_id] = e.seed; });
 
   renderTournamentInfo(tournament);
+
+  // If in_progress but no matches yet, show message
+  if (tournament.status === 'in_progress' && (!matches || matches.length === 0)) {
+    var noMatchMsg = '<p style="padding:2rem;text-align:center;color:var(--gray-400);">Draw has been generated but no matches found. Try refreshing.</p>';
+    document.getElementById('bracket-desktop-container').innerHTML = noMatchMsg;
+    document.getElementById('bracket-mobile-container').innerHTML = noMatchMsg;
+    return;
+  }
 
   if (tournament.status === 'entries_open') {
     // No bracket yet — show entrant list
@@ -159,6 +174,10 @@ async function loadBracketData(tournamentId) {
   renderMobileBracket(matches || [], tournament, seedMap);
   renderRoundDeadlines(tournament);
   renderRecentResults(matches || [], seedMap);
+  } catch (err) {
+    console.error('[MMP] loadBracketData error:', err);
+    document.getElementById('bracket-desktop-container').innerHTML = '<p style="padding:2rem;text-align:center;color:var(--red);">Error loading bracket. Check console.</p>';
+  }
 }
 
 function renderTournamentInfo(tournament) {

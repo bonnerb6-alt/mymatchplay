@@ -547,6 +547,9 @@ async function closeEntries(tournamentId) {
 async function generateDraw(tournamentId, bracketSize) {
   if (!confirm('Generate the draw? This will create the bracket and notify all players.')) return;
 
+  // Delete any existing matches for this tournament (in case of re-draw)
+  await supabase.from('matches').delete().eq('tournament_id', tournamentId);
+
   // Get entries
   const { data: entries } = await supabase
     .from('tournament_entries')
