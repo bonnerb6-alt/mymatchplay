@@ -132,7 +132,7 @@
         <!-- Members Tab -->
         <div id="members" class="tab-panel">
           <div style="padding:0.75rem 1rem;display:flex;justify-content:flex-end;border-bottom:1px solid var(--gray-200);">
-            <button class="btn btn-sm btn-primary" onclick="document.getElementById('enrolMemberModal').classList.add('active')">+ Enrol Golfer</button>
+            <button class="btn btn-sm btn-primary" onclick="document.getElementById('enrolMemberModal').classList.add('active')">+ Add New Member</button>
           </div>
           <div class="table-wrap">
             <table>
@@ -222,11 +222,11 @@
     </div>
   </div>
 
-  <!-- Enrol Golfer Modal -->
+  <!-- Add New Member Modal -->
   <div class="modal-overlay" id="enrolMemberModal">
     <div class="modal">
       <div class="modal-header">
-        <h3>&#128101; Enrol Golfer</h3>
+        <h3>&#128101; Add New Member</h3>
         <button class="modal-close" onclick="document.getElementById('enrolMemberModal').classList.remove('active')">&times;</button>
       </div>
       <div class="modal-body">
@@ -256,7 +256,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="document.getElementById('enrolMemberModal').classList.remove('active')">Cancel</button>
-        <button class="btn btn-primary" onclick="enrolGolfer()">Enrol Golfer</button>
+        <button class="btn btn-primary" onclick="enrolGolfer()">Add New Member</button>
       </div>
     </div>
   </div>
