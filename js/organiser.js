@@ -1034,7 +1034,7 @@ async function loadRequests() {
   var badge = document.getElementById('request-count-badge');
   if (badge) badge.innerHTML = pending.length > 0 ? '<span class="badge badge-red" style="margin-left:0.25rem;">' + pending.length + '</span>' : '';
 
-  if (requests.length === 0) {
+  if (!requests || requests.length === 0) {
     container.innerHTML = '<p style="text-align:center;color:var(--gray-400);">No membership requests</p>';
     return;
   }
