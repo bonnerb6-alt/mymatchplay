@@ -470,8 +470,10 @@
   <script src="js/organiser.js"></script>
   <script>
     setRole('organiser');
-    renderBottomNav('home');
-    renderTopNavLinks('home');
+    document.addEventListener('DOMContentLoaded', function() {
+      renderBottomNav('home');
+      renderTopNavLinks('home');
+    });
   </script>
 </body>
 </html>

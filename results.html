@@ -80,10 +80,9 @@
   <script>
     var resultsMember = null;
 
-    renderBottomNav('results');
-    renderTopNavLinks('results');
-
     async function initResults() {
+      renderBottomNav('results');
+      renderTopNavLinks('results');
       resultsMember = await getCurrentMember();
       if (!resultsMember) { window.location.href = 'login.html'; return; }
       await loadResultsFilter();

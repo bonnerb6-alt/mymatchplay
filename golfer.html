@@ -150,9 +150,11 @@
   <script src="js/golfer.js"></script>
   <script>
     setRole('golfer');
-    renderBottomNav('home');
-    renderTopNavLinks('home');
-    document.addEventListener('DOMContentLoaded', checkAndOfferOrgSwitch);
+    document.addEventListener('DOMContentLoaded', function() {
+      renderBottomNav('home');
+      renderTopNavLinks('home');
+      checkAndOfferOrgSwitch();
+    });
   </script>
 </body>
 </html>

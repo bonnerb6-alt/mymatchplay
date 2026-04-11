@@ -113,11 +113,9 @@
   <script src="js/nav.js"></script>
   <script src="js/golfer.js"></script>
   <script>
-    renderBottomNav('profile');
-    renderTopNavLinks('profile');
-  </script>
-  <script>
     document.addEventListener('DOMContentLoaded', async function() {
+      renderBottomNav('profile');
+      renderTopNavLinks('profile');
       currentMember = await getCurrentMember();
       if (!currentMember) { window.location.href = 'login.html'; return; }
 
