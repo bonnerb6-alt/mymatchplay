@@ -618,6 +618,36 @@ async function submitScore() {
       .eq('id', match.next_match_id);
   }
 
+  // Auto-update tournament current_round
+  var { data: thisMatch } = await supabase.from('matches').select('tournament_id, round').eq('id', matchId).single();
+  if (thisMatch) {
+    // Check if all matches in this round are done
+    var { data: roundMatches } = await supabase.from('matches')
+      .select('status')
+      .eq('tournament_id', thisMatch.tournament_id)
+      .eq('round', thisMatch.round);
+
+    var allDone = (roundMatches || []).every(function(m) { return m.status === 'completed' || m.status === 'bye'; });
+    if (allDone) {
+      // Advance to next round
+      await supabase.from('tournaments')
+        .update({ current_round: thisMatch.round + 1 })
+        .eq('id', thisMatch.tournament_id);
+    }
+
+    // Check if this was the final — mark tournament completed
+    var { data: anyPending } = await supabase.from('matches')
+      .select('id')
+      .eq('tournament_id', thisMatch.tournament_id)
+      .in('status', ['pending', 'in_progress'])
+      .limit(1);
+    if (!anyPending || anyPending.length === 0) {
+      await supabase.from('tournaments')
+        .update({ status: 'completed' })
+        .eq('id', thisMatch.tournament_id);
+    }
+  }
+
   alert('Score submitted! The bracket has been updated.');
   // Refresh data
   await Promise.all([loadStats(), loadUpcomingMatches(), loadRecentResults(), loadProfile()]);

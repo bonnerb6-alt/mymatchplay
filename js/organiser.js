@@ -129,6 +129,46 @@ async function loadOrgStats() {
   document.getElementById('org-stat-pending').textContent = pendingResults || 0;
 }
 
+// Derive the current round display from match data
+function deriveRoundDisplay(tournament, matches) {
+  if (tournament.status === 'entries_open' || tournament.status === 'scheduled') {
+    return '<span style="color:var(--gray-400);">Not started</span>';
+  }
+  if (tournament.status === 'completed') {
+    return '<span class="badge badge-gray">Completed</span>';
+  }
+
+  // Find the highest round that has at least one non-completed match
+  if (!matches || matches.length === 0) return '<span style="color:var(--gray-400);">Not started</span>';
+
+  var totalRounds = Math.log2(tournament.bracket_size);
+  var activeRound = 0;
+
+  for (var r = 1; r <= totalRounds; r++) {
+    var roundMatches = matches.filter(function(m) { return m.round === r; });
+    var hasActive = roundMatches.some(function(m) { return m.status === 'pending' || m.status === 'in_progress'; });
+    var hasCompleted = roundMatches.some(function(m) { return m.status === 'completed' || m.status === 'bye'; });
+    if (hasActive || (hasCompleted && r > activeRound)) {
+      activeRound = r;
+    }
+    if (hasActive) break; // This is the current active round
+  }
+
+  if (activeRound === 0) return '<span style="color:var(--gray-400);">Not started</span>';
+
+  var roundName = getRoundName(activeRound, totalRounds);
+  return '<span class="badge badge-green">' + roundName + '</span>';
+}
+
+// Get proper round name based on position relative to total rounds
+function getRoundName(round, totalRounds) {
+  if (round === totalRounds) return 'Final';
+  if (round === totalRounds - 1) return 'Semi Finals';
+  if (round === totalRounds - 2) return 'Quarter Finals';
+  if (round === totalRounds - 3) return 'Round of 16';
+  return 'Round ' + round;
+}
+
 async function loadTournaments() {
   const clubId = currentOrganiser.club_id;
   const container = document.getElementById('tournaments-table-body');
@@ -145,7 +185,12 @@ async function loadTournaments() {
     return;
   }
 
-  const roundNames = { 0: 'Not Started', 1: 'Round 1', 2: 'Round of 16', 3: 'Quarter Finals', 4: 'Semi Finals', 5: 'Final' };
+  // Get match data for all tournaments to derive current round
+  var tournamentIds = tournaments.map(function(t) { return t.id; });
+  var { data: allMatches } = await supabase
+    .from('matches')
+    .select('tournament_id, round, status')
+    .in('tournament_id', tournamentIds);
 
   container.innerHTML = tournaments.map(t => {
     const entryCount = t.tournament_entries?.[0]?.count || 0;
@@ -188,12 +233,16 @@ async function loadTournaments() {
         actions = `<button class="btn btn-sm btn-primary" onclick="openEntries('${t.id}')">Open Entries</button>`;
     }
 
+    // Auto-derive current round from match data
+    var tMatches = (allMatches || []).filter(function(m) { return m.tournament_id === t.id; });
+    var roundDisplay = deriveRoundDisplay(t, tMatches);
+
     return `
       <tr>
         <td><strong>${t.name}</strong></td>
         <td>${statusBadge}</td>
         <td>${entryCount} / ${t.bracket_size}</td>
-        <td>${roundNames[t.current_round] || 'Round ' + t.current_round}</td>
+        <td>${roundDisplay}</td>
         <td>${deadline}</td>
         <td>${actions}</td>
       </tr>`;
