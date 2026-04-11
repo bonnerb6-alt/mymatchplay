@@ -33,10 +33,18 @@ async function initGolferDashboard() {
     var isOrg = myClubs.some(function(c) { return c.role === 'organiser'; }) || currentMember.role === 'organiser' || currentMember.is_admin;
     console.log('[MMP] Is organiser:', isOrg, 'Role:', currentMember.role, 'Admin:', currentMember.is_admin);
     if (isOrg) {
-      var orgLink = document.getElementById('org-link');
-      if (orgLink) orgLink.style.display = 'flex';
+      // Desktop top nav
       var orgLinkDesktop = document.getElementById('org-link-desktop');
       if (orgLinkDesktop) orgLinkDesktop.style.display = 'inline-flex';
+      // Mobile bottom nav — add link
+      var bottomNav = document.getElementById('bottom-nav');
+      if (bottomNav && !document.getElementById('org-link')) {
+        var a = document.createElement('a');
+        a.id = 'org-link';
+        a.href = 'organiser.html';
+        a.innerHTML = '<span class="nav-icon">&#128274;</span>Organiser';
+        bottomNav.appendChild(a);
+      }
     }
 
     // Club logo
@@ -376,6 +384,134 @@ async function submitScore() {
 
   alert('Score submitted!');
   loadMatches(); loadStats(); loadMyTournaments(); populateScoreForm();
+}
+
+// ---- Profile Functions (used by profile.html) ----
+
+async function loadProfile() {
+  var profileEl = document.getElementById('golfer-profile');
+  if (!profileEl) return;
+
+  var id = currentMember.id;
+  var initials = currentMember.first_name[0] + currentMember.last_name[0];
+
+  var { data: played } = await supabase.from('matches').select('id').or('player1_id.eq.' + id + ',player2_id.eq.' + id).eq('status', 'completed');
+  var { data: won } = await supabase.from('matches').select('id').eq('winner_id', id).eq('status', 'completed');
+  var w = (won || []).length;
+  var p = (played || []).length;
+  var winRate = p > 0 ? Math.round(w / p * 100) : 0;
+
+  // Club logos
+  var clubLogos = {};
+  if (myClubIds.length > 0) {
+    var { data: cl } = await supabase.from('clubs').select('id, logo_url').in('id', myClubIds);
+    (cl || []).forEach(function(c) { if (c.logo_url) clubLogos[c.id] = c.logo_url; });
+  }
+
+  var clubsHTML = myClubs.map(function(c) {
+    var name = c.clubs?.name || 'Golf Club';
+    var logo = clubLogos[c.club_id] ? '<img src="' + clubLogos[c.club_id] + '" style="width:20px;height:20px;border-radius:3px;object-fit:cover;">' : '&#9971;';
+    var roleBadge = c.role === 'organiser' ? '<span class="badge badge-gold">Organiser</span>' : '<span class="badge badge-green">Golfer</span>';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem;background:var(--gray-100);border-radius:var(--radius-sm);font-size:0.8rem;margin-bottom:0.3rem;">' +
+      '<span style="display:flex;align-items:center;gap:0.4rem;">' + logo + ' <strong>' + name + '</strong> — Hcp ' + c.handicap + '</span>' + roleBadge + '</div>';
+  }).join('');
+
+  var prefLabel = { whatsapp: 'WhatsApp', sms: 'SMS', email: 'Email' };
+
+  profileEl.innerHTML =
+    '<div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">' +
+      '<div style="width:60px;height:60px;border-radius:50%;background:var(--green-600);color:white;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700;">' + initials + '</div>' +
+      '<div><div style="font-size:1.1rem;font-weight:700;">' + currentMember.first_name + ' ' + currentMember.last_name + '</div>' +
+        '<div style="font-size:0.8rem;color:var(--gray-500);">' + currentMember.email + '</div>' +
+        '<div style="font-size:0.8rem;color:var(--gray-500);">' + (currentMember.phone || 'No phone') + ' &bull; Prefers ' + (prefLabel[currentMember.contact_preference] || 'WhatsApp') + '</div>' +
+      '</div></div>' +
+    '<div style="margin-bottom:1rem;">' + clubsHTML + '</div>' +
+    '<div class="stats-grid">' +
+      '<div class="stat-box"><div class="value">' + p + '</div><div class="label">Played</div></div>' +
+      '<div class="stat-box"><div class="value">' + w + '</div><div class="label">Won</div></div>' +
+      '<div class="stat-box"><div class="value">' + (p - w) + '</div><div class="label">Lost</div></div>' +
+      '<div class="stat-box"><div class="value">' + winRate + '%</div><div class="label">Win Rate</div></div>' +
+    '</div>';
+}
+
+async function loadClubSelector() {
+  var select = document.getElementById('joinClubSelect');
+  if (!select) return;
+
+  var { data: clubs } = await supabase.from('clubs').select('id, name').order('name');
+  var existing = new Set(myClubIds);
+
+  var { data: pending } = await supabase.from('membership_requests').select('club_id').eq('member_id', currentMember.id).eq('status', 'pending');
+  (pending || []).forEach(function(r) { existing.add(r.club_id); });
+
+  var available = (clubs || []).filter(function(c) { return !existing.has(c.id); });
+
+  select.innerHTML = available.length > 0
+    ? '<option value="" disabled selected>Choose a club...</option>' + available.map(function(c) { return '<option value="' + c.id + '">' + c.name + '</option>'; }).join('')
+    : '<option disabled>No new clubs available</option>';
+
+  loadPendingRequests();
+}
+
+async function loadPendingRequests() {
+  var container = document.getElementById('pending-requests');
+  if (!container) return;
+
+  var { data: requests } = await supabase.from('membership_requests').select('*, clubs(name)').eq('member_id', currentMember.id).order('requested_at', { ascending: false }).limit(5);
+
+  if (!requests || requests.length === 0) { container.innerHTML = ''; return; }
+
+  container.innerHTML = '<div style="font-size:0.75rem;font-weight:600;color:var(--gray-600);margin-bottom:0.3rem;">My Requests</div>' +
+    requests.map(function(r) {
+      var badge = r.status === 'pending' ? '<span class="badge badge-gold">Pending</span>' : (r.status === 'approved' ? '<span class="badge badge-green">Approved</span>' : '<span class="badge badge-red">Rejected</span>');
+      return '<div style="display:flex;justify-content:space-between;padding:0.4rem 0.5rem;background:var(--gray-100);border-radius:var(--radius-sm);font-size:0.8rem;margin-bottom:0.25rem;">' +
+        '<span>' + (r.clubs?.name || 'Club') + '</span>' + badge + '</div>';
+    }).join('');
+}
+
+async function requestClubMembership() {
+  var clubId = document.getElementById('joinClubSelect').value;
+  var handicap = parseInt(document.getElementById('joinClubHandicap').value) || 0;
+  if (!clubId) { alert('Please select a club.'); return; }
+
+  var { error } = await supabase.from('membership_requests').insert({ member_id: currentMember.id, club_id: clubId, status: 'pending', message: 'Handicap: ' + handicap });
+  if (error) { alert('Error: ' + error.message); return; }
+  alert('Request sent!');
+  loadClubSelector();
+}
+
+function openEditProfile() {
+  if (!currentMember) return;
+  document.getElementById('editFirstName').value = currentMember.first_name;
+  document.getElementById('editLastName').value = currentMember.last_name;
+  document.getElementById('editHandicap').value = currentMember.handicap;
+  document.getElementById('editPhone').value = currentMember.phone || '';
+  document.getElementById('editEmail').value = currentMember.email;
+  var cpEl = document.getElementById('editContactPref');
+  if (cpEl) cpEl.value = currentMember.contact_preference || 'whatsapp';
+  document.getElementById('editProfileModal').classList.add('active');
+}
+
+async function saveProfile() {
+  var firstName = document.getElementById('editFirstName').value.trim();
+  var lastName = document.getElementById('editLastName').value.trim();
+  var handicap = parseInt(document.getElementById('editHandicap').value) || 0;
+  var phone = document.getElementById('editPhone').value.trim();
+  var cpEl = document.getElementById('editContactPref');
+  var contactPref = cpEl ? cpEl.value : 'whatsapp';
+
+  if (!firstName || !lastName) { alert('Name is required.'); return; }
+
+  var updateData = { first_name: firstName, last_name: lastName, handicap: handicap, phone: phone };
+  if (contactPref) updateData.contact_preference = contactPref;
+
+  var { error } = await supabase.from('members').update(updateData).eq('id', currentMember.id);
+  if (error) { alert('Error: ' + error.message); return; }
+
+  currentMember = await getCurrentMember();
+  document.getElementById('editProfileModal').classList.remove('active');
+  loadProfile();
+  alert('Profile updated!');
 }
 
 // Sidebar nav helper (desktop)
