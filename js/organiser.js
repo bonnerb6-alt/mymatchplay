@@ -3,8 +3,9 @@
 // ============================================
 
 let currentOrganiser = null;
-let orgClub = null; // The single club this organiser manages
+let orgClub = null;
 let orgClubId = null;
+let allOrgClubs = []; // All clubs this organiser manages
 
 async function initOrganiserDashboard() {
   currentOrganiser = await getCurrentMember();
@@ -13,31 +14,64 @@ async function initOrganiserDashboard() {
     return;
   }
 
-  // Load the club where this member is an organiser
+  // Load all clubs where this member is an organiser
   var { data: memberships } = await supabase
     .from('club_memberships')
     .select('*, clubs(id, name)')
     .eq('member_id', currentOrganiser.id)
-    .eq('role', 'organiser')
-    .limit(1);
+    .eq('role', 'organiser');
 
-  // Fallback to old model
   if (!memberships || memberships.length === 0) {
     if (currentOrganiser.role === 'organiser') {
-      orgClub = { club_id: currentOrganiser.club_id, clubs: currentOrganiser.clubs };
+      allOrgClubs = [{ club_id: currentOrganiser.club_id, clubs: currentOrganiser.clubs }];
     } else {
-      // Not an organiser at any club
       alert('You do not have organiser access. Redirecting to golfer dashboard.');
       window.location.href = 'golfer.html';
       return;
     }
   } else {
-    orgClub = memberships[0];
+    allOrgClubs = memberships;
   }
+
+  // Check if a club was previously selected (stored in sessionStorage)
+  var savedClubId = sessionStorage.getItem('orgSelectedClub');
+  var savedClub = savedClubId ? allOrgClubs.find(function(c) { return c.club_id === savedClubId; }) : null;
+  orgClub = savedClub || allOrgClubs[0];
   orgClubId = orgClub.club_id;
 
   updateNavForAuth(currentOrganiser);
   renderOrgSidebar();
+  renderClubSwitcher();
+  loadSelectedClub();
+}
+
+function renderClubSwitcher() {
+  var container = document.getElementById('club-switcher');
+  if (!container) return;
+
+  if (allOrgClubs.length <= 1) {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.innerHTML = allOrgClubs.map(function(c) {
+    var isActive = c.club_id === orgClubId;
+    var style = isActive
+      ? 'background:var(--gold);color:var(--green-900);border-color:var(--gold);'
+      : 'background:var(--white);color:var(--gray-600);border-color:var(--gray-200);';
+    return '<button class="btn btn-sm" style="' + style + 'font-size:0.8rem;padding:0.4rem 0.9rem;" onclick="switchClub(\'' + c.club_id + '\')">' + (c.clubs?.name || 'Club') + '</button>';
+  }).join('');
+}
+
+function switchClub(clubId) {
+  sessionStorage.setItem('orgSelectedClub', clubId);
+  orgClub = allOrgClubs.find(function(c) { return c.club_id === clubId; });
+  orgClubId = clubId;
+  renderClubSwitcher();
+  loadSelectedClub();
+}
+
+async function loadSelectedClub() {
   var clubName = orgClub.clubs?.name || 'Golf Club';
   document.getElementById('org-club-name').textContent = clubName + ' — Match Secretary Panel';
   displayClubIdentity();
