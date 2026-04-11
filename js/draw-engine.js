@@ -188,6 +188,27 @@ async function generateTournamentDraw(tournamentId, players, originalBracketSize
     .update({ bracket_size: bracketSize, status: 'in_progress', current_round: 1 })
     .eq('id', tournamentId);
 
+  // 11. Verify the draw was created correctly
+  var { data: verifyMatches } = await supabase.from('matches')
+    .select('id, round, position, player1_id, player2_id, winner_id, status, next_match_id')
+    .eq('tournament_id', tournamentId)
+    .order('round').order('position');
+
+  console.log('[MMP] Draw verification:');
+  (verifyMatches || []).forEach(function(m) {
+    console.log('  R' + m.round + ' P' + m.position + ': ' +
+      (m.player1_id ? m.player1_id.substring(0, 8) : 'null') + ' vs ' +
+      (m.player2_id ? m.player2_id.substring(0, 8) : 'null') +
+      ' | status=' + m.status +
+      ' | winner=' + (m.winner_id ? m.winner_id.substring(0, 8) : 'null') +
+      ' | next=' + (m.next_match_id ? m.next_match_id.substring(0, 8) : 'NULL'));
+  });
+
+  var nullNextCount = (verifyMatches || []).filter(function(m) { return m.round < totalRounds && !m.next_match_id; }).length;
+  if (nullNextCount > 0) {
+    console.error('[MMP] WARNING: ' + nullNextCount + ' matches have null next_match_id!');
+  }
+
   console.log('[MMP] Draw complete: ' + seededPlayers.length + ' players, ' + (bracketSize - seededPlayers.length) + ' byes, bracket size ' + bracketSize);
 
   return {

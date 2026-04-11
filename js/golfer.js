@@ -350,10 +350,15 @@ async function submitScore() {
   var { error } = await supabase.from('matches').update({ winner_id: winnerId, score: score, status: 'completed' }).eq('id', matchId);
   if (error) { alert('Error: ' + error.message); return; }
 
-  // Advance winner
+  // Advance winner to next match
+  console.log('[MMP] Score submitted. next_match_id:', match.next_match_id, 'position:', match.position);
   if (match.next_match_id) {
     var field = match.position % 2 === 1 ? 'player1_id' : 'player2_id';
-    await supabase.from('matches').update({ [field]: winnerId, status: 'in_progress' }).eq('id', match.next_match_id);
+    console.log('[MMP] Advancing winner to', field, 'of match', match.next_match_id);
+    var { error: advErr } = await supabase.from('matches').update({ [field]: winnerId, status: 'in_progress' }).eq('id', match.next_match_id);
+    if (advErr) console.error('[MMP] Advance error:', advErr.message);
+  } else {
+    console.warn('[MMP] No next_match_id — winner cannot advance. This may be the final.');
   }
 
   // Auto-advance round
