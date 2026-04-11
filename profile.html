@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile - MyMatchPlayPal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="golfer.html" class="navbar-brand">
+        <div class="brand-icon">&#9971;</div>
+        <span>MyMatchPlayPal <span style="font-size:0.7rem;font-weight:500;color:var(--green-400);margin-left:0.25rem;">PROFILE</span></span>
+      </a>
+      <ul class="navbar-links">
+        <li><a href="golfer.html">My Dashboard</a></li>
+        <li><a href="profile.html" class="active">My Profile</a></li>
+        <li><a href="bracket.html">Live Draws</a></li>
+      </ul>
+      <div class="navbar-actions">
+        <div class="nav-avatar">--</div>
+        <a href="#" onclick="signOut();return false;" class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:var(--white);font-size:0.75rem;padding:0.3rem 0.6rem;">Sign Out</a>
+        <button class="menu-toggle" onclick="document.querySelector('.navbar-links').classList.toggle('show')">&#9776;</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container page-content">
+    <!-- Profile Card -->
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3>&#9971; My Golfer Profile</h3>
+        <button class="btn btn-sm btn-secondary" onclick="openEditProfile()">Edit Profile</button>
+      </div>
+      <div class="card-body" id="golfer-profile">
+        <p style="text-align:center;color:var(--gray-400);">Loading...</p>
+      </div>
+    </div>
+
+    <!-- Join a Club -->
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3>&#127960; Join a Golf Club</h3>
+      </div>
+      <div class="card-body">
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:end;">
+          <div class="form-group" style="flex:1;min-width:200px;margin-bottom:0;">
+            <label class="form-label">Select Club</label>
+            <select class="form-select" id="joinClubSelect">
+              <option value="" disabled selected>Loading clubs...</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;min-width:200px;margin-bottom:0;">
+            <label class="form-label">Handicap at this club</label>
+            <input type="number" class="form-input" id="joinClubHandicap" placeholder="12" min="0" max="54">
+          </div>
+          <button class="btn btn-primary" onclick="requestClubMembership()" style="margin-bottom:0;">Request to Join</button>
+        </div>
+        <div id="pending-requests" style="margin-top:1rem;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Profile Modal -->
+  <div class="modal-overlay" id="editProfileModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>&#9881; Edit Profile</h3>
+        <button class="modal-close" onclick="document.getElementById('editProfileModal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+          <div class="form-group">
+            <label class="form-label">First Name</label>
+            <input type="text" id="editFirstName" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Last Name</label>
+            <input type="text" id="editLastName" class="form-input">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Handicap</label>
+          <input type="number" id="editHandicap" class="form-input" min="0" max="54">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="tel" id="editPhone" class="form-input" placeholder="087 123 4567">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" id="editEmail" class="form-input" disabled>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Preferred Contact Method</label>
+          <select class="form-select" id="editContactPref">
+            <option value="whatsapp">&#128172; WhatsApp</option>
+            <option value="sms">&#128241; SMS</option>
+            <option value="email">&#128231; Email</option>
+          </select>
+          <p style="font-size:0.75rem;color:var(--gray-500);margin-top:0.25rem;">Other players will see this as your preferred way to be contacted.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('editProfileModal').classList.remove('active')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/supabase-client.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/golfer.js"></script>
+</body>
+</html>
