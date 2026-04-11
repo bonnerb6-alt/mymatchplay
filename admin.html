@@ -68,6 +68,11 @@
         <div class="stat-value" id="admin-total-members">-</div>
         <div class="stat-label">Total Members</div>
       </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#fef3c7;">&#128176;</div>
+        <div class="stat-value" id="admin-annual-revenue">-</div>
+        <div class="stat-label">Annual Revenue</div>
+      </div>
     </div>
 
     <!-- Clubs Table -->
@@ -81,15 +86,16 @@
             <tr>
               <th>Club Name</th>
               <th>Contact</th>
+              <th>Club Size</th>
               <th>Members</th>
-              <th>Tournaments</th>
-              <th>Payment Status</th>
+              <th>Pricing</th>
+              <th>Payment</th>
               <th>Expires</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody id="clubs-table-body">
-            <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--gray-400);">Loading...</td></tr>
+            <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--gray-400);">Loading...</td></tr>
           </tbody>
         </table>
       </div>
@@ -107,6 +113,11 @@
         <div class="form-group">
           <label class="form-label">Club Name</label>
           <input type="text" id="newClubName" class="form-input" placeholder="e.g. Greenview Golf Club">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Club Size (total members)</label>
+          <input type="number" id="newClubSize" class="form-input" placeholder="e.g. 250" min="1">
+          <p style="font-size:0.75rem;color:var(--gray-500);margin-top:0.25rem;">Pricing: &lt;300 = &pound;100/yr &bull; 301-500 = &pound;200/yr &bull; 501-1000 = &pound;300/yr</p>
         </div>
         <div class="form-group">
           <label class="form-label">Contact Name</label>
@@ -148,6 +159,11 @@
         <div class="form-group">
           <label class="form-label">Club Name</label>
           <input type="text" id="editClubName" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Club Size (total members)</label>
+          <input type="number" id="editClubSize" class="form-input" min="1">
+          <p style="font-size:0.75rem;color:var(--gray-500);margin-top:0.25rem;">Pricing: &lt;300 = &pound;100/yr &bull; 301-500 = &pound;200/yr &bull; 501-1000 = &pound;300/yr</p>
         </div>
         <div class="form-group">
           <label class="form-label">Contact Name</label>
@@ -212,13 +228,30 @@
       var { count: overdueClubs } = await supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('payment_status', 'overdue');
       var { count: totalMembers } = await supabase.from('members').select('*', { count: 'exact', head: true });
 
+      // Calculate annual revenue from active clubs
+      var { data: activeClubData } = await supabase.from('clubs').select('club_size').eq('payment_status', 'active');
+      var revenue = 0;
+      (activeClubData || []).forEach(function(c) {
+        var p = getPricing(c.club_size);
+        var amount = parseInt((p.price || '0').replace(/[^0-9]/g, '')) || 0;
+        revenue += amount;
+      });
+
       document.getElementById('admin-total-clubs').textContent = totalClubs || 0;
       document.getElementById('admin-active-clubs').textContent = activeClubs || 0;
       document.getElementById('admin-overdue-clubs').textContent = overdueClubs || 0;
       document.getElementById('admin-total-members').textContent = totalMembers || 0;
+      document.getElementById('admin-annual-revenue').textContent = '£' + revenue.toLocaleString();
     }
 
-    var clubsData = {}; // Store club data by ID for edit modal
+    var clubsData = {};
+
+    function getPricing(size) {
+      if (!size || size <= 0) return { tier: 'Unknown', price: '-' };
+      if (size <= 300) return { tier: 'Small (1-300)', price: '£100/yr' };
+      if (size <= 500) return { tier: 'Medium (301-500)', price: '£200/yr' };
+      return { tier: 'Large (501-1000)', price: '£300/yr' };
+    }
 
     async function loadClubs() {
       var container = document.getElementById('clubs-table-body');
@@ -239,13 +272,14 @@
       });
 
       if (!clubs || clubs.length === 0) {
-        container.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--gray-400);">No clubs yet. Add one!</td></tr>';
+        container.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--gray-400);">No clubs yet. Add one!</td></tr>';
         return;
       }
 
       container.innerHTML = clubs.map(function(c) {
         var memberCount = c.club_memberships?.[0]?.count || 0;
-        var tournamentCount = tournamentCounts[c.id] || 0;
+        var clubSize = c.club_size || 0;
+        var pricing = getPricing(clubSize);
         var expires = c.subscription_expires ? new Date(c.subscription_expires).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
 
         var paymentBadge = '';
@@ -263,14 +297,14 @@
         var contactInfo = c.contact_name || c.contact_email || '';
         if (c.contact_name && c.contact_email) contactInfo = c.contact_name + '<br><span style="font-size:0.75rem;color:var(--gray-500);">' + c.contact_email + '</span>';
 
-        // Store club data for edit modal
         clubsData[c.id] = c;
 
         return '<tr>' +
           '<td><strong>' + c.name + '</strong>' + (c.notes ? '<br><span style="font-size:0.7rem;color:var(--gray-400);">' + c.notes.substring(0, 50) + '</span>' : '') + '</td>' +
           '<td>' + contactInfo + '</td>' +
-          '<td>' + memberCount + '</td>' +
-          '<td>' + tournamentCount + '</td>' +
+          '<td style="text-align:center;"><strong>' + (clubSize || '-') + '</strong><br><span style="font-size:0.7rem;color:var(--gray-500);">' + pricing.tier + '</span></td>' +
+          '<td style="text-align:center;">' + memberCount + ' enrolled</td>' +
+          '<td><strong style="color:var(--green-700);">' + pricing.price + '</strong></td>' +
           '<td>' + paymentBadge + '</td>' +
           '<td>' + expires + '</td>' +
           '<td><div style="display:flex;gap:0.3rem;flex-wrap:wrap;">' +
@@ -287,6 +321,7 @@
 
       var { error } = await supabase.from('clubs').insert({
         name: name,
+        club_size: parseInt(document.getElementById('newClubSize').value) || null,
         contact_name: document.getElementById('newClubContact').value.trim() || null,
         contact_email: document.getElementById('newClubEmail').value.trim() || null,
         contact_phone: document.getElementById('newClubPhone').value.trim() || null,
@@ -298,8 +333,7 @@
       if (error) { alert('Error: ' + error.message); return; }
 
       document.getElementById('addClubModal').classList.remove('active');
-      // Clear form
-      ['newClubName','newClubContact','newClubEmail','newClubPhone','newClubStripeLink','newClubNotes'].forEach(function(id) {
+      ['newClubName','newClubSize','newClubContact','newClubEmail','newClubPhone','newClubStripeLink','newClubNotes'].forEach(function(id) {
         document.getElementById(id).value = '';
       });
       alert('Club added!');
@@ -312,6 +346,7 @@
       if (!c) return;
       document.getElementById('editClubId').value = id;
       document.getElementById('editClubName').value = c.name || '';
+      document.getElementById('editClubSize').value = c.club_size || '';
       document.getElementById('editClubContact').value = c.contact_name || '';
       document.getElementById('editClubEmail').value = c.contact_email || '';
       document.getElementById('editClubPhone').value = c.contact_phone || '';
@@ -326,6 +361,7 @@
       var id = document.getElementById('editClubId').value;
       var { error } = await supabase.from('clubs').update({
         name: document.getElementById('editClubName').value.trim(),
+        club_size: parseInt(document.getElementById('editClubSize').value) || null,
         contact_name: document.getElementById('editClubContact').value.trim() || null,
         contact_email: document.getElementById('editClubEmail').value.trim() || null,
         contact_phone: document.getElementById('editClubPhone').value.trim() || null,
