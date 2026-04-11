@@ -538,6 +538,84 @@ async function printDraw() {
   window.print();
 }
 
+// Enrol a golfer directly
+async function enrolGolfer() {
+  var firstName = document.getElementById('enrolFirstName').value.trim();
+  var lastName = document.getElementById('enrolLastName').value.trim();
+  var email = document.getElementById('enrolEmail').value.trim();
+  var phone = document.getElementById('enrolPhone').value.trim();
+  var handicap = parseInt(document.getElementById('enrolHandicap').value) || 0;
+
+  if (!firstName || !lastName || !email) {
+    alert('First name, last name and email are required.');
+    return;
+  }
+
+  // Check if member already exists by email
+  var { data: existing } = await supabase
+    .from('members')
+    .select('id')
+    .eq('email', email)
+    .limit(1);
+
+  var memberId;
+
+  if (existing && existing.length > 0) {
+    // Member exists, just add club membership
+    memberId = existing[0].id;
+  } else {
+    // Create new member record (no auth_id — they haven't signed up yet)
+    var { data: newMember, error: memberErr } = await supabase
+      .from('members')
+      .insert({
+        club_id: orgClubId,
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        phone: phone || null,
+        handicap: handicap,
+        role: 'golfer'
+      })
+      .select('id')
+      .single();
+
+    if (memberErr) {
+      alert('Error creating member: ' + memberErr.message);
+      return;
+    }
+    memberId = newMember.id;
+  }
+
+  // Create club membership
+  var { error: cmErr } = await supabase
+    .from('club_memberships')
+    .insert({
+      member_id: memberId,
+      club_id: orgClubId,
+      role: 'golfer',
+      handicap: handicap,
+      status: 'active'
+    });
+
+  if (cmErr) {
+    if (cmErr.message.indexOf('duplicate') !== -1 || cmErr.message.indexOf('unique') !== -1) {
+      alert('This golfer is already a member of this club.');
+    } else {
+      alert('Error: ' + cmErr.message);
+    }
+    return;
+  }
+
+  document.getElementById('enrolMemberModal').classList.remove('active');
+  // Clear form
+  ['enrolFirstName','enrolLastName','enrolEmail','enrolPhone','enrolHandicap'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  alert(firstName + ' ' + lastName + ' has been enrolled!');
+  loadMembers();
+  loadOrgStats();
+}
+
 // Pause/Activate membership
 async function toggleMemberStatus(membershipId, newStatus) {
   var action = newStatus === 'paused' ? 'pause' : 'activate';
