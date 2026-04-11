@@ -672,14 +672,16 @@ async function generateDraw(tournamentId, bracketSize) {
   }
 
   // Auto-size bracket — round up to nearest power of 2
+  // e.g. 5 players → 8, 7 → 8, 9 → 16, 17 → 32
   var effectiveSize = 2;
   while (effectiveSize < players.length) effectiveSize *= 2;
-  // Don't exceed the tournament's max bracket size
-  if (effectiveSize > bracketSize) effectiveSize = bracketSize;
   bracketSize = effectiveSize;
 
+  console.log('[MMP] Players:', players.length, 'Bracket size:', bracketSize, 'Byes:', bracketSize - players.length);
+
   // Update the tournament's bracket_size to the effective size
-  await supabase.from('tournaments').update({ bracket_size: bracketSize }).eq('id', tournamentId);
+  var { error: sizeErr } = await supabase.from('tournaments').update({ bracket_size: bracketSize }).eq('id', tournamentId);
+  console.log('[MMP] Bracket size update:', sizeErr ? sizeErr.message : 'OK → ' + bracketSize);
 
   // Calculate rounds
   const totalRounds = Math.log2(bracketSize);
