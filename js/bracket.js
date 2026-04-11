@@ -239,29 +239,34 @@ function renderDesktopBracket(matches, tournament, seedMap) {
     html += `<div class="bracket-round">
       <div class="bracket-round-title">${rNames[round]}</div>`;
 
-    roundMatches.forEach((match, idx) => {
+    // Filter: skip BYE matches in round 1 display
+    var displayMatches = roundMatches.filter(function(m) { return m.status !== 'bye'; });
+
+    displayMatches.forEach((match, idx) => {
       const p1Class = match.winner_id === match.player1?.id ? 'winner' : (match.winner_id && match.winner_id !== match.player1?.id ? 'loser' : '');
       const p2Class = match.winner_id === match.player2?.id ? 'winner' : (match.winner_id && match.winner_id !== match.player2?.id ? 'loser' : '');
 
       let borderStyle = '';
       if (match.status === 'in_progress') borderStyle = 'border-color:var(--gold);';
       else if (match.status === 'pending' && !match.player1 && !match.player2) borderStyle = 'border-style:dashed;border-color:var(--gray-300);';
+      else if (match.status === 'completed') borderStyle = '';
 
-      const p1Score = match.winner_id === match.player1?.id ? '&#9989;' : (match.status === 'in_progress' ? '&nbsp;' : '&nbsp;');
-      const p2Score = match.winner_id === match.player2?.id ? '&#9989;' : (match.status === 'in_progress' ? '&nbsp;' : '&nbsp;');
+      const p1Score = match.winner_id === match.player1?.id ? '&#9989;' : '&nbsp;';
+      const p2Score = match.winner_id === match.player2?.id ? '&#9989;' : '&nbsp;';
 
-      const topMargin = round > 1 && idx === 0 ? `margin-top:${(marginMultiplier - 1) * 1.75}rem;` : '';
-      const gapMargin = round > 1 && idx > 0 ? `margin-top:${(marginMultiplier * 2 - 1) * 1.5}rem;` : '';
+      // Player names — show actual names or TBD for future rounds
+      var p1Display = match.player1 ? playerName(match.player1, seedMap) : '<span style="color:var(--gray-400);">TBD</span>';
+      var p2Display = match.player2 ? playerName(match.player2, seedMap) : '<span style="color:var(--gray-400);">TBD</span>';
 
       html += `
-        <div class="bracket-match-wrapper" style="${idx === 0 ? topMargin : gapMargin}">
+        <div class="bracket-match-wrapper">
           <div class="bracket-match" style="${borderStyle}">
-            <div class="bracket-player ${p1Class}" style="${!match.player1 ? 'color:var(--gray-400);' : ''}">
-              <span class="player-name">${playerName(match.player1, seedMap)}</span>
+            <div class="bracket-player ${p1Class}">
+              <span class="player-name">${p1Display}</span>
               <span class="player-score">${p1Score}</span>
             </div>
-            <div class="bracket-player ${p2Class}" style="${!match.player2 ? 'color:var(--gray-400);' : ''}">
-              <span class="player-name">${match.status === 'bye' ? 'BYE' : playerName(match.player2, seedMap)}</span>
+            <div class="bracket-player ${p2Class}">
+              <span class="player-name">${p2Display}</span>
               <span class="player-score">${p2Score}</span>
             </div>
           </div>

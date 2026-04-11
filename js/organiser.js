@@ -680,8 +680,12 @@ async function generateDraw(tournamentId, bracketSize) {
   console.log('[MMP] Players:', players.length, 'Bracket size:', bracketSize, 'Byes:', bracketSize - players.length);
 
   // Update the tournament's bracket_size to the effective size
-  var { error: sizeErr } = await supabase.from('tournaments').update({ bracket_size: bracketSize }).eq('id', tournamentId);
-  console.log('[MMP] Bracket size update:', sizeErr ? sizeErr.message : 'OK → ' + bracketSize);
+  var { data: sizeData, error: sizeErr } = await supabase.from('tournaments').update({ bracket_size: bracketSize }).eq('id', tournamentId).select('bracket_size').single();
+  console.log('[MMP] Bracket size update:', sizeErr ? sizeErr.message : 'OK → ' + (sizeData ? sizeData.bracket_size : bracketSize));
+  if (sizeErr) {
+    alert('Could not update bracket size: ' + sizeErr.message);
+    return;
+  }
 
   // Calculate rounds
   const totalRounds = Math.log2(bracketSize);
