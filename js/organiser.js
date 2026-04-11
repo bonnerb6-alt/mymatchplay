@@ -184,7 +184,8 @@ async function loadMembers() {
       email: cm.members.email,
       role: cm.role,
       membership_id: cm.id,
-      status: cm.status || 'active'
+      status: cm.status || 'active',
+      member_type: cm.member_type || 'mens'
     };
   }).sort(function(a, b) { return a.last_name.localeCompare(b.last_name); });
 
@@ -198,6 +199,9 @@ async function loadMembers() {
     const roleBadge = m.role === 'organiser'
       ? '<span class="badge badge-gold">Organiser</span>'
       : '<span class="badge badge-green">Golfer</span>';
+    const typeBadge = m.member_type === 'ladies'
+      ? '<span class="badge badge-blue" style="font-size:0.6rem;">Ladies</span>'
+      : '<span class="badge badge-gray" style="font-size:0.6rem;">Mens</span>';
     const statusBadge = m.status === 'paused'
       ? '<span class="badge badge-red">Paused</span>'
       : '';
@@ -209,7 +213,7 @@ async function loadMembers() {
         <td>
           <div style="display:flex;align-items:center;gap:0.5rem;">
             <div style="width:28px;height:28px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600;">${initials}</div>
-            <strong>${m.first_name} ${m.last_name}</strong> ${statusBadge}
+            <strong>${m.first_name} ${m.last_name}</strong> ${typeBadge} ${statusBadge}
           </div>
         </td>
         <td>${m.handicap}</td>
@@ -218,7 +222,7 @@ async function loadMembers() {
         <td>${roleBadge}</td>
         <td>
           <div style="display:flex;gap:0.3rem;flex-wrap:wrap;">
-            <button class="btn btn-sm btn-secondary" onclick="editMember('${m.id}','${m.first_name}','${m.last_name.replace(/'/g, "\\'")}',${m.handicap},'${m.phone || ''}','${m.email}','${m.role}')" style="font-size:0.7rem;">Edit</button>
+            <button class="btn btn-sm btn-secondary" onclick="editMember('${m.id}','${m.first_name}','${m.last_name.replace(/'/g, "\\'")}',${m.handicap},'${m.phone || ''}','${m.email}','${m.role}','${m.member_type}','${m.membership_id}')" style="font-size:0.7rem;">Edit</button>
             ${pauseBtn}
           </div>
         </td>
@@ -649,6 +653,8 @@ async function enrolGolfer() {
     memberId = newMember.id;
   }
 
+  var memberType = document.getElementById('enrolMemberType').value;
+
   // Create club membership
   var { error: cmErr } = await supabase
     .from('club_memberships')
@@ -657,7 +663,8 @@ async function enrolGolfer() {
       club_id: orgClubId,
       role: 'golfer',
       handicap: handicap,
-      status: 'active'
+      status: 'active',
+      member_type: memberType
     });
 
   if (cmErr) {
@@ -886,7 +893,7 @@ async function saveGroupLink() {
 }
 
 // Edit Member
-function editMember(id, firstName, lastName, handicap, phone, email, role) {
+function editMember(id, firstName, lastName, handicap, phone, email, role, memberType, membershipId) {
   document.getElementById('editMemberId').value = id;
   document.getElementById('editMemberFirstName').value = firstName;
   document.getElementById('editMemberLastName').value = lastName;
@@ -894,31 +901,41 @@ function editMember(id, firstName, lastName, handicap, phone, email, role) {
   document.getElementById('editMemberPhone').value = phone;
   document.getElementById('editMemberEmail').value = email;
   document.getElementById('editMemberRole').value = role;
+  document.getElementById('editMemberType').value = memberType || 'mens';
+  document.getElementById('editMemberId').dataset.membershipId = membershipId || '';
   document.getElementById('editMemberModal').classList.add('active');
 }
 
 async function saveMember() {
   var id = document.getElementById('editMemberId').value;
+  var membershipId = document.getElementById('editMemberId').dataset.membershipId;
   var firstName = document.getElementById('editMemberFirstName').value.trim();
   var lastName = document.getElementById('editMemberLastName').value.trim();
   var handicap = parseInt(document.getElementById('editMemberHandicap').value) || 0;
   var phone = document.getElementById('editMemberPhone').value.trim();
   var email = document.getElementById('editMemberEmail').value.trim();
   var role = document.getElementById('editMemberRole').value;
+  var memberType = document.getElementById('editMemberType').value;
 
   if (!firstName || !lastName || !email) {
     alert('Name and email are required.');
     return;
   }
 
+  // Update member record
   var { error } = await supabase
     .from('members')
-    .update({ first_name: firstName, last_name: lastName, handicap: handicap, phone: phone, email: email, role: role })
+    .update({ first_name: firstName, last_name: lastName, phone: phone, email: email })
     .eq('id', id);
 
-  if (error) {
-    alert('Error saving: ' + error.message);
-    return;
+  if (error) { alert('Error saving member: ' + error.message); return; }
+
+  // Update club_membership (role, handicap, member_type)
+  if (membershipId) {
+    await supabase
+      .from('club_memberships')
+      .update({ role: role, handicap: handicap, member_type: memberType })
+      .eq('id', membershipId);
   }
 
   document.getElementById('editMemberModal').classList.remove('active');
