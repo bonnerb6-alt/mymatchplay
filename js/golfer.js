@@ -31,9 +31,10 @@ async function initGolferDashboard() {
 
     // Show organiser link if applicable
     var isOrg = myClubs.some(function(c) { return c.role === 'organiser'; }) || currentMember.role === 'organiser' || currentMember.is_admin;
+    console.log('[MMP] Is organiser:', isOrg, 'Role:', currentMember.role, 'Admin:', currentMember.is_admin);
     if (isOrg) {
       var orgLink = document.getElementById('org-link');
-      if (orgLink) { orgLink.style.display = ''; orgLink.href = 'organiser.html'; orgLink.onclick = null; }
+      if (orgLink) orgLink.style.display = 'flex';
     }
 
     // Club logo
