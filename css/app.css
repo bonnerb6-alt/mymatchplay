@@ -95,6 +95,26 @@ img { max-width: 100%; display: block; }
   object-fit: cover;
 }
 
+/* Desktop nav links (hidden on mobile) */
+.top-nav-links {
+  display: none;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.top-nav-links a {
+  color: var(--green-200);
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+.top-nav-links a:hover { color: var(--white); background: rgba(255,255,255,0.1); }
+.top-nav-links a.active { color: var(--white); background: var(--green-700); }
+
 .top-nav-actions {
   display: flex;
   align-items: center;
@@ -842,6 +862,7 @@ table tbody tr:hover { background: var(--green-50); }
 @media (min-width: 768px) {
   body { padding-bottom: 0; }
   .bottom-nav { display: none; }
+  .top-nav-links { display: flex; }
 
   .page { max-width: 800px; padding: 2rem; }
   .page-wide { max-width: 1200px; padding: 2rem; }

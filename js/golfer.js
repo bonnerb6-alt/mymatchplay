@@ -35,6 +35,8 @@ async function initGolferDashboard() {
     if (isOrg) {
       var orgLink = document.getElementById('org-link');
       if (orgLink) orgLink.style.display = 'flex';
+      var orgLinkDesktop = document.getElementById('org-link-desktop');
+      if (orgLinkDesktop) orgLinkDesktop.style.display = 'inline-flex';
     }
 
     // Club logo
