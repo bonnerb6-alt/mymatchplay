@@ -201,7 +201,6 @@ async function loadTournaments() {
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
             <button class="btn btn-sm btn-primary" onclick="openEnrolTournament('${t.id}','${t.name.replace(/'/g, "\\'")}',${t.bracket_size})">Enrol Members</button>
             <button class="btn btn-sm btn-gold" onclick="generateDraw('${t.id}', ${t.bracket_size})">Generate Draw</button>
-            <button class="btn btn-sm btn-secondary" onclick="closeEntries('${t.id}')">Close Entry</button>
             ${groupBtnOpen}
           </div>`;
         break;
