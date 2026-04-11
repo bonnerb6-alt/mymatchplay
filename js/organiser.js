@@ -793,12 +793,17 @@ async function generateDraw(tournamentId, bracketSize) {
   }
 
   // Update tournament status
-  await supabase
+  var { error: statusErr } = await supabase
     .from('tournaments')
     .update({ status: 'in_progress', current_round: 1 })
     .eq('id', tournamentId);
 
-  alert(`Draw generated! ${players.length} players with ${byes} byes. Bracket is now live.`);
+  console.log('[MMP] Tournament status update:', statusErr ? statusErr.message : 'OK');
+  if (statusErr) {
+    alert('Draw generated but could not update tournament status: ' + statusErr.message);
+  } else {
+    alert('Draw generated! ' + players.length + ' players with ' + byes + ' byes. Bracket is now live.');
+  }
   await Promise.all([loadTournaments(), loadOrgStats()]);
 }
 

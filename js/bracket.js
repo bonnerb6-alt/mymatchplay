@@ -43,7 +43,7 @@ async function loadTournamentSelector() {
     .from('tournaments')
     .select('id, name, status, bracket_size, entry_deadline, current_round, created_at, clubs(name)')
     .in('club_id', bracketClubIds)
-    .in('status', ['entries_open', 'in_progress', 'completed'])
+    .in('status', ['entries_open', 'in_progress', 'completed', 'scheduled'])
     .order('created_at', { ascending: false });
 
   if (!tournaments || tournaments.length === 0) {
@@ -138,7 +138,7 @@ async function loadBracketData(tournamentId) {
     return;
   }
 
-  if (tournament.status === 'entries_open') {
+  if (tournament.status === 'entries_open' && (!matches || matches.length === 0)) {
     // No bracket yet — show entrant list
     var { data: entrants } = await supabase
       .from('tournament_entries')
