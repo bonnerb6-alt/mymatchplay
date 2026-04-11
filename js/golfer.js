@@ -47,15 +47,12 @@ async function initGolferDashboard() {
       if (brandIcon) brandIcon.innerHTML = '<img src="' + primaryClub.logo_url + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);">';
     }
   }
-  // Load all sections — catch errors individually so one failure doesn't block others
+  // Load all sections
   var sections = [
     { name: 'Stats', fn: loadStats },
-    { name: 'Matches', fn: loadUpcomingMatches },
-    { name: 'Results', fn: loadRecentResults },
-    { name: 'Notifications', fn: loadNotifications },
-    { name: 'Tournaments', fn: loadOpenTournaments },
-    { name: 'Profile', fn: loadProfile },
-    { name: 'ClubSelector', fn: loadClubSelector }
+    { name: 'ActionMatches', fn: loadActionMatches },
+    { name: 'MyTournaments', fn: loadMyTournaments },
+    { name: 'OpenTournaments', fn: loadOpenTournaments }
   ];
   await Promise.all(sections.map(function(s) {
     return s.fn().catch(function(err) { console.error('[MMP] ' + s.name + ' error:', err); });
@@ -159,6 +156,100 @@ async function calculateStreak(memberId) {
   return streak;
 }
 
+// Action Matches — clear cards showing what action is needed
+async function loadActionMatches() {
+  var memberId = currentMember.id;
+  var container = document.getElementById('action-matches');
+  if (!container) return;
+
+  var { data: matches } = await supabase.from('matches')
+    .select('id, round, score, status, deadline, scheduled_at, tournaments(id, name, whatsapp_group_link, clubs(name)), player1:members!matches_player1_id_fkey(id, first_name, last_name, handicap, phone, email, contact_preference), player2:members!matches_player2_id_fkey(id, first_name, last_name, handicap, phone, email, contact_preference)')
+    .or('player1_id.eq.' + memberId + ',player2_id.eq.' + memberId)
+    .in('status', ['pending', 'in_progress'])
+    .order('deadline', { ascending: true });
+
+  if (!matches || matches.length === 0) {
+    container.innerHTML = '<p style="text-align:center;color:var(--gray-400);padding:1rem;">No matches to play right now.</p>';
+    return;
+  }
+
+  var roundNames = { 1: 'Round 1', 2: 'Round of 16', 3: 'Quarter Final', 4: 'Semi Final', 5: 'Final' };
+
+  container.innerHTML = matches.map(function(match) {
+    var opponent = match.player1?.id === memberId ? match.player2 : match.player1;
+    if (!opponent) return '';
+
+    var initials = opponent.first_name[0] + opponent.last_name[0];
+    var oppName = opponent.first_name + ' ' + opponent.last_name;
+    var roundName = roundNames[match.round] || 'Round ' + match.round;
+    var deadline = match.deadline ? new Date(match.deadline).toLocaleDateString('en-IE', { day: 'numeric', month: 'short' }) : '';
+    var clubName = match.tournaments?.clubs?.name || '';
+
+    // Determine action needed
+    var hasSchedule = match.scheduled_at;
+    var scheduleDisplay = hasSchedule
+      ? new Date(match.scheduled_at).toLocaleDateString('en-IE', { weekday: 'short', day: 'numeric', month: 'short' }) + ' at ' + new Date(match.scheduled_at).toLocaleTimeString('en-IE', { hour: '2-digit', minute: '2-digit' })
+      : null;
+    var scheduleInputVal = hasSchedule ? match.scheduled_at.substring(0, 16) : '';
+
+    // Contact buttons
+    var msgText = 'Hi ' + opponent.first_name + ', we\'re matched in ' + (match.tournaments?.name || 'the tournament') + ' (' + roundName + '). When suits you to play?';
+    var hasPhone = opponent.phone && opponent.phone.trim().length > 0;
+    var phoneClean = hasPhone ? opponent.phone.replace(/\s/g, '') : '';
+    var pref = opponent.contact_preference || 'whatsapp';
+    var whatsappUrl = hasPhone ? 'https://wa.me/' + phoneClean + '?text=' + encodeURIComponent(msgText) : null;
+    var smsUrl = hasPhone ? 'sms:' + phoneClean + '?body=' + encodeURIComponent(msgText) : null;
+    var emailUrl = opponent.email ? 'mailto:' + opponent.email + '?subject=' + encodeURIComponent((match.tournaments?.name || '') + ' - ' + roundName) + '&body=' + encodeURIComponent(msgText) : null;
+
+    // Action: if no schedule set → Arrange Match, if scheduled → Record Score
+    var actionLabel, actionColor;
+    if (!hasSchedule) {
+      actionLabel = '&#128197; Arrange Match';
+      actionColor = 'var(--gold)';
+    } else {
+      actionLabel = '&#128221; Record Score';
+      actionColor = 'var(--green-600)';
+    }
+
+    // Primary contact button
+    var contactBtn = '';
+    if (pref === 'whatsapp' && whatsappUrl) contactBtn = '<a href="' + whatsappUrl + '" target="_blank" class="btn btn-sm btn-whatsapp">&#128172; WhatsApp</a>';
+    else if (pref === 'sms' && smsUrl) contactBtn = '<a href="' + smsUrl + '" class="btn btn-sm btn-primary">&#128241; SMS</a>';
+    else if (pref === 'email' && emailUrl) contactBtn = '<a href="' + emailUrl + '" class="btn btn-sm btn-primary">&#128231; Email</a>';
+    else if (whatsappUrl) contactBtn = '<a href="' + whatsappUrl + '" target="_blank" class="btn btn-sm btn-whatsapp">&#128172; WhatsApp</a>';
+    else if (emailUrl) contactBtn = '<a href="' + emailUrl + '" class="btn btn-sm btn-primary">&#128231; Email</a>';
+
+    var groupBtn = match.tournaments?.whatsapp_group_link
+      ? '<a href="' + match.tournaments.whatsapp_group_link + '" target="_blank" class="btn btn-sm btn-whatsapp" style="font-size:0.7rem;">Group</a>'
+      : '';
+
+    return '<div style="border:1.5px solid var(--gray-200);border-left:4px solid ' + actionColor + ';border-radius:var(--radius-lg);padding:1rem;margin-bottom:0.75rem;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.5rem;">' +
+        '<div><strong style="font-size:0.95rem;">' + (match.tournaments?.name || '') + '</strong> <span style="font-size:0.8rem;color:var(--gray-500);">' + roundName + '</span>' +
+          (clubName ? '<br><span style="font-size:0.7rem;color:var(--gray-400);">' + clubName + '</span>' : '') +
+        '</div>' +
+        '<span class="badge" style="background:' + actionColor + ';color:white;font-size:0.7rem;">' + actionLabel + '</span>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem;background:var(--green-50);border-radius:var(--radius);margin-bottom:0.5rem;">' +
+        '<div style="width:36px;height:36px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;">' + initials + '</div>' +
+        '<div><div style="font-weight:600;">' + oppName + '</div><div style="font-size:0.75rem;color:var(--gray-500);">Handicap ' + opponent.handicap + ' &bull; Prefers ' + pref + '</div></div>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">' +
+        '<div style="font-size:0.8rem;color:var(--gray-500);">' +
+          (deadline ? '&#128197; Due: ' + deadline : '') +
+          (scheduleDisplay ? ' &bull; <strong style="color:var(--green-700);">Scheduled: ' + scheduleDisplay + '</strong>' : '') +
+        '</div>' +
+        '<div style="display:flex;gap:0.4rem;flex-wrap:wrap;">' +
+          contactBtn + groupBtn +
+          (!hasSchedule ? '<button class="btn btn-sm btn-primary" onclick="document.getElementById(\'sched-' + match.id + '\').style.display=\'block\'">Set Date</button>' : '<a href="#section-matches" class="btn btn-sm btn-primary" onclick="document.getElementById(\'score-match-select\').value=\'' + match.id + '\';window.scrollTo(0,document.body.scrollHeight);">Record Score</a>') +
+        '</div>' +
+      '</div>' +
+      '<div id="sched-' + match.id + '" style="display:none;margin-top:0.5rem;"><input type="datetime-local" class="form-input" style="font-size:0.85rem;" value="' + scheduleInputVal + '" onchange="saveMatchSchedule(\'' + match.id + '\',this.value)"></div>' +
+    '</div>';
+  }).join('');
+}
+
+// Keep old function name for profile page compatibility
 async function loadUpcomingMatches() {
   const memberId = currentMember.id;
 
@@ -383,6 +474,130 @@ async function loadNotifications() {
         <span class="notification-time">${timeAgo}</span>
       </div>`;
   }).join('');
+}
+
+// My Tournaments — tournaments the golfer is registered in
+async function loadMyTournaments() {
+  var container = document.getElementById('my-tournaments');
+  if (!container) return;
+
+  var memberId = currentMember.id;
+
+  var { data: entries } = await supabase.from('tournament_entries')
+    .select('tournament_id, seed, tournaments(id, name, status, bracket_size, clubs(name))')
+    .eq('member_id', memberId);
+
+  if (!entries || entries.length === 0) {
+    container.innerHTML = '<p style="text-align:center;color:var(--gray-400);">Not registered in any tournaments yet.</p>';
+    return;
+  }
+
+  var statusLabels = { 'entries_open': 'Entries Open', 'in_progress': 'In Progress', 'completed': 'Completed', 'scheduled': 'Scheduled' };
+  var statusColors = { 'entries_open': 'badge-gold', 'in_progress': 'badge-green', 'completed': 'badge-gray', 'scheduled': 'badge-blue' };
+
+  container.innerHTML = entries.map(function(e) {
+    var t = e.tournaments;
+    if (!t) return '';
+    var statusBadge = '<span class="badge ' + (statusColors[t.status] || 'badge-gray') + '">' + (statusLabels[t.status] || t.status) + '</span>';
+    var clubName = t.clubs?.name || '';
+    var seedLabel = e.seed ? '<span style="font-size:0.75rem;color:var(--gray-500);">Seed ' + e.seed + '</span>' : '';
+
+    var viewBtns = '';
+    if (t.status === 'in_progress' || t.status === 'completed') {
+      viewBtns = '<button class="btn btn-sm btn-secondary" onclick="viewBracket(\'' + t.id + '\',\'' + t.name.replace(/'/g, "\\'") + '\')" style="font-size:0.75rem;">View Bracket</button>';
+    }
+    viewBtns += ' <button class="btn btn-sm btn-secondary" onclick="viewEntrants(\'' + t.id + '\',\'' + t.name.replace(/'/g, "\\'") + '\')" style="font-size:0.75rem;">View Entrants</button>';
+
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem;border:1px solid var(--gray-200);border-radius:var(--radius);margin-bottom:0.5rem;flex-wrap:wrap;gap:0.5rem;">' +
+      '<div><strong>' + t.name + '</strong> ' + statusBadge + ' ' + seedLabel +
+        (clubName ? '<br><span style="font-size:0.75rem;color:var(--gray-400);">' + clubName + '</span>' : '') +
+      '</div>' +
+      '<div style="display:flex;gap:0.4rem;flex-wrap:wrap;">' + viewBtns + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// View Bracket in modal
+async function viewBracket(tournamentId, tournamentName) {
+  document.getElementById('bracketModalTitle').textContent = tournamentName + ' — Bracket';
+  document.getElementById('bracketModalContent').innerHTML = '<p style="text-align:center;color:var(--gray-400);">Loading bracket...</p>';
+  document.getElementById('bracketModal').classList.add('active');
+
+  var { data: tournament } = await supabase.from('tournaments').select('*').eq('id', tournamentId).single();
+  var { data: matches } = await supabase.from('matches')
+    .select('*, player1:members!matches_player1_id_fkey(id, first_name, last_name), player2:members!matches_player2_id_fkey(id, first_name, last_name), winner:members!matches_winner_id_fkey(id, first_name, last_name)')
+    .eq('tournament_id', tournamentId).order('round').order('position');
+  var { data: entries } = await supabase.from('tournament_entries').select('member_id, seed').eq('tournament_id', tournamentId);
+
+  if (!matches || matches.length === 0) {
+    document.getElementById('bracketModalContent').innerHTML = '<p style="text-align:center;color:var(--gray-400);">Draw not yet generated.</p>';
+    return;
+  }
+
+  var seedMap = {};
+  (entries || []).forEach(function(e) { seedMap[e.member_id] = e.seed; });
+
+  var totalRounds = Math.log2(tournament.bracket_size);
+  var rNames = {};
+  for (var r = 1; r <= totalRounds; r++) {
+    if (r === totalRounds) rNames[r] = 'Final';
+    else if (r === totalRounds - 1) rNames[r] = 'Semi Finals';
+    else if (r === totalRounds - 2) rNames[r] = 'Quarter Finals';
+    else if (r === totalRounds - 3) rNames[r] = 'Round of 16';
+    else rNames[r] = 'Round ' + r;
+  }
+
+  // Build simple bracket table
+  var html = '';
+  var curRound = 0;
+  matches.forEach(function(m) {
+    if (m.status === 'bye') return;
+    if (m.round !== curRound) {
+      curRound = m.round;
+      html += '<div style="font-weight:700;font-size:0.85rem;color:var(--green-700);margin:0.75rem 0 0.4rem;padding:0.3rem 0.6rem;background:var(--green-100);border-radius:var(--radius-full);display:inline-block;">' + (rNames[m.round] || 'Round ' + m.round) + '</div>';
+    }
+    var p1 = m.player1 ? m.player1.first_name[0] + '. ' + m.player1.last_name : 'TBD';
+    var p2 = m.player2 ? m.player2.first_name[0] + '. ' + m.player2.last_name : 'TBD';
+    var isP1Winner = m.winner_id === m.player1?.id;
+    var isP2Winner = m.winner_id === m.player2?.id;
+    var p1Style = isP1Winner ? 'font-weight:700;color:var(--green-700);' : (isP2Winner ? 'color:var(--gray-400);text-decoration:line-through;' : '');
+    var p2Style = isP2Winner ? 'font-weight:700;color:var(--green-700);' : (isP1Winner ? 'color:var(--gray-400);text-decoration:line-through;' : '');
+    var score = m.score || '';
+
+    html += '<div style="display:flex;align-items:center;padding:0.3rem 0;font-size:0.8rem;border-bottom:1px solid var(--gray-100);">' +
+      '<span style="width:45%;' + p1Style + '">' + p1 + '</span>' +
+      '<span style="width:10%;text-align:center;font-size:0.7rem;color:var(--gray-400);">vs</span>' +
+      '<span style="width:30%;' + p2Style + '">' + p2 + '</span>' +
+      '<span style="width:15%;text-align:right;font-size:0.75rem;font-weight:600;color:var(--green-700);">' + score + '</span>' +
+    '</div>';
+  });
+
+  document.getElementById('bracketModalContent').innerHTML = html;
+}
+
+// View Entrants in modal
+async function viewEntrants(tournamentId, tournamentName) {
+  document.getElementById('entrantsModalTitle').textContent = tournamentName + ' — Entrants';
+  document.getElementById('entrantsModalContent').innerHTML = '<p style="text-align:center;color:var(--gray-400);">Loading...</p>';
+  document.getElementById('entrantsModal').classList.add('active');
+
+  var { data: entries } = await supabase.from('tournament_entries')
+    .select('seed, members(first_name, last_name, handicap)')
+    .eq('tournament_id', tournamentId)
+    .order('seed');
+
+  if (!entries || entries.length === 0) {
+    document.getElementById('entrantsModalContent').innerHTML = '<p style="text-align:center;color:var(--gray-400);">No entrants yet.</p>';
+    return;
+  }
+
+  document.getElementById('entrantsModalContent').innerHTML =
+    '<div style="font-size:0.8rem;color:var(--gray-500);margin-bottom:0.5rem;">' + entries.length + ' entrants</div>' +
+    entries.map(function(e, i) {
+      return '<div style="display:flex;justify-content:space-between;padding:0.4rem 0.5rem;border-bottom:1px solid var(--gray-100);font-size:0.85rem;">' +
+        '<span>' + (e.seed || (i + 1)) + '. ' + e.members.first_name + ' ' + e.members.last_name + '</span>' +
+        '<span style="color:var(--gray-500);">Hcp ' + e.members.handicap + '</span></div>';
+    }).join('');
 }
 
 async function loadOpenTournaments() {

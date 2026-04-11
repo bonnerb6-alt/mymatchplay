@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Results - MyMatchPlayPal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="golfer.html" class="navbar-brand" style="text-decoration:none;">
+        <div class="brand-icon">&#9971;</div>
+        <span>MyMatchPlayPal</span>
+      </a>
+      <ul class="navbar-links">
+        <li><a href="golfer.html">Dashboard</a></li>
+        <li><a href="results.html" class="active">Results</a></li>
+        <li><a href="profile.html">Profile</a></li>
+      </ul>
+      <div class="navbar-actions">
+        <div class="nav-avatar">--</div>
+        <a href="#" onclick="signOut();return false;" class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:var(--white);font-size:0.75rem;padding:0.3rem 0.6rem;">Sign Out</a>
+        <button class="menu-toggle" onclick="document.querySelector('.navbar-links').classList.toggle('show')">&#9776;</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container page-content">
+    <div class="dashboard-header">
+      <h1>&#127941; Match Results</h1>
+      <p>Your complete match history across all tournaments.</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stat-cards mb-3">
+      <div class="stat-card">
+        <div class="stat-icon green">&#127942;</div>
+        <div class="stat-value" id="results-played">-</div>
+        <div class="stat-label">Played</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">&#9989;</div>
+        <div class="stat-value" id="results-won">-</div>
+        <div class="stat-label">Won</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#fef2f2;">&#10060;</div>
+        <div class="stat-value" id="results-lost">-</div>
+        <div class="stat-label">Lost</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#fef3c7;">&#128200;</div>
+        <div class="stat-value" id="results-winrate">-</div>
+        <div class="stat-label">Win Rate</div>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="card mb-3">
+      <div class="card-body" style="padding:0.75rem 1rem;">
+        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+          <label style="font-weight:600;font-size:0.85rem;">Filter by tournament:</label>
+          <select class="form-select" id="results-filter" onchange="loadResults()" style="max-width:300px;">
+            <option value="all">All Tournaments</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results List -->
+    <div class="card">
+      <div class="card-body" id="results-list">
+        <p style="text-align:center;color:var(--gray-400);">Loading...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/supabase-client.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    var resultsMember = null;
+
+    async function initResults() {
+      resultsMember = await getCurrentMember();
+      if (!resultsMember) { window.location.href = 'login.html'; return; }
+      updateNavForAuth(resultsMember);
+      await loadResultsFilter();
+      await loadResults();
+    }
+
+    async function loadResultsFilter() {
+      var memberId = resultsMember.id;
+      // Get tournaments the member has played in
+      var { data: entries } = await supabase.from('tournament_entries').select('tournament_id, tournaments(name)').eq('member_id', memberId);
+      var select = document.getElementById('results-filter');
+      if (!entries || entries.length === 0) return;
+      entries.forEach(function(e) {
+        if (e.tournaments?.name) {
+          var opt = document.createElement('option');
+          opt.value = e.tournament_id;
+          opt.textContent = e.tournaments.name;
+          select.appendChild(opt);
+        }
+      });
+    }
+
+    async function loadResults() {
+      var memberId = resultsMember.id;
+      var filter = document.getElementById('results-filter').value;
+
+      var query = supabase.from('matches').select(
+        '*, tournaments(name), player1:members!matches_player1_id_fkey(id, first_name, last_name), player2:members!matches_player2_id_fkey(id, first_name, last_name), winner:members!matches_winner_id_fkey(id, first_name, last_name)'
+      ).or('player1_id.eq.' + memberId + ',player2_id.eq.' + memberId)
+       .eq('status', 'completed')
+       .order('created_at', { ascending: false });
+
+      if (filter !== 'all') query = query.eq('tournament_id', filter);
+
+      var { data: matches } = await query;
+      var container = document.getElementById('results-list');
+
+      if (!matches || matches.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:var(--gray-400);padding:2rem;">No match results yet.</p>';
+        document.getElementById('results-played').textContent = '0';
+        document.getElementById('results-won').textContent = '0';
+        document.getElementById('results-lost').textContent = '0';
+        document.getElementById('results-winrate').textContent = '0%';
+        return;
+      }
+
+      var wins = matches.filter(function(m) { return m.winner_id === memberId; }).length;
+      var total = matches.length;
+      var losses = total - wins;
+
+      document.getElementById('results-played').textContent = total;
+      document.getElementById('results-won').textContent = wins;
+      document.getElementById('results-lost').textContent = losses;
+      document.getElementById('results-winrate').textContent = Math.round((wins / total) * 100) + '%';
+
+      var roundNames = { 1: 'R1', 2: 'R16', 3: 'QF', 4: 'SF', 5: 'F' };
+
+      container.innerHTML = matches.map(function(m) {
+        var opponent = m.player1?.id === memberId ? m.player2 : m.player1;
+        var won = m.winner_id === memberId;
+        var borderColor = won ? 'var(--green-500)' : 'var(--red)';
+        var bgColor = won ? 'var(--green-50)' : '#fef2f2';
+        var badge = won ? '<span class="badge badge-green">Won</span>' : '<span class="badge badge-red">Lost</span>';
+        var oppName = opponent ? opponent.first_name + ' ' + opponent.last_name : 'Unknown';
+        var round = roundNames[m.round] || 'R' + m.round;
+        var date = new Date(m.created_at).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' });
+
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;background:' + bgColor + ';border-radius:var(--radius);border-left:3px solid ' + borderColor + ';margin-bottom:0.5rem;flex-wrap:wrap;gap:0.5rem;">' +
+          '<div style="flex:1;min-width:150px;">' +
+            '<div style="font-weight:600;font-size:0.9rem;">vs ' + oppName + '</div>' +
+            '<div style="font-size:0.75rem;color:var(--gray-500);">' + (m.tournaments?.name || '') + ' &bull; ' + round + ' &bull; ' + date + '</div>' +
+          '</div>' +
+          '<div style="text-align:right;display:flex;align-items:center;gap:0.5rem;">' +
+            badge +
+            '<span style="font-size:0.9rem;font-weight:600;">' + (m.score || '') + '</span>' +
+          '</div></div>';
+      }).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', initResults);
+  </script>
+</body>
+</html>
