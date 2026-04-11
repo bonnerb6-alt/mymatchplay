@@ -116,6 +116,7 @@
     document.addEventListener('DOMContentLoaded', async function() {
       renderBottomNav('profile');
       renderTopNavLinks('profile');
+      checkAndOfferOrgSwitch();
       currentMember = await getCurrentMember();
       if (!currentMember) { window.location.href = 'login.html'; return; }
 

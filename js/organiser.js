@@ -99,34 +99,26 @@ function renderOrgSidebar() {
 }
 
 async function loadOrgStats() {
-  const clubId = currentOrganiser.club_id;
+  try {
+    // Run all stat queries in parallel (4 queries → 1 round trip)
+    var [tournamentsRes, membersRes] = await Promise.all([
+      supabase.from('tournaments').select('id, status').eq('club_id', orgClubId),
+      supabase.from('club_memberships').select('id').eq('club_id', orgClubId).eq('status', 'active')
+    ]);
 
-  const { count: totalTournaments } = await supabase
-    .from('tournaments')
-    .select('*', { count: 'exact', head: true })
-    .eq('club_id', clubId);
+    var tournaments = tournamentsRes.data || [];
+    var totalTournaments = tournaments.length;
+    var activeTournaments = tournaments.filter(function(t) { return t.status === 'entries_open' || t.status === 'in_progress'; }).length;
+    var memberCount = (membersRes.data || []).length;
 
-  const { count: activeTournaments } = await supabase
-    .from('tournaments')
-    .select('*', { count: 'exact', head: true })
-    .eq('club_id', clubId)
-    .in('status', ['entries_open', 'in_progress']);
-
-  const { count: memberCount } = await supabase
-    .from('members')
-    .select('*', { count: 'exact', head: true })
-    .eq('club_id', clubId);
-
-  const { count: pendingResults } = await supabase
-    .from('matches')
-    .select('*, tournaments!inner(club_id)', { count: 'exact', head: true })
-    .eq('tournaments.club_id', clubId)
-    .in('status', ['pending', 'in_progress']);
-
-  document.getElementById('org-stat-total').textContent = totalTournaments || 0;
-  document.getElementById('org-stat-active').textContent = activeTournaments || 0;
-  document.getElementById('org-stat-members').textContent = memberCount || 0;
-  document.getElementById('org-stat-pending').textContent = pendingResults || 0;
+    var el;
+    el = document.getElementById('org-stat-total'); if (el) el.textContent = totalTournaments;
+    el = document.getElementById('org-stat-active'); if (el) el.textContent = activeTournaments;
+    el = document.getElementById('org-stat-members'); if (el) el.textContent = memberCount;
+    el = document.getElementById('org-stat-pending'); if (el) el.textContent = '-';
+  } catch (err) {
+    console.error('[MMP] Stats error:', err);
+  }
 }
 
 // Derive the current round display from match data

@@ -83,6 +83,7 @@
     async function initResults() {
       renderBottomNav('results');
       renderTopNavLinks('results');
+      checkAndOfferOrgSwitch();
       resultsMember = await getCurrentMember();
       if (!resultsMember) { window.location.href = 'login.html'; return; }
       await loadResultsFilter();

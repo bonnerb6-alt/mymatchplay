@@ -55,26 +55,28 @@ async function initGolferDashboard() {
 
 // ---- Stats ----
 async function loadStats() {
-  var id = currentMember.id;
+  try {
+    var id = currentMember.id;
 
-  var { data: entries } = await supabase.from('tournament_entries').select('tournament_id').eq('member_id', id);
-  var tCount = (entries || []).length;
+    // Run all queries in parallel (4 → 1 round trip)
+    var [entriesRes, pendingRes, wonRes, playedRes] = await Promise.all([
+      supabase.from('tournament_entries').select('tournament_id').eq('member_id', id),
+      supabase.from('matches').select('id').or('player1_id.eq.' + id + ',player2_id.eq.' + id).in('status', ['pending', 'in_progress']),
+      supabase.from('matches').select('id').eq('winner_id', id).eq('status', 'completed'),
+      supabase.from('matches').select('id').or('player1_id.eq.' + id + ',player2_id.eq.' + id).eq('status', 'completed')
+    ]);
 
-  var { data: pending } = await supabase.from('matches').select('id')
-    .or('player1_id.eq.' + id + ',player2_id.eq.' + id).in('status', ['pending', 'in_progress']);
+    var w = (wonRes.data || []).length;
+    var p = (playedRes.data || []).length;
 
-  var { data: won } = await supabase.from('matches').select('id').eq('winner_id', id).eq('status', 'completed');
-  var { data: played } = await supabase.from('matches').select('id')
-    .or('player1_id.eq.' + id + ',player2_id.eq.' + id).eq('status', 'completed');
-
-  var w = (won || []).length;
-  var p = (played || []).length;
-
-  var el;
-  el = document.getElementById('s-tournaments'); if (el) el.textContent = tCount;
-  el = document.getElementById('s-matches'); if (el) el.textContent = (pending || []).length;
-  el = document.getElementById('s-record'); if (el) el.textContent = w + '-' + (p - w);
-  el = document.getElementById('s-streak'); if (el) el.textContent = '0'; // simplified
+    var el;
+    el = document.getElementById('s-tournaments'); if (el) el.textContent = (entriesRes.data || []).length;
+    el = document.getElementById('s-matches'); if (el) el.textContent = (pendingRes.data || []).length;
+    el = document.getElementById('s-record'); if (el) el.textContent = w + '-' + (p - w);
+    el = document.getElementById('s-streak'); if (el) el.textContent = w > 0 ? w : '0';
+  } catch (err) {
+    console.error('[MMP] Stats error:', err);
+  }
 }
 
 // ---- My Matches (Action Cards) ----

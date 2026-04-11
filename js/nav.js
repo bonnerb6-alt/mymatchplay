@@ -61,42 +61,46 @@ function renderTopNavLinks(activePage) {
   container.innerHTML = html;
 }
 
-// Check if user is organiser and offer role switch (runs once)
-var _orgSwitchDone = false;
+// Check if user is organiser and offer role switch
 async function checkAndOfferOrgSwitch() {
-  if (_orgSwitchDone) return;
-  _orgSwitchDone = true;
+  // Don't add if already present
+  var nav = document.getElementById('bottom-nav');
+  var topLinks = document.querySelector('.top-nav-links');
+  if (!nav && !topLinks) return;
+  if (nav && nav.querySelector('[data-switch]')) return;
 
-  var member = await getCurrentMember();
-  if (!member) return;
+  try {
+    var member = await getCurrentMember();
+    if (!member) return;
 
-  var isOrg = member.role === 'organiser' || member.is_admin;
-  if (!isOrg) {
-    var { data: memberships } = await supabase.from('club_memberships').select('role').eq('member_id', member.id);
-    isOrg = (memberships || []).some(function(m) { return m.role === 'organiser'; });
-  }
-
-  if (isOrg && getRole() === 'golfer') {
-    // Add organiser link to bottom nav (only if not already there)
-    var nav = document.getElementById('bottom-nav');
-    if (nav && !nav.querySelector('[data-switch]')) {
-      var a = document.createElement('a');
-      a.href = 'organiser.html';
-      a.setAttribute('data-switch', 'organiser');
-      a.onclick = function() { setRole('organiser'); };
-      a.innerHTML = '<span class="nav-icon">&#128274;</span>Organiser';
-      nav.appendChild(a);
+    var isOrg = member.role === 'organiser' || member.is_admin;
+    if (!isOrg) {
+      var { data: memberships } = await supabase.from('club_memberships').select('role').eq('member_id', member.id);
+      isOrg = (memberships || []).some(function(m) { return m.role === 'organiser'; });
     }
 
-    // Add to top nav (only if not already there)
-    var topLinks = document.querySelector('.top-nav-links');
-    if (topLinks && !topLinks.querySelector('[data-switch]')) {
-      var a2 = document.createElement('a');
-      a2.href = 'organiser.html';
-      a2.setAttribute('data-switch', 'organiser');
-      a2.onclick = function() { setRole('organiser'); };
-      a2.textContent = 'Organiser';
-      topLinks.appendChild(a2);
+    var currentRole = getRole();
+
+    if (isOrg && currentRole === 'golfer') {
+      // Add organiser link
+      if (nav && !nav.querySelector('[data-switch]')) {
+        var a = document.createElement('a');
+        a.href = 'organiser.html';
+        a.setAttribute('data-switch', 'organiser');
+        a.onclick = function() { setRole('organiser'); };
+        a.innerHTML = '<span class="nav-icon">&#128274;</span>Organiser';
+        nav.appendChild(a);
+      }
+      if (topLinks && !topLinks.querySelector('[data-switch]')) {
+        var a2 = document.createElement('a');
+        a2.href = 'organiser.html';
+        a2.setAttribute('data-switch', 'organiser');
+        a2.onclick = function() { setRole('organiser'); };
+        a2.textContent = 'Organiser';
+        topLinks.appendChild(a2);
+      }
     }
+  } catch (err) {
+    console.error('[MMP] Org switch check error:', err);
   }
 }
