@@ -2,7 +2,8 @@
 // MyMatchPlayPal - Live Bracket
 // ============================================
 
-let bracketClubId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'; // Default demo club
+let bracketClubId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+let bracketClubIds = [];
 let currentTournamentId = null;
 let realtimeChannel = null;
 
@@ -12,7 +13,15 @@ async function initBracket() {
     if (member) {
       bracketClubId = member.club_id;
       updateNavForAuth(member);
+
+      // Get all clubs the member belongs to
+      var { data: memberships } = await supabase
+        .from('club_memberships')
+        .select('club_id')
+        .eq('member_id', member.id);
+      bracketClubIds = (memberships || []).map(function(m) { return m.club_id; });
     }
+    if (bracketClubIds.length === 0) bracketClubIds = [bracketClubId];
     await loadTournamentSelector();
   } catch (err) {
     console.error('[MMP] Bracket init error:', err);
@@ -27,33 +36,47 @@ async function loadTournamentSelector() {
 
   const { data: tournaments } = await supabase
     .from('tournaments')
-    .select('id, name, status, bracket_size, entry_deadline, current_round, created_at')
-    .eq('club_id', bracketClubId)
-    .in('status', ['in_progress', 'completed'])
+    .select('id, name, status, bracket_size, entry_deadline, current_round, created_at, clubs(name)')
+    .in('club_id', bracketClubIds)
+    .in('status', ['entries_open', 'in_progress', 'completed'])
     .order('created_at', { ascending: false });
 
   if (!tournaments || tournaments.length === 0) {
-    container.innerHTML = '<p style="color:var(--gray-400);">No active tournaments yet. Create one from the Organiser dashboard.</p>';
-    document.getElementById('bracket-desktop-container').innerHTML = '<p style="padding:2rem;text-align:center;color:var(--gray-400);">No bracket to display yet.</p>';
-    document.getElementById('bracket-mobile-container').innerHTML = '<p style="padding:2rem;text-align:center;color:var(--gray-400);">No bracket to display yet.</p>';
+    container.innerHTML = '<p style="color:var(--gray-400);">No tournaments yet.</p>';
+    document.getElementById('bracket-desktop-container').innerHTML = '<p style="padding:2rem;text-align:center;color:var(--gray-400);">No tournament to display.</p>';
+    document.getElementById('bracket-mobile-container').innerHTML = '<p style="padding:2rem;text-align:center;color:var(--gray-400);">No tournament to display.</p>';
     document.getElementById('tournament-info').innerHTML = '';
     document.getElementById('round-deadlines').innerHTML = '<p style="text-align:center;color:var(--gray-400);">-</p>';
     document.getElementById('bracket-results').innerHTML = '<p style="text-align:center;color:var(--gray-400);">-</p>';
     return;
   }
 
-  container.innerHTML = tournaments.map((t, i) => `
-    <button class="tournament-chip ${i === 0 ? 'active' : ''}" data-id="${t.id}" onclick="selectBracketTournament(this, '${t.id}')">
-      ${t.name}
-    </button>
-  `).join('');
+  var statusColors = {
+    'entries_open': 'background:var(--gold);border-color:var(--gold);color:var(--green-900);',
+    'in_progress': 'background:var(--green-600);border-color:var(--green-600);color:var(--white);',
+    'completed': 'background:var(--gray-400);border-color:var(--gray-400);color:var(--white);'
+  };
+  var statusLabels = { 'entries_open': 'Open', 'in_progress': 'Live', 'completed': 'Done' };
+
+  container.innerHTML = tournaments.map(function(t, i) {
+    var chipStyle = i === 0 ? statusColors[t.status] || '' : '';
+    var clubName = t.clubs?.name ? '<span style="font-size:0.65rem;display:block;opacity:0.7;">' + t.clubs.name + '</span>' : '';
+    var statusDot = '<span style="font-size:0.6rem;opacity:0.8;">[' + (statusLabels[t.status] || t.status) + ']</span>';
+    return '<button class="tournament-chip ' + (i === 0 ? 'active' : '') + '" style="' + chipStyle + '" data-id="' + t.id + '" onclick="selectBracketTournament(this, \'' + t.id + '\')">' +
+      t.name + ' ' + statusDot + clubName + '</button>';
+  }).join('');
 
   // Load the first tournament
   await selectBracketTournament(container.querySelector('.tournament-chip'), tournaments[0].id);
 }
 
 async function selectBracketTournament(btn, tournamentId) {
-  document.querySelectorAll('.tournament-chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.tournament-chip').forEach(function(c) {
+    c.classList.remove('active');
+    c.style.background = '';
+    c.style.borderColor = '';
+    c.style.color = '';
+  });
   if (btn) btn.classList.add('active');
 
   currentTournamentId = tournamentId;
@@ -94,6 +117,39 @@ async function loadBracketData(tournamentId) {
   (entries || []).forEach(e => { seedMap[e.member_id] = e.seed; });
 
   renderTournamentInfo(tournament);
+
+  if (tournament.status === 'entries_open') {
+    // No bracket yet — show entrant list
+    var { data: entrants } = await supabase
+      .from('tournament_entries')
+      .select('members(first_name, last_name, handicap)')
+      .eq('tournament_id', tournamentId);
+
+    var entryCount = (entrants || []).length;
+    var entrantList = (entrants || []).map(function(e, i) {
+      return '<div style="display:flex;justify-content:space-between;padding:0.4rem 0.75rem;border-bottom:1px solid var(--gray-100);font-size:0.85rem;">' +
+        '<span>' + (i + 1) + '. ' + e.members.first_name + ' ' + e.members.last_name + '</span>' +
+        '<span style="color:var(--gray-500);">Hcp ' + e.members.handicap + '</span></div>';
+    }).join('') || '<p style="padding:1rem;text-align:center;color:var(--gray-400);">No entries yet</p>';
+
+    var deadline = tournament.entry_deadline ? new Date(tournament.entry_deadline).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' }) : 'TBD';
+    var entryHTML = '<div class="card-body">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">' +
+        '<h3 style="font-size:1rem;">Entries (' + entryCount + ' / ' + tournament.bracket_size + ')</h3>' +
+        '<span style="font-size:0.85rem;color:var(--gray-500);">Closes: ' + deadline + '</span>' +
+      '</div>' +
+      '<div style="background:var(--gray-200);border-radius:var(--radius-full);height:8px;overflow:hidden;margin-bottom:1rem;">' +
+        '<div style="width:' + Math.round(entryCount / tournament.bracket_size * 100) + '%;height:100%;background:var(--green-500);border-radius:var(--radius-full);"></div>' +
+      '</div>' +
+      entrantList + '</div>';
+
+    document.getElementById('bracket-desktop-container').innerHTML = entryHTML;
+    document.getElementById('bracket-mobile-container').innerHTML = entryHTML;
+    document.getElementById('round-deadlines').innerHTML = '<p style="text-align:center;color:var(--gray-400);">Draw not yet generated</p>';
+    document.getElementById('bracket-results').innerHTML = '<p style="text-align:center;color:var(--gray-400);">No matches yet</p>';
+    return;
+  }
+
   renderDesktopBracket(matches || [], tournament, seedMap);
   renderMobileBracket(matches || [], tournament, seedMap);
   renderRoundDeadlines(tournament);
