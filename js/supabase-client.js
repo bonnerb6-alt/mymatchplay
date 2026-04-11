@@ -7,12 +7,13 @@ var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
 // The CDN exposes window.supabase with createClient
 var _sb = window.supabase;
+console.log('[MMP] window.supabase:', _sb ? 'loaded' : 'MISSING');
 if (!_sb || !_sb.createClient) {
-  console.error('Supabase JS library not loaded. Check CDN script tag in HTML <head>.');
-  // Prevent further errors by creating a stub
+  console.error('[MMP] Supabase JS library not loaded. Check CDN script tag in HTML <head>.');
   var supabase = null;
 } else {
   var supabase = _sb.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  console.log('[MMP] Supabase client created for:', SUPABASE_URL);
 }
 
 // Get the current authenticated user
@@ -24,6 +25,7 @@ async function getCurrentUser() {
 // Get the member record for the current authenticated user
 async function getCurrentMember() {
   const user = await getCurrentUser();
+  console.log('[MMP] Auth user:', user ? user.email : 'not logged in');
   if (!user) return null;
 
   const { data, error } = await supabase
@@ -32,6 +34,7 @@ async function getCurrentMember() {
     .eq('auth_id', user.id)
     .single();
 
+  console.log('[MMP] Member lookup:', data ? data.email : 'not found', 'Error:', error);
   if (error) return null;
   return data;
 }

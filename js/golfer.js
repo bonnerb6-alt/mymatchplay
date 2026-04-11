@@ -7,29 +7,37 @@ let myClubs = []; // All clubs this member belongs to
 let myClubIds = []; // Just the IDs for filtering
 
 async function initGolferDashboard() {
-  currentMember = await getCurrentMember();
-  if (!currentMember) {
-    window.location.href = 'login.html';
-    return;
-  }
+  try {
+    console.log('[MMP] Starting golfer dashboard init...');
+    console.log('[MMP] Supabase client:', supabase ? 'OK' : 'MISSING');
 
-  // Load all club memberships for this member (golfer can be in multiple clubs)
-  var { data: memberships } = await supabase
-    .from('club_memberships')
-    .select('*, clubs(id, name)')
-    .eq('member_id', currentMember.id);
+    currentMember = await getCurrentMember();
+    console.log('[MMP] Current member:', currentMember);
+    if (!currentMember) {
+      window.location.href = 'login.html';
+      return;
+    }
 
-  // Fallback to old single-club model if no memberships exist
-  if (!memberships || memberships.length === 0) {
-    myClubs = [{ club_id: currentMember.club_id, role: currentMember.role, handicap: currentMember.handicap, clubs: currentMember.clubs }];
-  } else {
-    myClubs = memberships;
-  }
-  myClubIds = myClubs.map(function(c) { return c.club_id; });
+    // Load all club memberships for this member (golfer can be in multiple clubs)
+    var { data: memberships, error: memErr } = await supabase
+      .from('club_memberships')
+      .select('*, clubs(id, name)')
+      .eq('member_id', currentMember.id);
 
-  updateNavForAuth(currentMember);
-  renderSidebar();
-  document.getElementById('dashboard-greeting').textContent = 'Welcome back, ' + currentMember.first_name;
+    console.log('[MMP] Club memberships:', memberships, 'Error:', memErr);
+
+    // Fallback to old single-club model if no memberships exist
+    if (!memberships || memberships.length === 0) {
+      myClubs = [{ club_id: currentMember.club_id, role: currentMember.role, handicap: currentMember.handicap, clubs: currentMember.clubs }];
+    } else {
+      myClubs = memberships;
+    }
+    myClubIds = myClubs.map(function(c) { return c.club_id; });
+    console.log('[MMP] Club IDs:', myClubIds);
+
+    updateNavForAuth(currentMember);
+    renderSidebar();
+    document.getElementById('dashboard-greeting').textContent = 'Welcome back, ' + currentMember.first_name;
 
   // Show club logo in navbar if available
   if (myClubIds.length > 0) {
@@ -49,6 +57,10 @@ async function initGolferDashboard() {
     loadClubSelector()
   ]);
   populateScoreForm();
+  console.log('[MMP] Golfer dashboard init complete.');
+  } catch (err) {
+    console.error('[MMP] Golfer dashboard init error:', err);
+  }
 }
 
 function renderSidebar() {
