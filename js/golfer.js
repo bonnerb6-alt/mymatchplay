@@ -30,6 +30,15 @@ async function initGolferDashboard() {
   updateNavForAuth(currentMember);
   renderSidebar();
   document.getElementById('dashboard-greeting').textContent = 'Welcome back, ' + currentMember.first_name;
+
+  // Show club logo in navbar if available
+  if (myClubIds.length > 0) {
+    var { data: primaryClub } = await supabase.from('clubs').select('logo_url').eq('id', myClubIds[0]).single();
+    if (primaryClub && primaryClub.logo_url) {
+      var brandIcon = document.querySelector('.navbar-brand .brand-icon');
+      if (brandIcon) brandIcon.innerHTML = '<img src="' + primaryClub.logo_url + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);">';
+    }
+  }
   await Promise.all([
     loadStats(),
     loadUpcomingMatches(),
@@ -429,14 +438,24 @@ async function loadProfile() {
   const losses = (totalPlayed || 0) - (wins || 0);
   const winRate = totalPlayed > 0 ? Math.round((wins / totalPlayed) * 100) : 0;
 
+  // Fetch club logos
+  var clubLogoMap = {};
+  if (myClubIds.length > 0) {
+    var { data: clubsWithLogos } = await supabase.from('clubs').select('id, logo_url').in('id', myClubIds);
+    (clubsWithLogos || []).forEach(function(c) { if (c.logo_url) clubLogoMap[c.id] = c.logo_url; });
+  }
+
   // Build club memberships list
   var clubsHTML = myClubs.map(function(c) {
     var clubName = c.clubs?.name || 'Golf Club';
     var roleBadge = c.role === 'organiser'
       ? '<span class="badge badge-gold" style="font-size:0.65rem;">Organiser</span>'
       : '<span class="badge badge-green" style="font-size:0.65rem;">Golfer</span>';
+    var logo = clubLogoMap[c.club_id]
+      ? '<img src="' + clubLogoMap[c.club_id] + '" alt="" style="width:24px;height:24px;border-radius:4px;object-fit:cover;">'
+      : '&#9971;';
     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0.75rem;background:var(--gray-100);border-radius:var(--radius);font-size:0.85rem;">
-      <span>&#9971; <strong>${clubName}</strong> &mdash; Hcp ${c.handicap}</span>
+      <span style="display:flex;align-items:center;gap:0.5rem;">${logo} <strong>${clubName}</strong> &mdash; Hcp ${c.handicap}</span>
       ${roleBadge}
     </div>`;
   }).join('');

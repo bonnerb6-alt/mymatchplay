@@ -73,6 +73,26 @@
         </div>
       </div>
 
+      <!-- Club Logo & Identity -->
+      <div class="card mb-3" id="club-identity-card">
+        <div class="card-body" style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+          <div id="club-logo-display" style="width:80px;height:80px;border-radius:var(--radius-lg);background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:2rem;overflow:hidden;flex-shrink:0;">
+            &#9971;
+          </div>
+          <div style="flex:1;">
+            <h2 id="club-display-name" style="font-size:1.25rem;font-weight:700;color:var(--gray-900);">Loading...</h2>
+            <p style="font-size:0.85rem;color:var(--gray-500);">Club logo appears on emails, draws, and player dashboards.</p>
+            <div style="margin-top:0.5rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <label class="btn btn-sm btn-secondary" style="cursor:pointer;">
+                &#128247; Upload Logo
+                <input type="file" id="logoUpload" accept="image/*" onchange="uploadClubLogo(this)" style="display:none;">
+              </label>
+              <button class="btn btn-sm btn-secondary" onclick="removeClubLogo()" id="removeLogo" style="display:none;">Remove Logo</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Stats -->
       <div id="org-section-stats" class="stat-cards">
         <div class="stat-card">

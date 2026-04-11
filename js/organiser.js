@@ -40,6 +40,7 @@ async function initOrganiserDashboard() {
   renderOrgSidebar();
   var clubName = orgClub.clubs?.name || 'Golf Club';
   document.getElementById('org-club-name').textContent = clubName + ' — Match Secretary Panel';
+  displayClubIdentity();
   await Promise.all([
     loadOrgStats(),
     loadTournaments(),
@@ -331,6 +332,86 @@ async function removeTournamentEntry(tournamentId, memberId, tournamentName, bra
   loadTournaments();
 }
 
+// Club logo
+async function displayClubIdentity() {
+  var nameEl = document.getElementById('club-display-name');
+  var logoEl = document.getElementById('club-logo-display');
+  var removeBtn = document.getElementById('removeLogo');
+
+  // Fetch fresh club data with logo_url
+  var { data: club } = await supabase.from('clubs').select('name, logo_url').eq('id', orgClubId).single();
+  if (!club) return;
+
+  if (nameEl) nameEl.textContent = club.name;
+
+  if (club.logo_url) {
+    logoEl.innerHTML = '<img src="' + club.logo_url + '" alt="Club Logo" style="width:100%;height:100%;object-fit:cover;">';
+    if (removeBtn) removeBtn.style.display = 'inline-flex';
+    // Also update navbar brand icon
+    var brandIcon = document.querySelector('.navbar-brand .brand-icon');
+    if (brandIcon) brandIcon.innerHTML = '<img src="' + club.logo_url + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);">';
+  } else {
+    logoEl.innerHTML = '&#9971;';
+    if (removeBtn) removeBtn.style.display = 'none';
+  }
+}
+
+async function uploadClubLogo(input) {
+  var file = input.files[0];
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    alert('Logo must be under 2MB.');
+    return;
+  }
+
+  var ext = file.name.split('.').pop().toLowerCase();
+  if (!['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext)) {
+    alert('Please upload an image file (JPG, PNG, GIF, SVG, or WebP).');
+    return;
+  }
+
+  var fileName = orgClubId + '.' + ext;
+
+  // Upload to Supabase Storage
+  var { error: uploadErr } = await supabase.storage
+    .from('club-logos')
+    .upload(fileName, file, { upsert: true, contentType: file.type });
+
+  if (uploadErr) {
+    alert('Upload error: ' + uploadErr.message);
+    return;
+  }
+
+  // Get the public URL
+  var { data: urlData } = supabase.storage.from('club-logos').getPublicUrl(fileName);
+  var logoUrl = urlData.publicUrl;
+
+  // Save to clubs table
+  var { error: updateErr } = await supabase.from('clubs').update({ logo_url: logoUrl }).eq('id', orgClubId);
+  if (updateErr) {
+    alert('Error saving logo URL: ' + updateErr.message);
+    return;
+  }
+
+  alert('Logo uploaded!');
+  displayClubIdentity();
+}
+
+async function removeClubLogo() {
+  if (!confirm('Remove the club logo?')) return;
+
+  await supabase.from('clubs').update({ logo_url: null }).eq('id', orgClubId);
+
+  // Try to delete from storage (non-critical if fails)
+  var { data: files } = await supabase.storage.from('club-logos').list('', { search: orgClubId });
+  if (files && files.length > 0) {
+    await supabase.storage.from('club-logos').remove(files.map(function(f) { return f.name; }));
+  }
+
+  displayClubIdentity();
+}
+
 function openCreateTournament() {
   document.getElementById('createModal').classList.add('active');
 }
@@ -584,9 +665,16 @@ async function printDraw() {
     matchesHTML += `<tr><td>${roundNames[m.round] || 'R' + m.round} M${m.position}</td><td>${p1}</td><td>${p2}</td><td>${result}</td></tr>`;
   }
 
+  // Get club logo for print
+  var { data: printClub } = await supabase.from('clubs').select('logo_url').eq('id', orgClubId).single();
+  var printLogo = printClub && printClub.logo_url
+    ? '<img src="' + printClub.logo_url + '" alt="" style="width:60px;height:60px;object-fit:contain;margin:0 auto 0.5rem;">'
+    : '';
+
   printSheet.innerHTML = `
     <div class="print-draw-header">
-      <h1>&#9971; ${tournament.name}</h1>
+      ${printLogo}
+      <h1>${tournament.name}</h1>
       <p>${currentOrganiser.clubs?.name || 'Golf Club'} &bull; ${tournament.bracket_size} Players &bull; Draw Sheet</p>
       <p class="print-date">Printed: ${new Date().toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
     </div>
