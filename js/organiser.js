@@ -991,6 +991,13 @@ function editMember(id, firstName, lastName, handicap, phone, email, role, membe
   document.getElementById('editMemberRole').value = role;
   document.getElementById('editMemberType').value = memberType || 'mens';
   document.getElementById('editMemberId').dataset.membershipId = membershipId || '';
+
+  // Only admin can change roles — hide role field for non-admins
+  var roleGroup = document.getElementById('editMemberRoleGroup');
+  if (roleGroup) {
+    roleGroup.style.display = (currentOrganiser && currentOrganiser.is_admin) ? 'block' : 'none';
+  }
+
   document.getElementById('editMemberModal').classList.add('active');
 }
 
@@ -1018,11 +1025,16 @@ async function saveMember() {
 
   if (error) { alert('Error saving member: ' + error.message); return; }
 
-  // Update club_membership (role, handicap, member_type)
+  // Update club_membership (handicap, member_type, and role if admin)
   if (membershipId) {
+    var cmUpdate = { handicap: handicap, member_type: memberType };
+    // Only admin can change roles
+    if (currentOrganiser && currentOrganiser.is_admin) {
+      cmUpdate.role = role;
+    }
     await supabase
       .from('club_memberships')
-      .update({ role: role, handicap: handicap, member_type: memberType })
+      .update(cmUpdate)
       .eq('id', membershipId);
   }
 
