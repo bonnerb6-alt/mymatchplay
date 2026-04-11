@@ -61,8 +61,12 @@ function renderTopNavLinks(activePage) {
   container.innerHTML = html;
 }
 
-// Check if user is organiser and offer role switch
+// Check if user is organiser and offer role switch (runs once)
+var _orgSwitchDone = false;
 async function checkAndOfferOrgSwitch() {
+  if (_orgSwitchDone) return;
+  _orgSwitchDone = true;
+
   var member = await getCurrentMember();
   if (!member) return;
 
@@ -73,9 +77,9 @@ async function checkAndOfferOrgSwitch() {
   }
 
   if (isOrg && getRole() === 'golfer') {
-    // Add organiser link to bottom nav
+    // Add organiser link to bottom nav (only if not already there)
     var nav = document.getElementById('bottom-nav');
-    if (nav && !nav.querySelector('[data-switch="organiser"]')) {
+    if (nav && !nav.querySelector('[data-switch]')) {
       var a = document.createElement('a');
       a.href = 'organiser.html';
       a.setAttribute('data-switch', 'organiser');
@@ -84,9 +88,9 @@ async function checkAndOfferOrgSwitch() {
       nav.appendChild(a);
     }
 
-    // Add to top nav
+    // Add to top nav (only if not already there)
     var topLinks = document.querySelector('.top-nav-links');
-    if (topLinks && !topLinks.querySelector('[data-switch="organiser"]')) {
+    if (topLinks && !topLinks.querySelector('[data-switch]')) {
       var a2 = document.createElement('a');
       a2.href = 'organiser.html';
       a2.setAttribute('data-switch', 'organiser');
