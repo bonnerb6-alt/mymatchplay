@@ -29,23 +29,7 @@ async function initGolferDashboard() {
     document.getElementById('nav-avatar').textContent = initials;
     document.getElementById('greeting').textContent = 'Hi, ' + currentMember.first_name;
 
-    // Show organiser link if applicable
-    var isOrg = myClubs.some(function(c) { return c.role === 'organiser'; }) || currentMember.role === 'organiser' || currentMember.is_admin;
-    console.log('[MMP] Is organiser:', isOrg, 'Role:', currentMember.role, 'Admin:', currentMember.is_admin);
-    if (isOrg) {
-      // Desktop top nav
-      var orgLinkDesktop = document.getElementById('org-link-desktop');
-      if (orgLinkDesktop) orgLinkDesktop.style.display = 'inline-flex';
-      // Mobile bottom nav — add link
-      var bottomNav = document.getElementById('bottom-nav');
-      if (bottomNav && !document.getElementById('org-link')) {
-        var a = document.createElement('a');
-        a.id = 'org-link';
-        a.href = 'organiser.html';
-        a.innerHTML = '<span class="nav-icon">&#128274;</span>Organiser';
-        bottomNav.appendChild(a);
-      }
-    }
+    // Nav is handled by nav.js
 
     // Club logo
     if (myClubIds.length > 0) {

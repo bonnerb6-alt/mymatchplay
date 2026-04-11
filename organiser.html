@@ -16,12 +16,7 @@
       <div class="icon" style="background:var(--gold);" id="org-nav-logo">&#9971;</div>
       <span>MyMatchPlayPal <span class="role-tag organiser">Organiser</span></span>
     </a>
-    <div class="top-nav-links">
-      <a href="golfer.html">Golfer</a>
-      <a href="organiser.html" class="active">Organiser</a>
-      <a href="results.html">Results</a>
-      <a href="profile.html">Profile</a>
-    </div>
+    <div class="top-nav-links"></div>
     <div class="top-nav-actions">
       <button class="signout-btn" onclick="signOut()">Sign Out</button>
     </div>
@@ -466,17 +461,17 @@
       el.classList.add('active');
     }
   </script>
-  <!-- Bottom Nav -->
-  <nav class="bottom-nav">
-    <a href="golfer.html"><span class="nav-icon">&#127968;</span>Golfer</a>
-    <a href="organiser.html" class="active"><span class="nav-icon">&#128274;</span>Organiser</a>
-    <a href="results.html"><span class="nav-icon">&#127941;</span>Results</a>
-    <a href="profile.html"><span class="nav-icon">&#128100;</span>Profile</a>
-  </nav>
+  <nav class="bottom-nav" id="bottom-nav"></nav>
 
   <script src="js/supabase-client.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/nav.js"></script>
   <script src="js/draw-engine.js"></script>
   <script src="js/organiser.js"></script>
+  <script>
+    setRole('organiser');
+    renderBottomNav('home');
+    renderTopNavLinks('home');
+  </script>
 </body>
 </html>

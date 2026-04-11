@@ -16,11 +16,7 @@
       <div class="icon">&#9971;</div>
       <span>MyMatchPlayPal</span>
     </a>
-    <div class="top-nav-links">
-      <a href="golfer.html">Dashboard</a>
-      <a href="results.html" class="active">Results</a>
-      <a href="profile.html">Profile</a>
-    </div>
+    <div class="top-nav-links"></div>
     <div class="top-nav-actions">
       <button class="signout-btn" onclick="signOut()">Sign Out</button>
     </div>
@@ -76,22 +72,20 @@
     </div>
   </div>
 
-  <!-- Bottom Nav -->
-  <nav class="bottom-nav">
-    <a href="golfer.html"><span class="nav-icon">&#127968;</span>Home</a>
-    <a href="results.html" class="active"><span class="nav-icon">&#127941;</span>Results</a>
-    <a href="profile.html"><span class="nav-icon">&#128100;</span>Profile</a>
-  </nav>
+  <nav class="bottom-nav" id="bottom-nav"></nav>
 
   <script src="js/supabase-client.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/nav.js"></script>
   <script>
     var resultsMember = null;
+
+    renderBottomNav('results');
+    renderTopNavLinks('results');
 
     async function initResults() {
       resultsMember = await getCurrentMember();
       if (!resultsMember) { window.location.href = 'login.html'; return; }
-      updateNavForAuth(resultsMember);
       await loadResultsFilter();
       await loadResults();
     }
