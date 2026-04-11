@@ -7,14 +7,18 @@ let currentTournamentId = null;
 let realtimeChannel = null;
 
 async function initBracket() {
-  // Try to get the member's club, fall back to demo club
-  const member = await getCurrentMember();
-  if (member) {
-    bracketClubId = member.club_id;
-    updateNavForAuth(member);
+  try {
+    const member = await getCurrentMember();
+    if (member) {
+      bracketClubId = member.club_id;
+      updateNavForAuth(member);
+    }
+    await loadTournamentSelector();
+  } catch (err) {
+    console.error('[MMP] Bracket init error:', err);
+    var container = document.getElementById('tournament-selector');
+    if (container) container.innerHTML = '<p style="color:var(--gray-400);">Could not load tournaments.</p>';
   }
-
-  await loadTournamentSelector();
 }
 
 async function loadTournamentSelector() {
@@ -29,7 +33,12 @@ async function loadTournamentSelector() {
     .order('created_at', { ascending: false });
 
   if (!tournaments || tournaments.length === 0) {
-    container.innerHTML = '<p style="color:var(--gray-400);">No active tournaments</p>';
+    container.innerHTML = '<p style="color:var(--gray-400);">No active tournaments yet. Create one from the Organiser dashboard.</p>';
+    document.getElementById('bracket-desktop-container').innerHTML = '<p style="padding:2rem;text-align:center;color:var(--gray-400);">No bracket to display yet.</p>';
+    document.getElementById('bracket-mobile-container').innerHTML = '<p style="padding:2rem;text-align:center;color:var(--gray-400);">No bracket to display yet.</p>';
+    document.getElementById('tournament-info').innerHTML = '';
+    document.getElementById('round-deadlines').innerHTML = '<p style="text-align:center;color:var(--gray-400);">-</p>';
+    document.getElementById('bracket-results').innerHTML = '<p style="text-align:center;color:var(--gray-400);">-</p>';
     return;
   }
 

@@ -113,8 +113,33 @@
     </div>
   </div>
 
+  <script>var IS_PROFILE_PAGE = true;</script>
   <script src="js/supabase-client.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/golfer.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+      currentMember = await getCurrentMember();
+      if (!currentMember) { window.location.href = 'login.html'; return; }
+
+      var { data: memberships } = await supabase
+        .from('club_memberships')
+        .select('*, clubs(id, name)')
+        .eq('member_id', currentMember.id);
+
+      if (!memberships || memberships.length === 0) {
+        myClubs = [{ club_id: currentMember.club_id, role: currentMember.role, handicap: currentMember.handicap, clubs: currentMember.clubs }];
+      } else {
+        myClubs = memberships;
+      }
+      myClubIds = myClubs.map(function(c) { return c.club_id; });
+
+      updateNavForAuth(currentMember);
+
+      // Only load profile-relevant sections
+      loadProfile().catch(function(e) { console.error('[MMP] Profile error:', e); });
+      loadClubSelector().catch(function(e) { console.error('[MMP] ClubSelector error:', e); });
+    });
+  </script>
 </body>
 </html>

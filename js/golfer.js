@@ -47,16 +47,20 @@ async function initGolferDashboard() {
       if (brandIcon) brandIcon.innerHTML = '<img src="' + primaryClub.logo_url + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);">';
     }
   }
-  await Promise.all([
-    loadStats(),
-    loadUpcomingMatches(),
-    loadRecentResults(),
-    loadNotifications(),
-    loadOpenTournaments(),
-    loadProfile(),
-    loadClubSelector()
-  ]);
-  populateScoreForm();
+  // Load all sections — catch errors individually so one failure doesn't block others
+  var sections = [
+    { name: 'Stats', fn: loadStats },
+    { name: 'Matches', fn: loadUpcomingMatches },
+    { name: 'Results', fn: loadRecentResults },
+    { name: 'Notifications', fn: loadNotifications },
+    { name: 'Tournaments', fn: loadOpenTournaments },
+    { name: 'Profile', fn: loadProfile },
+    { name: 'ClubSelector', fn: loadClubSelector }
+  ];
+  await Promise.all(sections.map(function(s) {
+    return s.fn().catch(function(err) { console.error('[MMP] ' + s.name + ' error:', err); });
+  }));
+  populateScoreForm().catch(function(err) { console.error('[MMP] ScoreForm error:', err); });
   console.log('[MMP] Golfer dashboard init complete.');
   } catch (err) {
     console.error('[MMP] Golfer dashboard init error:', err);
@@ -78,41 +82,58 @@ function renderSidebar() {
 }
 
 async function loadStats() {
-  const memberId = currentMember.id;
+  try {
+    const memberId = currentMember.id;
 
-  // Active tournaments
-  const { count: activeTournaments } = await supabase
-    .from('tournament_entries')
-    .select('tournament_id, tournaments!inner(status)', { count: 'exact', head: true })
-    .eq('member_id', memberId)
-    .in('tournaments.status', ['entries_open', 'in_progress']);
+    // Active tournaments - simpler query
+    var { data: myEntries } = await supabase
+      .from('tournament_entries')
+      .select('tournament_id')
+      .eq('member_id', memberId);
 
-  // Matches to play
-  const { count: matchesToPlay } = await supabase
-    .from('matches')
-    .select('*', { count: 'exact', head: true })
-    .or(`player1_id.eq.${memberId},player2_id.eq.${memberId}`)
-    .in('status', ['pending', 'in_progress']);
+    var activeTournaments = 0;
+    if (myEntries && myEntries.length > 0) {
+      var tIds = myEntries.map(function(e) { return e.tournament_id; });
+      var { data: activeTourns } = await supabase
+        .from('tournaments')
+        .select('id')
+        .in('id', tIds)
+        .in('status', ['entries_open', 'in_progress']);
+      activeTournaments = (activeTourns || []).length;
+    }
 
-  // Win/Loss
-  const { count: wins } = await supabase
-    .from('matches')
-    .select('*', { count: 'exact', head: true })
-    .eq('winner_id', memberId)
-    .eq('status', 'completed');
+    // Matches to play
+    var { data: pendingMatches } = await supabase
+      .from('matches')
+      .select('id')
+      .or('player1_id.eq.' + memberId + ',player2_id.eq.' + memberId)
+      .in('status', ['pending', 'in_progress']);
+    var matchesToPlay = (pendingMatches || []).length;
 
-  const { count: totalPlayed } = await supabase
-    .from('matches')
-    .select('*', { count: 'exact', head: true })
-    .or(`player1_id.eq.${memberId},player2_id.eq.${memberId}`)
-    .eq('status', 'completed');
+    // Win/Loss
+    var { data: wonMatches } = await supabase
+      .from('matches')
+      .select('id')
+      .eq('winner_id', memberId)
+      .eq('status', 'completed');
+    var wins = (wonMatches || []).length;
 
-  const losses = (totalPlayed || 0) - (wins || 0);
+    var { data: allMyMatches } = await supabase
+      .from('matches')
+      .select('id')
+      .or('player1_id.eq.' + memberId + ',player2_id.eq.' + memberId)
+      .eq('status', 'completed');
+    var totalPlayed = (allMyMatches || []).length;
+    var losses = totalPlayed - wins;
 
-  document.getElementById('stat-active').textContent = activeTournaments || 0;
-  document.getElementById('stat-matches').textContent = matchesToPlay || 0;
-  document.getElementById('stat-record').textContent = `${wins || 0}-${losses}`;
-  document.getElementById('stat-streak').textContent = await calculateStreak(memberId);
+    var el;
+    el = document.getElementById('stat-active'); if (el) el.textContent = activeTournaments;
+    el = document.getElementById('stat-matches'); if (el) el.textContent = matchesToPlay;
+    el = document.getElementById('stat-record'); if (el) el.textContent = wins + '-' + losses;
+    el = document.getElementById('stat-streak'); if (el) el.textContent = await calculateStreak(memberId);
+  } catch (err) {
+    console.error('[MMP] loadStats error:', err);
+  }
 }
 
 async function calculateStreak(memberId) {
@@ -758,5 +779,7 @@ function golferSidebarNav(el) {
   el.classList.add('active');
 }
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', initGolferDashboard);
+// Initialize on page load (skip on profile page — it has its own init)
+if (typeof IS_PROFILE_PAGE === 'undefined') {
+  document.addEventListener('DOMContentLoaded', initGolferDashboard);
+}
