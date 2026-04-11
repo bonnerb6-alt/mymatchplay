@@ -165,7 +165,7 @@ async function loadUpcomingMatches() {
   const { data: matches } = await supabase
     .from('matches')
     .select(`
-      id, round, score, status, deadline,
+      id, round, score, status, deadline, scheduled_at,
       tournaments(id, name, whatsapp_group_link, clubs(name)),
       player1:members!matches_player1_id_fkey(id, first_name, last_name, handicap, phone, email, contact_preference),
       player2:members!matches_player2_id_fkey(id, first_name, last_name, handicap, phone, email, contact_preference)
@@ -202,6 +202,14 @@ async function loadUpcomingMatches() {
       ? '<span class="badge badge-green"><span class="status-dot live"></span> In Progress</span>'
       : '<span class="badge badge-gold"><span class="status-dot pending"></span> Awaiting</span>';
 
+    // Scheduled date/time
+    const hasSchedule = match.scheduled_at;
+    const scheduleDate = hasSchedule ? new Date(match.scheduled_at) : null;
+    const scheduleDisplay = scheduleDate
+      ? scheduleDate.toLocaleDateString('en-IE', { weekday: 'short', day: 'numeric', month: 'short' }) + ' at ' + scheduleDate.toLocaleTimeString('en-IE', { hour: '2-digit', minute: '2-digit' })
+      : null;
+    const scheduleInputVal = hasSchedule ? match.scheduled_at.substring(0, 16) : '';
+
     const msgText = `Hi ${opponent.first_name}, we're matched in ${match.tournaments?.name || 'the tournament'} (${roundName}). When suits you to play?`;
     const hasPhone = opponent.phone && opponent.phone.trim().length > 0;
     const phoneClean = hasPhone ? opponent.phone.replace(/\s/g, '') : '';
@@ -210,6 +218,10 @@ async function loadUpcomingMatches() {
     const smsUrl = hasPhone ? `sms:${phoneClean}?body=${encodeURIComponent(msgText)}` : null;
     const emailUrl = opponent.email ? `mailto:${opponent.email}?subject=${encodeURIComponent(match.tournaments?.name + ' - ' + roundName)}&body=${encodeURIComponent(msgText)}` : null;
     const contactButtons = buildContactButtons(pref, whatsappUrl, smsUrl, emailUrl, hasPhone);
+
+    var scheduleCell = scheduleDisplay
+      ? `<span style="font-size:0.8rem;font-weight:600;color:var(--green-700);">&#128197; ${scheduleDisplay}</span><br><button class="btn btn-sm btn-secondary" style="font-size:0.65rem;margin-top:0.25rem;padding:0.2rem 0.4rem;" onclick="document.getElementById('sched-${match.id}').style.display='block'">Change</button><div id="sched-${match.id}" style="display:none;margin-top:0.25rem;"><input type="datetime-local" class="form-input" style="font-size:0.75rem;padding:0.25rem;" value="${scheduleInputVal}" onchange="saveMatchSchedule('${match.id}',this.value)"></div>`
+      : `<button class="btn btn-sm btn-primary" style="font-size:0.7rem;" onclick="document.getElementById('sched-${match.id}').style.display='block'">Set Date & Time</button><div id="sched-${match.id}" style="display:none;margin-top:0.25rem;"><input type="datetime-local" class="form-input" style="font-size:0.75rem;padding:0.25rem;" onchange="saveMatchSchedule('${match.id}',this.value)"></div>`;
 
     tableHTML += `
       <tr>
@@ -222,6 +234,7 @@ async function loadUpcomingMatches() {
           </div>
         </td>
         <td>${deadline}</td>
+        <td>${scheduleCell}</td>
         <td>${statusBadge}</td>
         <td>${contactButtons.desktop}</td>
       </tr>`;
@@ -246,6 +259,15 @@ async function loadUpcomingMatches() {
           <div>
             <div class="match-card-mobile-name">${oppName}</div>
             <div class="match-card-mobile-hcp">Handicap ${opponent.handicap}</div>
+          </div>
+        </div>
+        <div style="padding:0.5rem 0;border-top:1px solid var(--gray-100);">
+          ${scheduleDisplay
+            ? `<div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:0.85rem;font-weight:600;color:var(--green-700);">&#128197; ${scheduleDisplay}</span><button class="btn btn-sm btn-secondary" style="font-size:0.65rem;padding:0.2rem 0.5rem;" onclick="document.getElementById('msched-${match.id}').style.display='block'">Change</button></div>`
+            : `<button class="btn btn-sm btn-primary" style="width:100%;font-size:0.85rem;" onclick="document.getElementById('msched-${match.id}').style.display='block'">&#128197; Set Date & Time</button>`
+          }
+          <div id="msched-${match.id}" style="display:${scheduleDisplay ? 'none' : 'none'};margin-top:0.4rem;">
+            <input type="datetime-local" class="form-input" style="font-size:0.85rem;" value="${scheduleInputVal}" onchange="saveMatchSchedule('${match.id}',this.value)">
           </div>
         </div>
         <div class="match-card-mobile-footer">
@@ -598,6 +620,30 @@ async function submitScore() {
   // Refresh data
   await Promise.all([loadStats(), loadUpcomingMatches(), loadRecentResults(), loadProfile()]);
   populateScoreForm();
+}
+
+// Schedule a match date/time
+async function saveMatchSchedule(matchId, dateTimeValue) {
+  if (!dateTimeValue) return;
+
+  var { error } = await supabase
+    .from('matches')
+    .update({ scheduled_at: new Date(dateTimeValue).toISOString(), status: 'in_progress' })
+    .eq('id', matchId);
+
+  if (error) {
+    alert('Error saving schedule: ' + error.message);
+    return;
+  }
+
+  // Notify via contact preference if possible
+  var schedDate = new Date(dateTimeValue);
+  var displayDate = schedDate.toLocaleDateString('en-IE', { weekday: 'long', day: 'numeric', month: 'long' });
+  var displayTime = schedDate.toLocaleTimeString('en-IE', { hour: '2-digit', minute: '2-digit' });
+
+  alert('Match scheduled for ' + displayDate + ' at ' + displayTime + '!');
+  loadUpcomingMatches();
+  loadStats();
 }
 
 // Join a Club
