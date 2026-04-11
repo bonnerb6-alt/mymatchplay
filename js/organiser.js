@@ -234,6 +234,9 @@ async function loadTournaments() {
         actions = `<button class="btn btn-sm btn-primary" onclick="openEntries('${t.id}')">Open Entries</button>`;
     }
 
+    // Add delete button to all tournaments
+    actions = `<div style="display:flex;gap:0.5rem;flex-wrap:wrap;">${actions}<button class="btn btn-sm btn-danger" onclick="deleteTournament('${t.id}','${t.name.replace(/'/g, "\\'")}')" style="font-size:0.65rem;">Delete</button></div>`;
+
     // Auto-derive current round from match data
     var tMatches = (allMatches || []).filter(function(m) { return m.tournament_id === t.id; });
     var roundDisplay = deriveRoundDisplay(t, tMatches);
@@ -352,6 +355,29 @@ async function loadActivityLog() {
         <span class="notification-time">${timeAgo}</span>
       </div>`;
   }).join('');
+}
+
+// Delete Tournament
+async function deleteTournament(tournamentId, tournamentName) {
+  var confirmation = prompt('To delete "' + tournamentName + '", type DELETE below:');
+  if (confirmation !== 'DELETE') {
+    if (confirmation !== null) alert('Deletion cancelled. You must type DELETE exactly.');
+    return;
+  }
+
+  // Delete matches first (cascade should handle it but be explicit)
+  await supabase.from('matches').delete().eq('tournament_id', tournamentId);
+  await supabase.from('tournament_entries').delete().eq('tournament_id', tournamentId);
+  var { error } = await supabase.from('tournaments').delete().eq('id', tournamentId);
+
+  if (error) {
+    alert('Error deleting: ' + error.message);
+    return;
+  }
+
+  alert('"' + tournamentName + '" has been deleted.');
+  loadTournaments();
+  loadOrgStats();
 }
 
 // Round Deadlines
