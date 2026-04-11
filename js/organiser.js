@@ -234,8 +234,15 @@ async function loadTournaments() {
         actions = `<button class="btn btn-sm btn-primary" onclick="openEntries('${t.id}')">Open Entries</button>`;
     }
 
-    // Add delete button to all tournaments
-    actions = `<div style="display:flex;gap:0.5rem;flex-wrap:wrap;">${actions}<button class="btn btn-sm btn-danger" onclick="deleteTournament('${t.id}','${t.name.replace(/'/g, "\\'")}')" style="font-size:0.65rem;">Delete</button></div>`;
+    // Append delete button
+    var deleteBtn = `<button class="btn btn-sm btn-danger" onclick="deleteTournament('${t.id}','${t.name.replace(/'/g, "\\'")}')" style="font-size:0.65rem;">Delete</button>`;
+    // Insert delete button before the closing </div> of actions
+    if (actions.lastIndexOf('</div>') !== -1) {
+      var pos = actions.lastIndexOf('</div>');
+      actions = actions.substring(0, pos) + deleteBtn + actions.substring(pos);
+    } else {
+      actions = actions + deleteBtn;
+    }
 
     // Auto-derive current round from match data
     var tMatches = (allMatches || []).filter(function(m) { return m.tournament_id === t.id; });
