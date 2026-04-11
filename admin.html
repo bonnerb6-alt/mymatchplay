@@ -218,6 +218,8 @@
       document.getElementById('admin-total-members').textContent = totalMembers || 0;
     }
 
+    var clubsData = {}; // Store club data by ID for edit modal
+
     async function loadClubs() {
       var container = document.getElementById('clubs-table-body');
 
@@ -261,13 +263,8 @@
         var contactInfo = c.contact_name || c.contact_email || '';
         if (c.contact_name && c.contact_email) contactInfo = c.contact_name + '<br><span style="font-size:0.75rem;color:var(--gray-500);">' + c.contact_email + '</span>';
 
-        // Escape single quotes in values for onclick
-        var safeName = (c.name || '').replace(/'/g, "\\'");
-        var safeContact = (c.contact_name || '').replace(/'/g, "\\'");
-        var safeEmail = c.contact_email || '';
-        var safePhone = c.contact_phone || '';
-        var safeStripe = c.stripe_payment_link || '';
-        var safeNotes = (c.notes || '').replace(/'/g, "\\'");
+        // Store club data for edit modal
+        clubsData[c.id] = c;
 
         return '<tr>' +
           '<td><strong>' + c.name + '</strong>' + (c.notes ? '<br><span style="font-size:0.7rem;color:var(--gray-400);">' + c.notes.substring(0, 50) + '</span>' : '') + '</td>' +
@@ -277,7 +274,7 @@
           '<td>' + paymentBadge + '</td>' +
           '<td>' + expires + '</td>' +
           '<td><div style="display:flex;gap:0.3rem;flex-wrap:wrap;">' +
-            '<button class="btn btn-sm btn-secondary" style="font-size:0.7rem;" onclick="openEditClub(\'' + c.id + '\',\'' + safeName + '\',\'' + safeContact + '\',\'' + safeEmail + '\',\'' + safePhone + '\',\'' + c.payment_status + '\',\'' + (c.subscription_expires || '') + '\',\'' + safeStripe + '\',\'' + safeNotes + '\')">Edit</button>' +
+            '<button class="btn btn-sm btn-secondary" style="font-size:0.7rem;" onclick="openEditClub(\'' + c.id + '\')">Edit</button>' +
             stripeBtn +
           '</div></td>' +
         '</tr>';
@@ -310,16 +307,18 @@
       loadAdminStats();
     }
 
-    function openEditClub(id, name, contact, email, phone, payment, expires, stripe, notes) {
+    function openEditClub(id) {
+      var c = clubsData[id];
+      if (!c) return;
       document.getElementById('editClubId').value = id;
-      document.getElementById('editClubName').value = name;
-      document.getElementById('editClubContact').value = contact;
-      document.getElementById('editClubEmail').value = email;
-      document.getElementById('editClubPhone').value = phone;
-      document.getElementById('editClubPayment').value = payment;
-      document.getElementById('editClubExpires').value = expires;
-      document.getElementById('editClubStripeLink').value = stripe;
-      document.getElementById('editClubNotes').value = notes;
+      document.getElementById('editClubName').value = c.name || '';
+      document.getElementById('editClubContact').value = c.contact_name || '';
+      document.getElementById('editClubEmail').value = c.contact_email || '';
+      document.getElementById('editClubPhone').value = c.contact_phone || '';
+      document.getElementById('editClubPayment').value = c.payment_status || 'trial';
+      document.getElementById('editClubExpires').value = c.subscription_expires || '';
+      document.getElementById('editClubStripeLink').value = c.stripe_payment_link || '';
+      document.getElementById('editClubNotes').value = c.notes || '';
       document.getElementById('editClubModal').classList.add('active');
     }
 
