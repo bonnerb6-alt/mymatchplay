@@ -6,27 +6,18 @@
   <title>Organiser Dashboard - MyMatchPlayPal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/app.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
-  <!-- Navigation -->
-  <nav class="navbar" style="background:linear-gradient(90deg, var(--green-900) 0%, #1a3a1a 100%);border-bottom:3px solid var(--gold);">
-    <div class="navbar-inner">
-      <a href="organiser.html" class="navbar-brand">
-        <div class="brand-icon" style="background:var(--gold);color:var(--green-900);">&#9971;</div>
-        <span>MyMatchPlayPal <span style="font-size:0.7rem;font-weight:500;color:var(--gold);margin-left:0.25rem;">ORGANISER</span></span>
-      </a>
-      <ul class="navbar-links">
-        <li><a href="organiser.html" class="active">Dashboard</a></li>
-        <li><a href="results.html">Results</a></li>
-        <li><a href="profile.html">Profile</a></li>
-      </ul>
-      <div class="navbar-actions">
-        <div class="nav-avatar" style="background:var(--gold);color:var(--green-900);border-color:var(--gold-light);">--</div>
-        <button class="menu-toggle" onclick="document.querySelector('.navbar-links').classList.toggle('show')">&#9776;</button>
-      </div>
+  <nav class="top-nav organiser">
+    <a href="organiser.html" class="top-nav-brand">
+      <div class="icon" style="background:var(--gold);" id="org-nav-logo">&#9971;</div>
+      <span>MyMatchPlayPal <span class="role-tag organiser">Organiser</span></span>
+    </a>
+    <div class="top-nav-actions">
+      <button class="signout-btn" onclick="signOut()">Sign Out</button>
     </div>
   </nav>
 
@@ -469,6 +460,14 @@
       el.classList.add('active');
     }
   </script>
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <a href="golfer.html"><span class="nav-icon">&#127968;</span>Golfer</a>
+    <a href="organiser.html" class="active"><span class="nav-icon">&#128274;</span>Organiser</a>
+    <a href="results.html"><span class="nav-icon">&#127941;</span>Results</a>
+    <a href="profile.html"><span class="nav-icon">&#128100;</span>Profile</a>
+  </nav>
+
   <script src="js/supabase-client.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/draw-engine.js"></script>
