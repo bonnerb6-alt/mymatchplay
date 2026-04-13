@@ -163,98 +163,93 @@ function getRoundName(round, totalRounds) {
 }
 
 async function loadTournaments() {
-  const clubId = currentOrganiser.club_id;
-  const container = document.getElementById('tournaments-table-body');
+  var container = document.getElementById('tournaments-list');
   if (!container) return;
 
-  const { data: tournaments } = await supabase
+  var { data: tournaments } = await supabase
     .from('tournaments')
-    .select('*, tournament_entries(count), clubs(name), whatsapp_group_link')
+    .select('id, name, status, bracket_size, entry_deadline, tournament_entries(count), whatsapp_group_link')
     .eq('club_id', orgClubId)
     .order('created_at', { ascending: false });
 
   if (!tournaments || tournaments.length === 0) {
-    container.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--gray-400);">No tournaments yet. Create one!</td></tr>';
+    container.innerHTML = '<p style="text-align:center;color:var(--gray-400);padding:2rem 0;">No tournaments yet. Create one!</p>';
     return;
   }
 
-  // Get match data for all tournaments to derive current round
   var tournamentIds = tournaments.map(function(t) { return t.id; });
   var { data: allMatches } = await supabase
     .from('matches')
     .select('tournament_id, round, status')
     .in('tournament_id', tournamentIds);
 
-  container.innerHTML = tournaments.map(t => {
-    const entryCount = t.tournament_entries?.[0]?.count || 0;
-    const deadline = t.entry_deadline
+  var chevron = '<svg class="t-card-chevron" width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>';
+
+  container.innerHTML = tournaments.map(function(t) {
+    var entryCount = t.tournament_entries && t.tournament_entries[0] ? t.tournament_entries[0].count : 0;
+    var deadline = t.entry_deadline
       ? new Date(t.entry_deadline).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' })
-      : 'TBD';
-
-    let statusBadge, actions;
-    switch (t.status) {
-      case 'entries_open':
-        statusBadge = '<span class="badge badge-gold"><span class="status-dot pending"></span> Entries Open</span>';
-        var groupBtnOpen = t.whatsapp_group_link
-          ? `<a href="${t.whatsapp_group_link}" target="_blank" class="btn btn-sm btn-whatsapp">WhatsApp Group</a>`
-          : `<button class="btn btn-sm btn-whatsapp" onclick="createWhatsAppGroup('${t.id}','${t.name.replace(/'/g, "\\'")}')">Create Group</button>`;
-        actions = `
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-            <button class="btn btn-sm btn-primary" onclick="openEnrolTournament('${t.id}','${t.name.replace(/'/g, "\\'")}',${t.bracket_size})">Enrol Members</button>
-            <button class="btn btn-sm btn-gold" onclick="generateDraw('${t.id}', ${t.bracket_size})">Generate Draw</button>
-            ${groupBtnOpen}
-          </div>`;
-        break;
-      case 'in_progress':
-        statusBadge = '<span class="badge badge-green"><span class="status-dot live"></span> In Progress</span>';
-        var groupBtn = t.whatsapp_group_link
-          ? `<a href="${t.whatsapp_group_link}" target="_blank" class="btn btn-sm btn-whatsapp">WhatsApp Group</a>`
-          : `<button class="btn btn-sm btn-whatsapp" onclick="createWhatsAppGroup('${t.id}','${t.name.replace(/'/g, "\\'")}')">Create Group</button>`;
-        actions = `
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-            <button class="btn btn-sm btn-secondary" onclick="viewOrgBracket('${t.id}','${t.name.replace(/'/g, "\\'")}')">View Draw</button>
-            <button class="btn btn-sm btn-primary" onclick="openRoundDeadlines('${t.id}','${t.name.replace(/'/g, "\\'")}',${t.bracket_size})">Set Deadlines</button>
-            <button class="btn btn-sm btn-gold" onclick="redraw('${t.id}', ${t.bracket_size})">Re-Draw</button>
-            ${groupBtn}
-          </div>`;
-        break;
-      case 'completed':
-        statusBadge = '<span class="badge badge-gray"><span class="status-dot closed"></span> Completed</span>';
-        actions = `<div style="display:flex;gap:0.5rem;flex-wrap:wrap;"><button class="btn btn-sm btn-secondary" onclick="viewOrgBracket('${t.id}','${t.name.replace(/'/g, "\\'")}')">View Results</button></div>`;
-        break;
-      default:
-        statusBadge = '<span class="badge badge-blue"><span class="status-dot" style="background:var(--blue);"></span> Scheduled</span>';
-        actions = `<button class="btn btn-sm btn-primary" onclick="openEntries('${t.id}')">Open Entries</button>`;
-    }
-
-    // Append delete button
-    var deleteBtn = `<button class="btn btn-sm btn-danger" onclick="deleteTournament('${t.id}','${t.name.replace(/'/g, "\\'")}')" style="font-size:0.65rem;">Delete</button>`;
-    // Insert delete button before the closing </div> of actions
-    if (actions.lastIndexOf('</div>') !== -1) {
-      var pos = actions.lastIndexOf('</div>');
-      actions = actions.substring(0, pos) + deleteBtn + actions.substring(pos);
-    } else {
-      actions = actions + deleteBtn;
-    }
-
-    // Auto-derive current round from match data
+      : 'None set';
     var tMatches = (allMatches || []).filter(function(m) { return m.tournament_id === t.id; });
     var roundDisplay = deriveRoundDisplay(t, tMatches);
 
-    return `
-      <tr>
-        <td><strong>${t.name}</strong></td>
-        <td>${statusBadge}</td>
-        <td>${entryCount} / ${t.bracket_size}</td>
-        <td>${roundDisplay}</td>
-        <td>${deadline}</td>
-        <td>${actions}</td>
-      </tr>`;
+    var badge, buttons;
+
+    if (t.status === 'entries_open') {
+      badge = '<span class="badge badge-gold">Entries Open</span>';
+      var tid = t.id, tname = t.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'"), bsize = t.bracket_size;
+      buttons =
+        '<button class="btn btn-primary" onclick="openEnrolTournament(\'' + tid + '\',\'' + tname + '\',' + bsize + ')">Enrol Members</button>' +
+        '<button class="btn btn-gold" onclick="generateDraw(\'' + tid + '\',' + bsize + ')">Generate Draw</button>' +
+        '<button class="btn btn-danger" style="grid-column:1/-1" onclick="deleteTournament(\'' + tid + '\',\'' + tname + '\')">Delete</button>';
+
+    } else if (t.status === 'in_progress') {
+      badge = '<span class="badge badge-green">In Progress</span>';
+      var tid = t.id, tname = t.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'"), bsize = t.bracket_size;
+      buttons =
+        '<button class="btn btn-secondary" onclick="viewOrgBracket(\'' + tid + '\',\'' + tname + '\')">View Draw</button>' +
+        '<button class="btn btn-primary" onclick="openRoundDeadlines(\'' + tid + '\',\'' + tname + '\',' + bsize + ')">Set Deadlines</button>' +
+        '<button class="btn btn-gold" onclick="redraw(\'' + tid + '\',' + bsize + ')">Re-Draw</button>' +
+        '<button class="btn btn-danger" onclick="deleteTournament(\'' + tid + '\',\'' + tname + '\')">Delete</button>';
+
+    } else if (t.status === 'completed') {
+      badge = '<span class="badge badge-gray">Completed</span>';
+      var tid = t.id, tname = t.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      buttons =
+        '<button class="btn btn-secondary" style="grid-column:1/-1" onclick="viewOrgBracket(\'' + tid + '\',\'' + tname + '\')">View Results</button>' +
+        '<button class="btn btn-danger" style="grid-column:1/-1" onclick="deleteTournament(\'' + tid + '\',\'' + tname + '\')">Delete</button>';
+
+    } else {
+      badge = '<span class="badge badge-blue">Scheduled</span>';
+      var tid = t.id, tname = t.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      buttons =
+        '<button class="btn btn-primary" onclick="openEntries(\'' + tid + '\')">Open Entries</button>' +
+        '<button class="btn btn-danger" onclick="deleteTournament(\'' + tid + '\',\'' + tname + '\')">Delete</button>';
+    }
+
+    return '<details class="t-card">' +
+      '<summary>' +
+        '<div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;flex:1;min-width:0;">' +
+          '<span class="t-card-title">' + t.name + '</span>' +
+          badge +
+        '</div>' +
+        chevron +
+      '</summary>' +
+      '<div class="t-card-detail"><span class="t-card-detail-label">Entries</span><span>' + entryCount + ' / ' + t.bracket_size + '</span></div>' +
+      '<div class="t-card-detail"><span class="t-card-detail-label">Round</span><span>' + roundDisplay + '</span></div>' +
+      '<div class="t-card-detail"><span class="t-card-detail-label">Entry Deadline</span><span>' + deadline + '</span></div>' +
+      '<div class="t-card-actions">' + buttons + '</div>' +
+      '</details>';
   }).join('');
 }
 
 // ---- View Bracket / Results (Organiser) ----
+var _currentViewTournamentId = null;
+var _currentViewTournamentName = null;
+
 async function viewOrgBracket(tournamentId, name) {
+  _currentViewTournamentId = tournamentId;
+  _currentViewTournamentName = name;
   document.getElementById('orgBracketModalTitle').textContent = name;
   document.getElementById('orgBracketModalContent').innerHTML = '<div class="card-empty">Loading...</div>';
   document.getElementById('orgBracketModal').classList.add('active');
@@ -534,17 +529,17 @@ async function loadMembers() {
       : `<button class="btn btn-sm btn-danger" onclick="toggleMemberStatus('${m.membership_id}','paused')" style="font-size:0.7rem;">Pause</button>`;
     return `
       <tr style="${m.status === 'paused' ? 'opacity:0.5;' : ''}">
-        <td>
+        <td data-label="Name">
           <div style="display:flex;align-items:center;gap:0.5rem;">
             <div style="width:28px;height:28px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600;">${initials}</div>
             <strong>${m.first_name} ${m.last_name}</strong> ${typeBadge} ${statusBadge}
           </div>
         </td>
-        <td>${m.handicap}</td>
-        <td>${m.phone || '-'}</td>
-        <td>${m.email}</td>
-        <td>${roleBadge}</td>
-        <td>
+        <td data-label="Handicap">${m.handicap}</td>
+        <td data-label="Phone">${m.phone || '-'}</td>
+        <td data-label="Email">${m.email}</td>
+        <td data-label="Role">${roleBadge}</td>
+        <td data-label="Actions">
           <div style="display:flex;gap:0.3rem;flex-wrap:wrap;">
             <button class="btn btn-sm btn-secondary" onclick="editMember('${m.id}','${m.first_name}','${m.last_name.replace(/'/g, "\\'")}',${m.handicap},'${m.phone || ''}','${m.email}','${m.role}','${m.member_type}','${m.membership_id}')" style="font-size:0.7rem;">Edit</button>
             ${pauseBtn}
@@ -912,96 +907,240 @@ async function generateDraw(tournamentId, bracketSize) {
   await Promise.all([loadTournaments(), loadOrgStats()]);
 }
 
-// Print draw from live data
-async function printDraw() {
-  const clubId = currentOrganiser.club_id;
+// ---- Print Draw Modal ----
 
-  // Get the first in-progress tournament
-  const { data: tournaments } = await supabase
+var _printCurrentType = 'draw'; // 'draw' or 'names'
+var _printCurrentContent = '';
+
+// Print from the View Draw modal (uses the currently open tournament)
+async function printFromViewDraw(type) {
+  if (!_currentViewTournamentId) return;
+  document.getElementById('orgBracketModal').classList.remove('active');
+  await openPrintModal(_currentViewTournamentId, type);
+}
+
+async function openPrintDrawModal() {
+  try {
+    await openPrintModal(null, 'draw');
+  } catch(err) {
+    console.error(err);
+    alert('Error opening print modal: ' + err.message);
+  }
+}
+
+async function openPrintModal(preSelectId, type) {
+  var modal = document.getElementById('printDrawModal');
+  var select = document.getElementById('printTournamentSelect');
+  var preview = document.getElementById('printDrawPreview');
+  var printBtn = document.getElementById('doPrintBtn');
+
+  preview.innerHTML = '<p style="text-align:center;color:var(--gray-400);padding:2rem 0;">Loading...</p>';
+  printBtn.disabled = true;
+  _printCurrentType = type || 'draw';
+  _printCurrentContent = '';
+  modal.classList.add('active');
+
+  // Load tournaments
+  var { data: tournaments } = await supabase
     .from('tournaments')
-    .select('*')
-    .eq('club_id', clubId)
-    .eq('status', 'in_progress')
-    .order('created_at', { ascending: false })
-    .limit(1);
+    .select('id, name, status, bracket_size')
+    .eq('club_id', orgClubId)
+    .in('status', ['in_progress', 'completed', 'entries_open'])
+    .order('created_at', { ascending: false });
 
   if (!tournaments || tournaments.length === 0) {
-    alert('No active tournament to print.');
+    select.innerHTML = '<option value="">No tournaments available</option>';
+    preview.innerHTML = '<p style="text-align:center;color:var(--gray-400);padding:2rem 0;">No tournaments found.</p>';
     return;
   }
 
-  const tournament = tournaments[0];
+  var statusLabel = { in_progress: 'Live', completed: 'Completed', entries_open: 'Open' };
+  select.innerHTML = tournaments.map(function(t) {
+    return '<option value="' + t.id + '">' +
+      t.name + ' (' + (statusLabel[t.status] || t.status) + ')' +
+      '</option>';
+  }).join('');
 
-  // Get members
-  const { data: members } = await supabase
-    .from('members')
-    .select('*')
-    .eq('club_id', clubId)
-    .eq('role', 'golfer')
-    .order('last_name');
+  // Auto-select: prefer the passed ID, then first in_progress, then first
+  var autoId = preSelectId ||
+    (tournaments.find(function(t) { return t.status === 'in_progress'; }) || tournaments[0]).id;
+  select.value = autoId;
 
-  // Get matches
-  const { data: matches } = await supabase
-    .from('matches')
-    .select(`
-      *,
-      player1:members!matches_player1_id_fkey(first_name, last_name),
-      player2:members!matches_player2_id_fkey(first_name, last_name),
-      winner:members!matches_winner_id_fkey(first_name, last_name)
-    `)
-    .eq('tournament_id', tournament.id)
-    .order('round')
-    .order('position');
+  // Sync button highlights then load preview
+  document.getElementById('previewDrawBtn').classList.toggle('btn-primary', _printCurrentType === 'draw');
+  document.getElementById('previewDrawBtn').classList.toggle('btn-secondary', _printCurrentType !== 'draw');
+  document.getElementById('previewNamesBtn').classList.toggle('btn-primary', _printCurrentType === 'names');
+  document.getElementById('previewNamesBtn').classList.toggle('btn-secondary', _printCurrentType !== 'names');
 
-  // Build print content
-  const printSheet = document.getElementById('printDrawSheet');
-  const roundNames = { 1: 'Round 1', 2: 'Round of 16', 3: 'Quarter Finals', 4: 'Semi Finals', 5: 'Final' };
+  await loadPrintPreview();
+}
 
-  let membersHTML = members.map(m => `
-    <tr><td>${m.first_name} ${m.last_name}</td><td>${m.handicap}</td><td>${m.phone || '-'}</td><td>${m.email}</td></tr>
-  `).join('');
+async function loadPrintPreview(type) {
+  var select = document.getElementById('printTournamentSelect');
+  var preview = document.getElementById('printDrawPreview');
+  var printBtn = document.getElementById('doPrintBtn');
+  var drawBtn = document.getElementById('previewDrawBtn');
+  var namesBtn = document.getElementById('previewNamesBtn');
 
-  let matchesHTML = '';
-  let currentRound = 0;
-  for (const m of matches) {
-    if (m.round !== currentRound) {
-      currentRound = m.round;
-      matchesHTML += `<tr class="print-round-header"><td colspan="4">${roundNames[m.round] || 'Round ' + m.round}</td></tr>`;
-    }
-    const p1 = m.player1 ? `${m.player1.first_name[0]}. ${m.player1.last_name}` : 'TBD';
-    const p2 = m.player2 ? `${m.player2.first_name[0]}. ${m.player2.last_name}` : (m.status === 'bye' ? 'BYE' : 'TBD');
-    const result = m.status === 'completed' ? `${m.winner?.first_name[0]}. ${m.winner?.last_name} won ${m.score || ''}`
-      : m.status === 'bye' ? 'BYE' : (m.status === 'in_progress' ? 'In progress' : '—');
+  if (type) _printCurrentType = type;
 
-    matchesHTML += `<tr><td>${roundNames[m.round] || 'R' + m.round} M${m.position}</td><td>${p1}</td><td>${p2}</td><td>${result}</td></tr>`;
+  // Highlight selected choice button
+  var selStyle = 'border:2px solid var(--green-600);border-radius:var(--radius);padding:0.75rem;background:#f0fdf4;cursor:pointer;text-align:left;';
+  var defStyle = 'border:2px solid var(--gray-200);border-radius:var(--radius);padding:0.75rem;background:white;cursor:pointer;text-align:left;';
+  drawBtn.setAttribute('style', _printCurrentType === 'draw' ? selStyle : defStyle);
+  namesBtn.setAttribute('style', _printCurrentType === 'names' ? selStyle : defStyle);
+
+  var tournamentId = select.value;
+  if (!tournamentId) {
+    preview.style.display = 'block';
+    preview.innerHTML = '<p style="text-align:center;color:var(--gray-400);padding:2rem 0;">No tournaments available to print.</p>';
+    printBtn.disabled = true;
+    return;
   }
 
-  // Get club logo for print
-  var { data: printClub } = await supabase.from('clubs').select('logo_url').eq('id', orgClubId).single();
-  var printLogo = printClub && printClub.logo_url
-    ? '<img src="' + printClub.logo_url + '" alt="" style="width:60px;height:60px;object-fit:contain;margin:0 auto 0.5rem;">'
-    : '';
+  preview.style.display = 'block';
+  preview.innerHTML = '<p style="text-align:center;color:var(--gray-400);padding:2rem 0;">Loading...</p>';
+  printBtn.disabled = true;
 
-  printSheet.innerHTML = `
-    <div class="print-draw-header">
-      ${printLogo}
-      <h1>${tournament.name}</h1>
-      <p>${currentOrganiser.clubs?.name || 'Golf Club'} &bull; ${tournament.bracket_size} Players &bull; Draw Sheet</p>
-      <p class="print-date">Printed: ${new Date().toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-    </div>
-    <h2 class="print-section-title">Player Directory</h2>
-    <table class="print-table">
-      <thead><tr><th>Name</th><th>Handicap</th><th>Phone</th><th>Email</th></tr></thead>
-      <tbody>${membersHTML}</tbody>
-    </table>
-    <h2 class="print-section-title">Draw</h2>
-    <table class="print-table">
-      <thead><tr><th>Match</th><th>Player 1</th><th>Player 2</th><th>Result</th></tr></thead>
-      <tbody>${matchesHTML}</tbody>
-    </table>
-    <div class="print-footer"><p>Generated by MyMatchPlayPal</p></div>`;
+  // Get club logo
+  var clubName = 'Golf Club';
+  var logoHTML = '';
+  try {
+    var { data: clubData } = await supabase.from('clubs').select('logo_url, name').eq('id', orgClubId).single();
+    clubName = clubData?.name || (currentOrganiser?.clubs?.name) || 'Golf Club';
+    logoHTML = clubData?.logo_url ? '<img src="' + clubData.logo_url + '" alt="">' : '';
+  } catch(e) { console.error('Error fetching club data for print:', e); }
+  var dateStr = new Date().toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  if (_printCurrentType === 'draw') {
+    // Load matches
+    var [matchesRes, tRes] = await Promise.all([
+      supabase.from('matches')
+        .select('*, player1:members!matches_player1_id_fkey(first_name, last_name), player2:members!matches_player2_id_fkey(first_name, last_name), winner:members!matches_winner_id_fkey(first_name, last_name)')
+        .eq('tournament_id', tournamentId)
+        .order('round').order('position'),
+      supabase.from('tournaments').select('bracket_size, name').eq('id', tournamentId).single()
+    ]);
+
+    var matches = matchesRes.data || [];
+    var bracketSize = tRes.data?.bracket_size || 0;
+    var tName = tRes.data?.name || '';
+    var totalRounds = bracketSize > 0 ? Math.log2(bracketSize) : 0;
+
+    var rNames = {};
+    for (var r = 1; r <= totalRounds; r++) {
+      if (r === totalRounds) rNames[r] = 'Final';
+      else if (r === totalRounds - 1) rNames[r] = 'Semi Finals';
+      else if (r === totalRounds - 2) rNames[r] = 'Quarter Finals';
+      else if (r === totalRounds - 3) rNames[r] = 'Round of 16';
+      else rNames[r] = 'Round ' + r;
+    }
+
+    var matchRows = '';
+    var curRound = 0;
+    matches.forEach(function(m) {
+      if (m.round !== curRound) {
+        curRound = m.round;
+        matchRows += '<tr class="round-row"><td colspan="4">' + (rNames[m.round] || 'Round ' + m.round) + '</td></tr>';
+      }
+      if (m.status === 'bye') return;
+      var p1 = m.player1 ? m.player1.first_name[0] + '. ' + m.player1.last_name : 'TBD';
+      var p2 = m.player2 ? m.player2.first_name[0] + '. ' + m.player2.last_name : 'TBD';
+      var result = m.status === 'completed'
+        ? (m.winner ? m.winner.first_name[0] + '. ' + m.winner.last_name + (m.score ? ' (' + m.score + ')' : '') : '—')
+        : (m.status === 'in_progress' ? 'In Progress' : '—');
+      matchRows += '<tr><td>M' + m.position + '</td><td>' + p1 + '</td><td>' + p2 + '</td><td>' + result + '</td></tr>';
+    });
+
+    if (!matchRows) matchRows = '<tr><td colspan="4" style="text-align:center;color:#999;">Draw not generated yet</td></tr>';
+
+    _printCurrentContent =
+      '<div class="print-draw-header">' + logoHTML +
+        '<h1>' + tName + '</h1>' +
+        '<p>' + clubName + ' &bull; ' + bracketSize + ' Players &bull; Draw Sheet</p>' +
+        '<p>Printed: ' + dateStr + '</p>' +
+      '</div>' +
+      '<div class="print-section-title">Draw</div>' +
+      '<table class="print-table">' +
+        '<thead><tr><th>Match</th><th>Player 1</th><th>Player 2</th><th>Result</th></tr></thead>' +
+        '<tbody>' + matchRows + '</tbody>' +
+      '</table>' +
+      '<div class="print-footer">Generated by MyMatchPlayPal</div>';
+
+  } else {
+    // Load names
+    var [entriesRes, tRes2] = await Promise.all([
+      supabase.from('tournament_entries')
+        .select('seed, members(first_name, last_name, handicap, phone, email)')
+        .eq('tournament_id', tournamentId)
+        .order('seed', { ascending: true }),
+      supabase.from('tournaments').select('name').eq('id', tournamentId).single()
+    ]);
+
+    var entries = entriesRes.data || [];
+    var tName2 = tRes2.data?.name || '';
+
+    var rows = entries.map(function(e, i) {
+      var m = e.members;
+      return '<tr>' +
+        '<td>' + (e.seed || (i + 1)) + '</td>' +
+        '<td><strong>' + m.first_name + ' ' + m.last_name + '</strong></td>' +
+        '<td>' + (m.handicap !== null ? m.handicap : '—') + '</td>' +
+        '<td>' + (m.phone || '—') + '</td>' +
+        '<td>' + (m.email || '—') + '</td>' +
+        '</tr>';
+    }).join('');
+
+    if (!rows) rows = '<tr><td colspan="5" style="text-align:center;color:#999;">No entrants yet</td></tr>';
+
+    _printCurrentContent =
+      '<div class="print-draw-header">' + logoHTML +
+        '<h1>' + tName2 + '</h1>' +
+        '<p>' + clubName + ' &bull; Player List</p>' +
+        '<p>Printed: ' + dateStr + '</p>' +
+      '</div>' +
+      '<div class="print-section-title">Entrants (' + entries.length + ')</div>' +
+      '<table class="print-table">' +
+        '<thead><tr><th>#</th><th>Name</th><th>Handicap</th><th>Phone</th><th>Email</th></tr></thead>' +
+        '<tbody>' + rows + '</tbody>' +
+      '</table>' +
+      '<div class="print-footer">Generated by MyMatchPlayPal</div>';
+  }
+
+  preview.innerHTML = _printCurrentContent;
+  printBtn.disabled = false;
+}
+
+function doPrint() {
+  if (!_printCurrentContent) return;
+
+  // Set page orientation
+  var orientation = _printCurrentType === 'draw' ? 'landscape' : 'portrait';
+  var styleEl = document.getElementById('printPageStyle');
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'printPageStyle';
+    document.head.appendChild(styleEl);
+  }
+  styleEl.textContent = '@page { size: A4 ' + orientation + '; margin: 12mm; }';
+
+  // Populate the hidden print sheet
+  var sheet = document.getElementById('printDrawSheet');
+  sheet.innerHTML = _printCurrentContent;
 
   window.print();
+
+  // Clean up after a short delay
+  setTimeout(function() {
+    sheet.innerHTML = '';
+    styleEl.textContent = '';
+  }, 1000);
+}
+
+function closePrintDrawModal() {
+  document.getElementById('printDrawModal').classList.remove('active');
+  _printCurrentContent = '';
+  _printCurrentType = 'draw';
 }
 
 // Enrol a golfer directly
