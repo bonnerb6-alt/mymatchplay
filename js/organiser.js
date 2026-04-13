@@ -67,6 +67,7 @@ function switchClub(clubId) {
   sessionStorage.setItem('orgSelectedClub', clubId);
   orgClub = allOrgClubs.find(function(c) { return c.club_id === clubId; });
   orgClubId = clubId;
+  _resultsLoaded = false;
   renderClubSwitcher();
   loadSelectedClub();
 }
@@ -211,7 +212,7 @@ async function loadTournaments() {
           : `<button class="btn btn-sm btn-whatsapp" onclick="createWhatsAppGroup('${t.id}','${t.name.replace(/'/g, "\\'")}')">Create Group</button>`;
         actions = `
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-            <a href="bracket.html" class="btn btn-sm btn-secondary">View Bracket</a>
+            <button class="btn btn-sm btn-secondary" onclick="viewOrgBracket('${t.id}','${t.name.replace(/'/g, "\\'")}')">View Draw</button>
             <button class="btn btn-sm btn-primary" onclick="openRoundDeadlines('${t.id}','${t.name.replace(/'/g, "\\'")}',${t.bracket_size})">Set Deadlines</button>
             <button class="btn btn-sm btn-gold" onclick="redraw('${t.id}', ${t.bracket_size})">Re-Draw</button>
             ${groupBtn}
@@ -219,7 +220,7 @@ async function loadTournaments() {
         break;
       case 'completed':
         statusBadge = '<span class="badge badge-gray"><span class="status-dot closed"></span> Completed</span>';
-        actions = '<a href="bracket.html" class="btn btn-sm btn-secondary">View Results</a>';
+        actions = `<div style="display:flex;gap:0.5rem;flex-wrap:wrap;"><button class="btn btn-sm btn-secondary" onclick="viewOrgBracket('${t.id}','${t.name.replace(/'/g, "\\'")}')">View Results</button></div>`;
         break;
       default:
         statusBadge = '<span class="badge badge-blue"><span class="status-dot" style="background:var(--blue);"></span> Scheduled</span>';
@@ -250,6 +251,242 @@ async function loadTournaments() {
         <td>${actions}</td>
       </tr>`;
   }).join('');
+}
+
+// ---- View Bracket / Results (Organiser) ----
+async function viewOrgBracket(tournamentId, name) {
+  document.getElementById('orgBracketModalTitle').textContent = name;
+  document.getElementById('orgBracketModalContent').innerHTML = '<div class="card-empty">Loading...</div>';
+  document.getElementById('orgBracketModal').classList.add('active');
+
+  var [matchesRes, tRes] = await Promise.all([
+    supabase.from('matches')
+      .select('*, player1:members!matches_player1_id_fkey(id, first_name, last_name), player2:members!matches_player2_id_fkey(id, first_name, last_name), winner:members!matches_winner_id_fkey(id, first_name, last_name)')
+      .eq('tournament_id', tournamentId).order('round').order('position'),
+    supabase.from('tournaments').select('bracket_size, status').eq('id', tournamentId).single()
+  ]);
+
+  var matches = matchesRes.data;
+  var t = tRes.data;
+
+  if (!matches || matches.length === 0) {
+    document.getElementById('orgBracketModalContent').innerHTML = '<div class="card-empty">Draw not generated yet</div>';
+    return;
+  }
+
+  var totalRounds = Math.log2(t.bracket_size);
+  var rNames = {};
+  for (var r = 1; r <= totalRounds; r++) {
+    if (r === totalRounds) rNames[r] = 'Final';
+    else if (r === totalRounds - 1) rNames[r] = 'Semi Finals';
+    else if (r === totalRounds - 2) rNames[r] = 'Quarter Finals';
+    else if (r === totalRounds - 3) rNames[r] = 'Round of 16';
+    else rNames[r] = 'Round ' + r;
+  }
+
+  var byRound = {};
+  matches.forEach(function(m) {
+    if (m.status === 'bye') return;
+    if (!byRound[m.round]) byRound[m.round] = [];
+    byRound[m.round].push(m);
+  });
+
+  var finalMatches = (byRound[totalRounds] || []);
+  var champion = finalMatches.length > 0 && finalMatches[0].winner ? finalMatches[0].winner : null;
+
+  var checkSVG = '<svg style="display:inline;vertical-align:middle;margin-right:0.25rem;" width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>';
+  var starSVG = '<svg width="22" height="22" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>';
+
+  var html = '';
+
+  if (champion) {
+    html += '<div style="background:linear-gradient(135deg,#166534,#16a34a);color:white;border-radius:var(--radius);padding:1.1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem;">' +
+      '<div style="width:48px;height:48px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fbbf24;">' + starSVG + '</div>' +
+      '<div>' +
+        '<div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;opacity:0.75;margin-bottom:0.2rem;">Tournament Winner</div>' +
+        '<div style="font-size:1.2rem;font-weight:700;line-height:1.2;">' + champion.first_name + ' ' + champion.last_name + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  Object.keys(byRound).sort(function(a, b) { return a - b; }).forEach(function(r) {
+    var roundMatches = byRound[r];
+    var roundName = rNames[r] || 'Round ' + r;
+    var allComplete = roundMatches.every(function(m) { return m.status === 'completed'; });
+    var isFinal = parseInt(r) === totalRounds;
+    var useGrid = roundMatches.length > 1 && !isFinal;
+
+    html += '<div style="margin-bottom:1.25rem;">' +
+      '<div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.75rem;padding-bottom:0.5rem;border-bottom:2px solid var(--gray-100);">' +
+        '<span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--gray-600);">' + roundName + '</span>' +
+        (allComplete
+          ? '<span style="font-size:0.65rem;background:#dcfce7;color:#166534;padding:0.15rem 0.5rem;border-radius:99px;font-weight:600;">Complete</span>'
+          : '<span style="font-size:0.65rem;background:#fef9c3;color:#854d0e;padding:0.15rem 0.5rem;border-radius:99px;font-weight:600;">In Progress</span>') +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:' + (useGrid ? 'repeat(auto-fill,minmax(240px,1fr))' : '1fr') + ';gap:0.65rem;">';
+
+    roundMatches.forEach(function(m) {
+      var p1Name = m.player1 ? m.player1.first_name + ' ' + m.player1.last_name : 'TBD';
+      var p2Name = m.player2 ? m.player2.first_name + ' ' + m.player2.last_name : 'TBD';
+      var w1 = m.winner_id && m.player1 && m.winner_id === m.player1.id;
+      var w2 = m.winner_id && m.player2 && m.winner_id === m.player2.id;
+      var isPending = !m.winner_id && (m.player1 || m.player2);
+
+      html += '<div style="border:1px solid ' + (isFinal ? '#86efac' : 'var(--gray-200)') + ';border-radius:var(--radius);overflow:hidden;box-shadow:' + (isFinal ? '0 2px 8px rgba(22,163,74,0.12)' : '0 1px 3px rgba(0,0,0,0.06)') + ';">' +
+        '<div style="padding:0.65rem 0.85rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--gray-100);background:' + (w1 ? '#f0fdf4' : 'white') + ';">' +
+          '<div style="display:flex;align-items:center;gap:0.35rem;min-width:0;">' +
+            (w1
+              ? '<span style="flex-shrink:0;width:20px;height:20px;background:#16a34a;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:white;">' + checkSVG + '</span>'
+              : '<span style="flex-shrink:0;width:20px;height:20px;background:' + (w2 ? 'var(--gray-200)' : 'var(--gray-100)') + ';border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.6rem;color:var(--gray-400);">1</span>') +
+            '<span style="font-size:0.875rem;font-weight:' + (w1 ? '700' : '500') + ';color:' + (w1 ? '#166534' : (w2 ? 'var(--gray-400)' : 'var(--gray-800)')) + ';' + (w2 ? 'text-decoration:line-through;' : '') + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + p1Name + '</span>' +
+          '</div>' +
+          (w1 && m.score ? '<span style="flex-shrink:0;font-size:0.75rem;font-weight:700;color:#166534;background:#dcfce7;padding:0.15rem 0.5rem;border-radius:99px;margin-left:0.4rem;">' + m.score + '</span>' : '') +
+        '</div>' +
+        '<div style="padding:0.65rem 0.85rem;display:flex;justify-content:space-between;align-items:center;background:' + (w2 ? '#f0fdf4' : 'white') + ';">' +
+          '<div style="display:flex;align-items:center;gap:0.35rem;min-width:0;">' +
+            (w2
+              ? '<span style="flex-shrink:0;width:20px;height:20px;background:#16a34a;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:white;">' + checkSVG + '</span>'
+              : '<span style="flex-shrink:0;width:20px;height:20px;background:' + (w1 ? 'var(--gray-200)' : 'var(--gray-100)') + ';border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.6rem;color:var(--gray-400);">2</span>') +
+            '<span style="font-size:0.875rem;font-weight:' + (w2 ? '700' : '500') + ';color:' + (w2 ? '#166534' : (w1 ? 'var(--gray-400)' : 'var(--gray-800)')) + ';' + (w1 ? 'text-decoration:line-through;' : '') + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + p2Name + '</span>' +
+          '</div>' +
+          (w2 && m.score ? '<span style="flex-shrink:0;font-size:0.75rem;font-weight:700;color:#166534;background:#dcfce7;padding:0.15rem 0.5rem;border-radius:99px;margin-left:0.4rem;">' + m.score + '</span>' : '') +
+          (isPending && !w1 && !w2 ? '<span style="font-size:0.65rem;color:var(--gray-400);font-style:italic;flex-shrink:0;">Pending</span>' : '') +
+        '</div>' +
+      '</div>';
+    });
+
+    html += '</div></div>';
+  });
+
+  document.getElementById('orgBracketModalContent').innerHTML = html;
+}
+
+// ---- Results Tab ----
+var _resultsLoaded = false;
+async function loadResults() {
+  if (_resultsLoaded) return; // Only load once per session unless forced
+  _resultsLoaded = true;
+  var container = document.getElementById('results-list');
+  if (!container) return;
+  container.innerHTML = '<div class="card-empty">Loading...</div>';
+
+  var { data: tournaments } = await supabase.from('tournaments')
+    .select('id, name, status, bracket_size, clubs(name)')
+    .eq('club_id', orgClubId)
+    .in('status', ['in_progress', 'completed'])
+    .order('created_at', { ascending: false });
+
+  if (!tournaments || tournaments.length === 0) {
+    container.innerHTML = '<div class="card-empty">No active or completed tournaments yet.</div>';
+    return;
+  }
+
+  var statusLabel = { in_progress: 'Live', completed: 'Completed' };
+  var statusColor = { in_progress: 'badge-green', completed: 'badge-gray' };
+
+  container.innerHTML = tournaments.map(function(t) {
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem;border:1px solid var(--gray-200);border-radius:var(--radius);margin-bottom:0.5rem;background:white;">' +
+      '<div>' +
+        '<div style="font-weight:600;font-size:0.9rem;">' + t.name + '</div>' +
+        '<div style="font-size:0.78rem;color:var(--gray-500);">' + (t.clubs?.name || '') + ' &bull; ' + t.bracket_size + ' players</div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:0.5rem;">' +
+        '<span class="badge ' + (statusColor[t.status] || 'badge-gray') + '">' + (statusLabel[t.status] || t.status) + '</span>' +
+        '<button class="btn btn-sm btn-secondary" onclick="viewOrgBracket(\'' + t.id + '\',\'' + t.name.replace(/'/g, "\\'") + '\')">View Results</button>' +
+        (t.status === 'in_progress' ? '<button class="btn btn-sm btn-primary" style="font-size:0.72rem;" onclick="openOverrideResult(\'' + t.id + '\',\'' + t.name.replace(/'/g, "\\'") + '\')">Override Result</button>' : '') +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ---- Match Result Override ----
+async function openOverrideResult(tournamentId, name) {
+  var modal = document.getElementById('overrideResultModal');
+  document.getElementById('overrideTournamentName').textContent = name;
+  document.getElementById('overrideMatchSelect').innerHTML = '<option disabled selected>Loading matches...</option>';
+  document.getElementById('overrideScore').value = '';
+  modal.classList.add('active');
+
+  var { data: matches } = await supabase.from('matches')
+    .select('id, round, score, status, player1:members!matches_player1_id_fkey(id, first_name, last_name), player2:members!matches_player2_id_fkey(id, first_name, last_name), winner:members!matches_winner_id_fkey(id, first_name, last_name)')
+    .eq('tournament_id', tournamentId)
+    .neq('status', 'bye')
+    .order('round').order('position');
+
+  window._overrideMatches = matches || [];
+  window._overrideTournamentId = tournamentId;
+
+  var totalRounds = matches && matches.length > 0
+    ? Math.max.apply(null, matches.map(function(m) { return m.round; }))
+    : 1;
+
+  var rNames = {};
+  for (var r = 1; r <= totalRounds; r++) {
+    if (r === totalRounds) rNames[r] = 'Final';
+    else if (r === totalRounds - 1) rNames[r] = 'Semi Finals';
+    else if (r === totalRounds - 2) rNames[r] = 'Quarter Finals';
+    else rNames[r] = 'Round ' + r;
+  }
+
+  var select = document.getElementById('overrideMatchSelect');
+  var validMatches = (matches || []).filter(function(m) { return m.player1 && m.player2; });
+  if (validMatches.length === 0) {
+    select.innerHTML = '<option disabled>No matches available</option>';
+    return;
+  }
+
+  select.innerHTML = validMatches.map(function(m) {
+    var p1 = m.player1.first_name + ' ' + m.player1.last_name;
+    var p2 = m.player2.first_name + ' ' + m.player2.last_name;
+    var label = (rNames[m.round] || 'Round ' + m.round) + ': ' + p1 + ' vs ' + p2;
+    return '<option value="' + m.id + '">' + label + '</option>';
+  }).join('');
+
+  // Pre-fill winner/score when match selection changes
+  select.onchange = function() {
+    var m = (window._overrideMatches || []).find(function(x) { return x.id === select.value; });
+    if (!m) return;
+    document.getElementById('overrideScore').value = m.score || '';
+    var p1Opt = document.getElementById('overrideWinnerP1');
+    var p2Opt = document.getElementById('overrideWinnerP2');
+    if (m.player1) { p1Opt.value = m.player1.id; p1Opt.textContent = m.player1.first_name + ' ' + m.player1.last_name; }
+    if (m.player2) { p2Opt.value = m.player2.id; p2Opt.textContent = m.player2.first_name + ' ' + m.player2.last_name; }
+    var winnerSelect = document.getElementById('overrideWinnerSelect');
+    winnerSelect.value = m.winner_id || '';
+  };
+  select.dispatchEvent(new Event('change'));
+}
+
+async function submitOverrideResult() {
+  var matchId = document.getElementById('overrideMatchSelect').value;
+  var winnerId = document.getElementById('overrideWinnerSelect').value;
+  var score = document.getElementById('overrideScore').value.trim();
+
+  if (!matchId || !winnerId) { alert('Please select a match and winner.'); return; }
+
+  var btn = document.getElementById('overrideSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+
+  var { error } = await supabase.from('matches')
+    .update({ winner_id: winnerId, score: score || null, status: 'completed' })
+    .eq('id', matchId);
+
+  btn.disabled = false; btn.textContent = 'Override Result';
+
+  if (error) { alert('Error: ' + error.message); return; }
+
+  // Advance winner to next match
+  var { data: match } = await supabase.from('matches').select('next_match_id, position, tournament_id, round').eq('id', matchId).single();
+  if (match && match.next_match_id) {
+    var field = match.position % 2 === 1 ? 'player1_id' : 'player2_id';
+    await supabase.from('matches').update({ [field]: winnerId, status: 'in_progress' }).eq('id', match.next_match_id);
+  }
+
+  document.getElementById('overrideResultModal').classList.remove('active');
+  _resultsLoaded = false;
+  loadResults();
+  loadTournaments();
+  alert('Result overridden successfully.');
 }
 
 async function loadMembers() {

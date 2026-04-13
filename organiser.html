@@ -35,8 +35,8 @@
         <ul class="sidebar-nav">
           <li><a href="#org-section-stats" class="active" onclick="sidebarNav(this)"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg></span> Dashboard</a></li>
           <li><a href="#" onclick="sidebarNav(this);switchToTab('tournaments');return false;"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg></span> Tournaments</a></li>
+          <li><a href="#" onclick="sidebarNav(this);switchToTab('results');return false;"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path d="M2 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V4zM8 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1H9a1 1 0 01-1-1V4zM15 3a1 1 0 00-1 1v12a1 1 0 001 1h2a1 1 0 001-1V4a1 1 0 00-1-1h-2z"/></svg></span> Results</a></li>
           <li><a href="#" onclick="sidebarNav(this);switchToTab('members');return false;"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg></span> Members</a></li>
-          <li><a href="bracket.html"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path d="M2 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V4zM8 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1H9a1 1 0 01-1-1V4zM15 3a1 1 0 00-1 1v12a1 1 0 001 1h2a1 1 0 001-1V4a1 1 0 00-1-1h-2z"/></svg></span> Public Brackets</a></li>
           <li><a href="#" onclick="sidebarNav(this);switchToTab('requests');return false;"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg></span> Requests</a></li>
           <li><a href="#" onclick="sidebarNav(this);switchToTab('activity');return false;"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg></span> Activity Log</a></li>
         </ul>
@@ -46,10 +46,16 @@
         <ul class="sidebar-nav">
           <li><a href="#" onclick="openCreateTournament();return false;"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"/></svg></span> New Tournament</a></li>
           <li><a href="#" onclick="printDraw();return false;"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a1 1 0 001 1h8a1 1 0 001-1v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a1 1 0 00-1-1H6a1 1 0 00-1 1zm2 0h6v3H7V4zm-1 9h8v2H6v-2z" clip-rule="evenodd"/></svg></span> Print Draw</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Account</div>
+        <ul class="sidebar-nav">
+          <li><a href="golfer.html" style="color:var(--green-600);font-weight:600;"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 7l2.55 2.4A1 1 0 0116 11H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clip-rule="evenodd"/></svg></span> Switch to Golfer View</a></li>
           <li><a href="#" onclick="signOut();return false;"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg></span> Sign Out</a></li>
         </ul>
       </div>
-      <div class="sidebar-section" id="sidebar-role-switcher" style="padding:0 1rem;"></div>
+      <div class="sidebar-section" id="sidebar-role-switcher" style="display:none;"></div>
     </aside>
 
     <!-- Main Content -->
@@ -92,24 +98,32 @@
       <!-- Stats -->
       <div id="org-section-stats" class="stat-cards">
         <div class="stat-card">
-          <div class="stat-icon green"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg></div>
-          <div class="stat-value" id="org-stat-total">-</div>
-          <div class="stat-label">Total Tournaments</div>
+          <div class="stat-icon green"><svg width="22" height="22" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg></div>
+          <div class="stat-text">
+            <div class="stat-value" id="org-stat-total">-</div>
+            <div class="stat-label">Tournaments</div>
+          </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon gold"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg></div>
-          <div class="stat-value" id="org-stat-active">-</div>
-          <div class="stat-label">Active Right Now</div>
+          <div class="stat-icon gold"><svg width="22" height="22" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg></div>
+          <div class="stat-text">
+            <div class="stat-value" id="org-stat-active">-</div>
+            <div class="stat-label">Active Now</div>
+          </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon blue"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg></div>
-          <div class="stat-value" id="org-stat-members">-</div>
-          <div class="stat-label">Registered Members</div>
+          <div class="stat-icon blue"><svg width="22" height="22" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg></div>
+          <div class="stat-text">
+            <div class="stat-value" id="org-stat-members">-</div>
+            <div class="stat-label">Members</div>
+          </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon red"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg></div>
-          <div class="stat-value" id="org-stat-pending">-</div>
-          <div class="stat-label">Pending Results</div>
+          <div class="stat-icon red"><svg width="22" height="22" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg></div>
+          <div class="stat-text">
+            <div class="stat-value" id="org-stat-pending">-</div>
+            <div class="stat-label">Pending</div>
+          </div>
         </div>
       </div>
 
@@ -118,6 +132,7 @@
         <div class="card-body" style="padding-bottom:0;">
           <div class="tabs">
             <button class="tab active" onclick="switchTab(event, 'tournaments')">Tournaments</button>
+            <button class="tab" onclick="switchTab(event, 'results');loadResults();">Results</button>
             <button class="tab" onclick="switchTab(event, 'members')">Members</button>
             <button class="tab" onclick="switchTab(event, 'requests')">Requests <span id="request-count-badge"></span></button>
             <button class="tab" onclick="switchTab(event, 'activity')">Activity Log</button>
@@ -142,6 +157,15 @@
                 <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--gray-400);">Loading...</td></tr>
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- Results Tab -->
+        <div id="results" class="tab-panel">
+          <div class="card-body">
+            <div id="results-list">
+              <p style="text-align:center;color:var(--gray-400);">Select a tournament below to view results.</p>
+            </div>
           </div>
         </div>
 
@@ -430,6 +454,55 @@
     </div>
   </div>
 
+  <!-- Override Match Result Modal -->
+  <div class="modal-overlay" id="overrideResultModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Override Match Result</h3>
+        <button class="modal-close" onclick="document.getElementById('overrideResultModal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.8rem;color:var(--gray-500);margin-bottom:1rem;">Tournament: <strong id="overrideTournamentName"></strong></p>
+        <div class="form-group">
+          <label class="form-label">Select Match</label>
+          <select class="form-select" id="overrideMatchSelect">
+            <option disabled selected>Loading...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Winner</label>
+          <select class="form-select" id="overrideWinnerSelect">
+            <option value="" disabled selected>Select winner</option>
+            <option id="overrideWinnerP1" value="">Player 1</option>
+            <option id="overrideWinnerP2" value="">Player 2</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Score (e.g. 3&amp;2)</label>
+          <input type="text" class="form-input" id="overrideScore" placeholder="e.g. 3&amp;2">
+        </div>
+        <p style="font-size:0.75rem;color:var(--gray-400);">This will override any score submitted by the golfers and advance the winner to the next round.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('overrideResultModal').classList.remove('active')">Cancel</button>
+        <button class="btn btn-primary" id="overrideSubmitBtn" onclick="submitOverrideResult()">Override Result</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Bracket / Results Modal (Organiser) -->
+  <div class="modal-overlay" id="orgBracketModal">
+    <div class="modal" style="max-width:95%;width:640px;">
+      <div class="modal-header">
+        <h3 id="orgBracketModalTitle">Draw &amp; Results</h3>
+        <button class="modal-close" onclick="document.getElementById('orgBracketModal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body" style="max-height:80vh;overflow-y:auto;">
+        <div id="orgBracketModalContent"><div class="card-empty">Loading...</div></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Print Draw Sheet (hidden, shown only when printing) -->
   <div id="printDrawSheet" class="print-draw-sheet"></div>
 
@@ -451,10 +524,11 @@
       document.getElementById(tabId).classList.add('active');
       // Highlight the matching tab button
       var tabs = document.querySelectorAll('.tab');
-      var tabMap = { 'tournaments': 0, 'members': 1, 'requests': 2, 'activity': 3 };
+      var tabMap = { 'tournaments': 0, 'results': 1, 'members': 2, 'requests': 3, 'activity': 4 };
       if (tabMap[tabId] !== undefined && tabs[tabMap[tabId]]) tabs[tabMap[tabId]].classList.add('active');
       // Scroll to the tabs area
       document.querySelector('.tabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (tabId === 'results') loadResults();
     }
 
     function sidebarNav(el) {
@@ -472,8 +546,20 @@
   <script>
     setRole('organiser');
     document.addEventListener('DOMContentLoaded', function() {
-      renderBottomNav('home');
-      renderTopNavLinks('home');
+      var urlTab = new URLSearchParams(window.location.search).get('tab');
+      var activePage = urlTab === 'results' ? 'results' : 'home';
+      renderBottomNav(activePage);
+      renderTopNavLinks(activePage);
+      if (urlTab) {
+        // Wait for dashboard to init, then switch tab
+        var interval = setInterval(function() {
+          var panel = document.getElementById(urlTab);
+          if (panel) {
+            clearInterval(interval);
+            switchToTab(urlTab);
+          }
+        }, 100);
+      }
     });
   </script>
 </body>

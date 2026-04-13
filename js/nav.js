@@ -35,8 +35,9 @@ function renderBottomNav(activePage) {
   if (!nav) return;
 
   var html = '';
+  var resultsHref = role === 'organiser' ? 'organiser.html?tab=results' : 'results.html';
   html += '<a href="' + home + '" class="' + (activePage === 'home' ? 'active' : '') + '"><span class="nav-icon">' + homeIcon + '</span>' + homeLabel + '</a>';
-  html += '<a href="results.html" class="' + (activePage === 'results' ? 'active' : '') + '"><span class="nav-icon">' + NAV_ICONS.star + '</span>Results</a>';
+  html += '<a href="' + resultsHref + '" class="' + (activePage === 'results' ? 'active' : '') + '"><span class="nav-icon">' + NAV_ICONS.star + '</span>Results</a>';
   html += '<a href="profile.html" class="' + (activePage === 'profile' ? 'active' : '') + '"><span class="nav-icon">' + NAV_ICONS.user + '</span>Profile</a>';
 
   // Switch role link
@@ -60,8 +61,9 @@ function renderTopNavLinks(activePage) {
   var homeLabel = role === 'organiser' ? 'Manage' : 'Dashboard';
 
   var html = '';
+  var resultsHrefTop = role === 'organiser' ? 'organiser.html?tab=results' : 'results.html';
   html += '<a href="' + home + '" class="' + (activePage === 'home' ? 'active' : '') + '">' + homeLabel + '</a>';
-  html += '<a href="results.html" class="' + (activePage === 'results' ? 'active' : '') + '">Results</a>';
+  html += '<a href="' + resultsHrefTop + '" class="' + (activePage === 'results' ? 'active' : '') + '">Results</a>';
   html += '<a href="profile.html" class="' + (activePage === 'profile' ? 'active' : '') + '">Profile</a>';
 
   // Switch role

@@ -111,18 +111,45 @@ async function loadMatches() {
     var deadline = m.deadline ? new Date(m.deadline).toLocaleDateString('en-IE', { day: 'numeric', month: 'short' }) : '';
     var isScheduled = !!scheduled;
 
-    // Contact
+    // Contact buttons — show all available methods, highlight preferred
     var msg = encodeURIComponent('Hi ' + opp.first_name + ', we\'re matched in ' + (m.tournaments?.name || 'the tournament') + ' (' + round + '). When suits you to play?');
-    var phone = opp.phone ? opp.phone.replace(/\s/g, '') : '';
+    var phone = opp.phone ? opp.phone.replace(/[\s\-()]/g, '') : '';
+    var irishPhone = phone && phone.startsWith('0') ? '+353' + phone.slice(1) : phone;
     var pref = opp.contact_preference || 'whatsapp';
+    var emailSubject = encodeURIComponent((m.tournaments?.name || 'Tournament') + ' — ' + round);
 
-    var contactBtn = '';
-    if (pref === 'whatsapp' && phone) contactBtn = '<a href="https://wa.me/' + phone + '?text=' + msg + '" target="_blank" class="btn btn-sm btn-whatsapp">WhatsApp</a>';
-    else if (pref === 'sms' && phone) contactBtn = '<a href="sms:' + phone + '?body=' + msg + '" class="btn btn-sm btn-primary">SMS</a>';
-    else if (opp.email) contactBtn = '<a href="mailto:' + opp.email + '?subject=' + encodeURIComponent((m.tournaments?.name || '') + ' - ' + round) + '&body=' + msg + '" class="btn btn-sm btn-primary">Email</a>';
-    else if (phone) contactBtn = '<a href="https://wa.me/' + phone + '?text=' + msg + '" target="_blank" class="btn btn-sm btn-whatsapp">WhatsApp</a>';
+    var prefLabel = { whatsapp: 'WhatsApp', sms: 'SMS', email: 'Email', call: 'Call' };
+    var contactBtns = '';
 
-    var groupBtn = m.tournaments?.whatsapp_group_link ? '<a href="' + m.tournaments.whatsapp_group_link + '" target="_blank" class="btn btn-sm btn-secondary">Group</a>' : '';
+    // Build all available contact buttons; preferred gets primary styling
+    if (irishPhone) {
+      contactBtns +=
+        '<a href="tel:' + irishPhone + '" class="btn btn-sm ' + (pref === 'call' ? 'btn-primary' : 'btn-secondary') + '" title="Call' + (pref === 'call' ? ' (preferred)' : '') + '">' +
+          '<svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor" style="display:inline;vertical-align:middle;margin-right:0.2rem;"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/></svg>' +
+          'Call' + (pref === 'call' ? ' <span style="font-size:0.6rem;opacity:0.75;">★</span>' : '') +
+        '</a>';
+      contactBtns +=
+        '<a href="sms:' + irishPhone + '?body=' + msg + '" class="btn btn-sm ' + (pref === 'sms' ? 'btn-primary' : 'btn-secondary') + '" title="SMS' + (pref === 'sms' ? ' (preferred)' : '') + '">' +
+          '<svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor" style="display:inline;vertical-align:middle;margin-right:0.2rem;"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>' +
+          'SMS' + (pref === 'sms' ? ' <span style="font-size:0.6rem;opacity:0.75;">★</span>' : '') +
+        '</a>';
+      contactBtns +=
+        '<a href="https://wa.me/' + irishPhone + '?text=' + msg + '" target="_blank" class="btn btn-sm ' + (pref === 'whatsapp' ? 'btn-whatsapp' : 'btn-secondary') + '" title="WhatsApp' + (pref === 'whatsapp' ? ' (preferred)' : '') + '">' +
+          '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="display:inline;vertical-align:middle;margin-right:0.2rem;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>' +
+          'WhatsApp' + (pref === 'whatsapp' ? ' <span style="font-size:0.6rem;opacity:0.75;">★</span>' : '') +
+        '</a>';
+    }
+    if (opp.email) {
+      contactBtns +=
+        '<a href="mailto:' + opp.email + '?subject=' + emailSubject + '&body=' + msg + '" class="btn btn-sm ' + (pref === 'email' ? 'btn-primary' : 'btn-secondary') + '" title="Email' + (pref === 'email' ? ' (preferred)' : '') + '">' +
+          '<svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor" style="display:inline;vertical-align:middle;margin-right:0.2rem;"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>' +
+          'Email' + (pref === 'email' ? ' <span style="font-size:0.6rem;opacity:0.75;">★</span>' : '') +
+        '</a>';
+    }
+
+    var groupBtn = m.tournaments?.whatsapp_group_link
+      ? '<a href="' + m.tournaments.whatsapp_group_link + '" target="_blank" class="btn btn-sm btn-secondary">Group Chat</a>'
+      : '';
 
     return '<div class="action-card' + (isScheduled ? ' scheduled' : '') + '">' +
       '<div class="match-header">' +
@@ -132,12 +159,15 @@ async function loadMatches() {
       '</div>' +
       '<div class="opponent-row">' +
         '<div class="opponent-avatar">' + initials + '</div>' +
-        '<div><div class="opponent-name">' + opp.first_name + ' ' + opp.last_name + '</div>' +
-          '<div class="opponent-detail">Hcp ' + opp.handicap + ' &bull; Prefers ' + pref + '</div></div>' +
+        '<div>' +
+          '<div class="opponent-name">' + opp.first_name + ' ' + opp.last_name + '</div>' +
+          '<div class="opponent-detail">Hcp ' + opp.handicap + (pref ? ' &bull; Prefers ' + (prefLabel[pref] || pref) : '') + '</div>' +
+        '</div>' +
       '</div>' +
+      (contactBtns ? '<div style="display:flex;flex-wrap:wrap;gap:0.4rem;padding:0.6rem 0 0.25rem;">' + contactBtns + '</div>' : '') +
       '<div class="match-footer">' +
         '<div class="match-meta">' + (deadline ? 'Due: ' + deadline : '') + (schedStr ? ' &bull; <strong>' + schedStr + '</strong>' : '') + '</div>' +
-        '<div class="match-actions">' + contactBtn + groupBtn +
+        '<div class="match-actions">' + groupBtn +
           (!isScheduled ? '<button class="btn btn-sm btn-primary" onclick="toggleSchedule(\'' + m.id + '\')">Set Date</button>' : '') +
         '</div>' +
       '</div>' +
@@ -172,19 +202,39 @@ async function loadMyTournaments() {
     return;
   }
 
+  // For completed tournaments, fetch winners from the final matches
+  var completedIds = entries.filter(function(e) { return e.tournaments?.status === 'completed'; }).map(function(e) { return e.tournament_id; });
+  var winners = {};
+  if (completedIds.length > 0) {
+    var { data: finalMatches } = await supabase.from('matches')
+      .select('tournament_id, winner:members!matches_winner_id_fkey(first_name, last_name)')
+      .in('tournament_id', completedIds)
+      .not('winner_id', 'is', null);
+    // Find the final match per tournament (highest round) — approximate by taking last winner per tournament
+    (finalMatches || []).forEach(function(m) { if (m.winner) winners[m.tournament_id] = m.winner; });
+  }
+
   var statusLabel = { entries_open: 'Open', in_progress: 'Live', completed: 'Done', scheduled: 'Upcoming' };
   var statusColor = { entries_open: 'badge-gold', in_progress: 'badge-green', completed: 'badge-gray', scheduled: 'badge-blue' };
+  var starSVG = '<svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor" style="display:inline;vertical-align:middle;margin-right:0.2rem;color:#fbbf24;"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>';
 
   container.innerHTML = entries.map(function(e) {
     var t = e.tournaments;
     if (!t) return '';
+    var winner = winners[t.id];
+    var winnerHTML = (t.status === 'completed' && winner)
+      ? '<div style="margin-top:0.4rem;font-size:0.78rem;color:#166534;font-weight:600;">' + starSVG + 'Won by ' + winner.first_name + ' ' + winner.last_name + '</div>'
+      : '';
+
     return '<div class="tournament-card">' +
       '<div class="t-info"><h3>' + t.name + '</h3>' +
         '<div class="t-meta">' + (t.clubs?.name || '') + ' &bull; ' + t.bracket_size + ' players' +
-        (e.seed ? ' &bull; Seed ' + e.seed : '') + '</div></div>' +
+        (e.seed ? ' &bull; Seed ' + e.seed : '') + '</div>' +
+        winnerHTML +
+      '</div>' +
       '<div class="t-actions">' +
         '<span class="badge ' + (statusColor[t.status] || 'badge-gray') + '">' + (statusLabel[t.status] || t.status) + '</span>' +
-        (t.status === 'in_progress' || t.status === 'completed' ? '<button class="btn btn-sm btn-secondary" onclick="viewBracket(\'' + t.id + '\',\'' + t.name.replace(/'/g, "\\'") + '\')">Bracket</button>' : '') +
+        (t.status === 'in_progress' || t.status === 'completed' ? '<button class="btn btn-sm btn-secondary" onclick="viewBracket(\'' + t.id + '\',\'' + t.name.replace(/'/g, "\\'") + '\')">' + (t.status === 'completed' ? 'Results' : 'Draw') + '</button>' : '') +
         '<button class="btn btn-sm btn-secondary" onclick="viewEntrants(\'' + t.id + '\',\'' + t.name.replace(/'/g, "\\'") + '\')">Entrants</button>' +
       '</div></div>';
   }).join('');
@@ -196,14 +246,24 @@ async function viewBracket(tournamentId, name) {
   document.getElementById('bracketModalContent').innerHTML = '<div class="card-empty">Loading...</div>';
   document.getElementById('bracketModal').classList.add('active');
 
-  var { data: matches } = await supabase.from('matches')
-    .select('*, player1:members!matches_player1_id_fkey(id, first_name, last_name), player2:members!matches_player2_id_fkey(id, first_name, last_name), winner:members!matches_winner_id_fkey(id, first_name, last_name)')
-    .eq('tournament_id', tournamentId).order('round').order('position');
-  var { data: t } = await supabase.from('tournaments').select('bracket_size').eq('id', tournamentId).single();
+  var html = await buildBracketHTML(tournamentId);
+  document.getElementById('bracketModalContent').innerHTML = html;
+}
+
+// Shared bracket HTML builder used by golfer + organiser views
+async function buildBracketHTML(tournamentId) {
+  var [matchesRes, tRes] = await Promise.all([
+    supabase.from('matches')
+      .select('*, player1:members!matches_player1_id_fkey(id, first_name, last_name), player2:members!matches_player2_id_fkey(id, first_name, last_name), winner:members!matches_winner_id_fkey(id, first_name, last_name)')
+      .eq('tournament_id', tournamentId).order('round').order('position'),
+    supabase.from('tournaments').select('bracket_size, status').eq('id', tournamentId).single()
+  ]);
+
+  var matches = matchesRes.data;
+  var t = tRes.data;
 
   if (!matches || matches.length === 0) {
-    document.getElementById('bracketModalContent').innerHTML = '<div class="card-empty">Draw not generated yet</div>';
-    return;
+    return '<div class="card-empty">Draw not generated yet</div>';
   }
 
   var totalRounds = Math.log2(t.bracket_size);
@@ -216,28 +276,96 @@ async function viewBracket(tournamentId, name) {
     else rNames[r] = 'Round ' + r;
   }
 
-  var html = '';
-  var curRound = 0;
+  // Group by round (skip byes)
+  var byRound = {};
   matches.forEach(function(m) {
     if (m.status === 'bye') return;
-    if (m.round !== curRound) {
-      curRound = m.round;
-      html += '<div class="bracket-round-label" style="display:inline-block;margin:0.6rem 0 0.3rem;">' + (rNames[m.round] || 'Round ' + m.round) + '</div>';
-    }
-    var p1 = m.player1 ? m.player1.first_name[0] + '. ' + m.player1.last_name : 'TBD';
-    var p2 = m.player2 ? m.player2.first_name[0] + '. ' + m.player2.last_name : 'TBD';
-    var w1 = m.winner_id === m.player1?.id;
-    var w2 = m.winner_id === m.player2?.id;
-
-    html += '<div class="bracket-match-row">' +
-      '<span style="' + (w1 ? 'font-weight:700;color:var(--green-700);' : (w2 ? 'color:var(--gray-400);text-decoration:line-through;' : '')) + '">' + p1 + '</span>' +
-      ' <span class="vs">vs</span> ' +
-      '<span style="' + (w2 ? 'font-weight:700;color:var(--green-700);' : (w1 ? 'color:var(--gray-400);text-decoration:line-through;' : '')) + '">' + p2 + '</span>' +
-      (m.score ? ' <span style="font-size:0.75rem;font-weight:600;color:var(--green-700);margin-left:0.5rem;">' + m.score + '</span>' : '') +
-    '</div>';
+    if (!byRound[m.round]) byRound[m.round] = [];
+    byRound[m.round].push(m);
   });
 
-  document.getElementById('bracketModalContent').innerHTML = html;
+  // Champion = winner of the final round
+  var finalMatches = (byRound[totalRounds] || []);
+  var champion = finalMatches.length > 0 && finalMatches[0].winner ? finalMatches[0].winner : null;
+
+  var checkSVG = '<svg style="display:inline;vertical-align:middle;margin-right:0.25rem;" width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>';
+  var starSVG = '<svg width="22" height="22" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>';
+
+  var html = '';
+
+  // Champion banner
+  if (champion) {
+    html += '<div style="background:linear-gradient(135deg,var(--green-800,#166534),var(--green-600,#16a34a));color:white;border-radius:var(--radius);padding:1.1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem;">' +
+      '<div style="width:48px;height:48px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fbbf24;">' + starSVG + '</div>' +
+      '<div>' +
+        '<div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;opacity:0.75;margin-bottom:0.2rem;">Tournament Winner</div>' +
+        '<div style="font-size:1.2rem;font-weight:700;line-height:1.2;">' + champion.first_name + ' ' + champion.last_name + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  // Rounds
+  Object.keys(byRound).sort(function(a, b) { return a - b; }).forEach(function(r) {
+    var roundMatches = byRound[r];
+    var roundName = rNames[r] || 'Round ' + r;
+    var allComplete = roundMatches.every(function(m) { return m.status === 'completed'; });
+    var isFinal = parseInt(r) === totalRounds;
+
+    // Round header
+    html += '<div style="margin-bottom:1.25rem;">' +
+      '<div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.75rem;padding-bottom:0.5rem;border-bottom:2px solid var(--gray-100);">' +
+        '<span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--gray-600);">' + roundName + '</span>' +
+        (allComplete
+          ? '<span style="font-size:0.65rem;background:#dcfce7;color:#166534;padding:0.15rem 0.5rem;border-radius:99px;font-weight:600;">Complete</span>'
+          : '<span style="font-size:0.65rem;background:#fef9c3;color:#854d0e;padding:0.15rem 0.5rem;border-radius:99px;font-weight:600;">In Progress</span>') +
+      '</div>';
+
+    // Match cards in a responsive grid (2 cols for rounds with many matches)
+    var useGrid = roundMatches.length > 1 && !isFinal;
+    html += '<div style="display:grid;grid-template-columns:' + (useGrid ? 'repeat(auto-fill,minmax(240px,1fr))' : '1fr') + ';gap:0.65rem;">';
+
+    roundMatches.forEach(function(m) {
+      var p1Name = m.player1 ? m.player1.first_name + ' ' + m.player1.last_name : 'TBD';
+      var p2Name = m.player2 ? m.player2.first_name + ' ' + m.player2.last_name : 'TBD';
+      var w1 = m.winner_id && m.player1 && m.winner_id === m.player1.id;
+      var w2 = m.winner_id && m.player2 && m.winner_id === m.player2.id;
+      var isPending = !m.winner_id && (m.player1 || m.player2);
+
+      // Match card
+      html += '<div style="border:1px solid ' + (isFinal ? 'var(--green-300,#86efac)' : 'var(--gray-200)') + ';border-radius:var(--radius);overflow:hidden;box-shadow:' + (isFinal ? '0 2px 8px rgba(22,163,74,0.12)' : '0 1px 3px rgba(0,0,0,0.06)') + ';">';
+
+      // Player 1
+      html +=
+        '<div style="padding:0.65rem 0.85rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--gray-100);background:' + (w1 ? '#f0fdf4' : 'white') + ';">' +
+          '<div style="display:flex;align-items:center;gap:0.35rem;min-width:0;">' +
+            (w1
+              ? '<span style="flex-shrink:0;width:20px;height:20px;background:#16a34a;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:white;">' + checkSVG + '</span>'
+              : '<span style="flex-shrink:0;width:20px;height:20px;background:' + (w2 ? 'var(--gray-200)' : 'var(--gray-100)') + ';border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.6rem;color:var(--gray-400);">1</span>') +
+            '<span style="font-size:0.875rem;font-weight:' + (w1 ? '700' : '500') + ';color:' + (w1 ? '#166534' : (w2 ? 'var(--gray-400)' : 'var(--gray-800)')) + ';' + (w2 ? 'text-decoration:line-through;' : '') + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + p1Name + '</span>' +
+          '</div>' +
+          (w1 && m.score ? '<span style="flex-shrink:0;font-size:0.75rem;font-weight:700;color:#166534;background:#dcfce7;padding:0.15rem 0.5rem;border-radius:99px;margin-left:0.4rem;">' + m.score + '</span>' : '') +
+        '</div>';
+
+      // Player 2
+      html +=
+        '<div style="padding:0.65rem 0.85rem;display:flex;justify-content:space-between;align-items:center;background:' + (w2 ? '#f0fdf4' : 'white') + ';">' +
+          '<div style="display:flex;align-items:center;gap:0.35rem;min-width:0;">' +
+            (w2
+              ? '<span style="flex-shrink:0;width:20px;height:20px;background:#16a34a;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:white;">' + checkSVG + '</span>'
+              : '<span style="flex-shrink:0;width:20px;height:20px;background:' + (w1 ? 'var(--gray-200)' : 'var(--gray-100)') + ';border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.6rem;color:var(--gray-400);">2</span>') +
+            '<span style="font-size:0.875rem;font-weight:' + (w2 ? '700' : '500') + ';color:' + (w2 ? '#166534' : (w1 ? 'var(--gray-400)' : 'var(--gray-800)')) + ';' + (w1 ? 'text-decoration:line-through;' : '') + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + p2Name + '</span>' +
+          '</div>' +
+          (w2 && m.score ? '<span style="flex-shrink:0;font-size:0.75rem;font-weight:700;color:#166534;background:#dcfce7;padding:0.15rem 0.5rem;border-radius:99px;margin-left:0.4rem;">' + m.score + '</span>' : '') +
+          (isPending && !w1 && !w2 ? '<span style="font-size:0.65rem;color:var(--gray-400);font-style:italic;">Pending</span>' : '') +
+        '</div>';
+
+      html += '</div>'; // end match card
+    });
+
+    html += '</div></div>'; // end grid + round
+  });
+
+  return html;
 }
 
 // ---- View Entrants Modal ----
@@ -417,11 +545,11 @@ async function loadProfile() {
         '<div style="font-size:0.8rem;color:var(--gray-500);">' + (currentMember.phone || 'No phone') + ' &bull; Prefers ' + (prefLabel[currentMember.contact_preference] || 'WhatsApp') + '</div>' +
       '</div></div>' +
     '<div style="margin-bottom:1rem;">' + clubsHTML + '</div>' +
-    '<div class="stats-grid">' +
-      '<div class="stat-box"><div class="value">' + p + '</div><div class="label">Played</div></div>' +
-      '<div class="stat-box"><div class="value">' + w + '</div><div class="label">Won</div></div>' +
-      '<div class="stat-box"><div class="value">' + (p - w) + '</div><div class="label">Lost</div></div>' +
-      '<div class="stat-box"><div class="value">' + winRate + '%</div><div class="label">Win Rate</div></div>' +
+    '<div class="stat-cards">' +
+      '<div class="stat-card"><div class="stat-icon blue"><svg width="22" height="22" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clip-rule="evenodd"/></svg></div><div class="stat-text"><div class="stat-value">' + p + '</div><div class="stat-label">Played</div></div></div>' +
+      '<div class="stat-card"><div class="stat-icon green"><svg width="22" height="22" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></div><div class="stat-text"><div class="stat-value">' + w + '</div><div class="stat-label">Won</div></div></div>' +
+      '<div class="stat-card"><div class="stat-icon red"><svg width="22" height="22" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></div><div class="stat-text"><div class="stat-value">' + (p - w) + '</div><div class="stat-label">Lost</div></div></div>' +
+      '<div class="stat-card"><div class="stat-icon gold"><svg width="22" height="22" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg></div><div class="stat-text"><div class="stat-value">' + winRate + '%</div><div class="stat-label">Win Rate</div></div></div>' +
     '</div>';
 }
 

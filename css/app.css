@@ -273,6 +273,7 @@ img { max-width: 100%; display: block; }
 /* ============================================
    Stat Cards
    ============================================ */
+/* Legacy (kept for backward compat) */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -280,28 +281,81 @@ img { max-width: 100%; display: block; }
   margin-bottom: 1.25rem;
 }
 
+/* ---- Stat Cards (dashboard boxes with icon) ---- */
+.stat-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  flex: 1 1 calc(50% - 0.325rem);
+  min-width: 130px;
+  background: var(--white);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--gray-200);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.stat-card .stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.stat-card .stat-icon svg { display: block; }
+.stat-card .stat-icon.green  { background: var(--green-100); color: var(--green-700); }
+.stat-card .stat-icon.gold   { background: #fef3c7; color: #b45309; }
+.stat-card .stat-icon.blue   { background: #eff6ff; color: #1d4ed8; }
+.stat-card .stat-icon.red    { background: #fef2f2; color: #dc2626; }
+.stat-card .stat-icon.purple { background: #f5f3ff; color: #7c3aed; }
+
+.stat-card .stat-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.stat-card .stat-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  line-height: 1;
+}
+
+.stat-card .stat-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+/* Legacy stat-box — kept for profile page */
 .stat-box {
   background: var(--white);
   border-radius: var(--radius);
   padding: 0.85rem;
   border: 1px solid var(--gray-200);
-  border-top: 3px solid var(--gray-300);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   text-align: center;
-  transition: box-shadow 0.15s;
 }
-
-.stats-grid .stat-box:nth-child(1) { border-top-color: var(--green-500); }
-.stats-grid .stat-box:nth-child(2) { border-top-color: var(--gold); }
-.stats-grid .stat-box:nth-child(3) { border-top-color: var(--blue); }
-.stats-grid .stat-box:nth-child(4) { border-top-color: #8b5cf6; }
-
 .stat-box .value {
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--gray-900);
   line-height: 1;
 }
-
 .stat-box .label {
   font-size: 0.7rem;
   font-weight: 500;
@@ -935,6 +989,8 @@ table tbody tr:hover { background: var(--green-50); }
   .page-header h1 { font-size: 1.75rem; }
 
   .stats-grid { grid-template-columns: repeat(4, 1fr); }
+  .stat-card { flex: 1 1 calc(25% - 0.5rem); }
+  .stat-card .stat-value { font-size: 1.85rem; }
 
   .stat-box .value { font-size: 1.75rem; }
 
