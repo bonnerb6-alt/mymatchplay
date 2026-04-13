@@ -195,8 +195,8 @@ async function loadTournaments() {
       case 'entries_open':
         statusBadge = '<span class="badge badge-gold"><span class="status-dot pending"></span> Entries Open</span>';
         var groupBtnOpen = t.whatsapp_group_link
-          ? `<a href="${t.whatsapp_group_link}" target="_blank" class="btn btn-sm btn-whatsapp">&#128172; Group</a>`
-          : `<button class="btn btn-sm btn-whatsapp" onclick="createWhatsAppGroup('${t.id}','${t.name.replace(/'/g, "\\'")}')">&#128172; Create Group</button>`;
+          ? `<a href="${t.whatsapp_group_link}" target="_blank" class="btn btn-sm btn-whatsapp">WhatsApp Group</a>`
+          : `<button class="btn btn-sm btn-whatsapp" onclick="createWhatsAppGroup('${t.id}','${t.name.replace(/'/g, "\\'")}')">Create Group</button>`;
         actions = `
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
             <button class="btn btn-sm btn-primary" onclick="openEnrolTournament('${t.id}','${t.name.replace(/'/g, "\\'")}',${t.bracket_size})">Enrol Members</button>
@@ -207,8 +207,8 @@ async function loadTournaments() {
       case 'in_progress':
         statusBadge = '<span class="badge badge-green"><span class="status-dot live"></span> In Progress</span>';
         var groupBtn = t.whatsapp_group_link
-          ? `<a href="${t.whatsapp_group_link}" target="_blank" class="btn btn-sm btn-whatsapp">&#128172; Group</a>`
-          : `<button class="btn btn-sm btn-whatsapp" onclick="createWhatsAppGroup('${t.id}','${t.name.replace(/'/g, "\\'")}')">&#128172; Create Group</button>`;
+          ? `<a href="${t.whatsapp_group_link}" target="_blank" class="btn btn-sm btn-whatsapp">WhatsApp Group</a>`
+          : `<button class="btn btn-sm btn-whatsapp" onclick="createWhatsAppGroup('${t.id}','${t.name.replace(/'/g, "\\'")}')">Create Group</button>`;
         actions = `
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
             <a href="bracket.html" class="btn btn-sm btn-secondary">View Bracket</a>
@@ -346,7 +346,7 @@ async function loadActivityLog() {
     const timeAgo = getOrgTimeAgo(new Date(m.created_at));
     return `
       <div class="notification-item">
-        <div class="notification-icon" style="background:var(--green-100);color:var(--green-700);">&#9989;</div>
+        <div class="notification-icon" style="background:var(--green-100);color:var(--green-700);"><svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></div>
         <div class="notification-content">
           <h4>Score Reported</h4>
           <p>${m.winner?.first_name?.[0]}. ${m.winner?.last_name} beat ${loser?.first_name?.[0]}. ${loser?.last_name} ${m.score || ''} in ${m.tournaments?.name || ''}</p>
@@ -527,7 +527,7 @@ async function displayClubIdentity() {
     var brandIcon = document.querySelector('.navbar-brand .brand-icon');
     if (brandIcon) brandIcon.innerHTML = '<img src="' + club.logo_url + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);">';
   } else {
-    logoEl.innerHTML = '&#9971;';
+    logoEl.innerHTML = '<img src="logo.png" alt="Club Logo" style="width:100%;height:100%;object-fit:cover;">';
     if (removeBtn) removeBtn.style.display = 'none';
   }
 }

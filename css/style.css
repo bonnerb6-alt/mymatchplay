@@ -127,6 +127,13 @@ img {
   align-items: center;
   justify-content: center;
   font-size: 1.1rem;
+  overflow: hidden;
+}
+
+.navbar-brand .brand-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .navbar-links {
@@ -570,10 +577,12 @@ img {
   margin-bottom: 0.75rem;
 }
 
-.stat-card .stat-icon.green { background: var(--green-100); }
-.stat-card .stat-icon.gold { background: #fef3c7; }
-.stat-card .stat-icon.blue { background: #eff6ff; }
-.stat-card .stat-icon.red { background: #fef2f2; }
+.stat-card .stat-icon { display: flex; align-items: center; justify-content: center; }
+.stat-card .stat-icon svg { display: block; }
+.stat-card .stat-icon.green { background: var(--green-100); color: var(--green-700); }
+.stat-card .stat-icon.gold  { background: #fef3c7; color: #b45309; }
+.stat-card .stat-icon.blue  { background: #eff6ff; color: #1d4ed8; }
+.stat-card .stat-icon.red   { background: #fef2f2; color: #dc2626; }
 
 .stat-card .stat-value {
   font-size: 1.75rem;
@@ -759,6 +768,7 @@ table tbody tr:hover {
 
 .hero h1 span {
   color: var(--green-400);
+  text-shadow: 0 0 40px rgba(74, 222, 128, 0.25);
 }
 
 .hero p {
@@ -780,12 +790,13 @@ table tbody tr:hover {
 }
 
 .hero-mockup {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.18);
   border-radius: var(--radius-xl);
   padding: 2rem;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
   width: 340px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.05) inset;
 }
 
 .hero-mockup-header {
@@ -871,9 +882,20 @@ table tbody tr:hover {
   margin-bottom: 0.75rem;
 }
 
+.section-header h2::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 3px;
+  background: var(--green-500);
+  border-radius: 2px;
+  margin: 0.6rem auto 0;
+}
+
 .section-header p {
   color: var(--gray-500);
   font-size: 1.05rem;
+  margin-top: 0.85rem;
 }
 
 .feature-grid {
@@ -898,33 +920,68 @@ table tbody tr:hover {
 }
 
 .feature-icon {
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   border-radius: var(--radius-lg);
   background: var(--green-100);
+  color: var(--green-700);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
   margin-bottom: 1.25rem;
+  transition: transform 0.2s;
 }
 
+.feature-icon svg {
+  width: 26px;
+  height: 26px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.feature-card:hover .feature-icon {
+  transform: scale(1.08);
+}
+
+.feature-icon-blue   { background: #eff6ff; color: #1d4ed8; }
+.feature-icon-wapp   { background: #f0fdf4; color: #15803d; }
+.feature-icon-amber  { background: #fef3c7; color: #b45309; }
+.feature-icon-purple { background: #fdf4ff; color: #7e22ce; }
+.feature-icon-teal   { background: #ecfdf5; color: #0f766e; }
+
 .feature-card h3 {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
   color: var(--gray-800);
 }
 
 .feature-card p {
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   color: var(--gray-500);
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 /* How It Works - 4 column grid */
 .how-it-works-grid {
   grid-template-columns: repeat(4, 1fr);
+}
+
+/* Step number badge */
+.step-num {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--green-600);
+  color: white;
+  font-weight: 700;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.35);
+  font-family: var(--font-display);
 }
 
 /* ============================================
@@ -1268,9 +1325,10 @@ table tbody tr:hover {
 
 .accordion-arrow {
   margin-left: auto;
-  font-size: 0.7rem;
   color: var(--gray-400);
   transition: transform 0.2s;
+  display: flex;
+  align-items: center;
 }
 
 .bracket-accordion-header.active .accordion-arrow {

@@ -140,7 +140,7 @@ function injectAuthModal() {
   <div class="modal-overlay" id="authModal">
     <div class="modal">
       <div class="modal-header">
-        <h3>&#9971; MyMatchPlayPal</h3>
+        <h3>MyMatchPlayPal</h3>
         <button class="modal-close" onclick="hideAuthModal()">&times;</button>
       </div>
       <div class="modal-body">

@@ -157,7 +157,7 @@
   <nav class="navbar">
     <div class="navbar-inner">
       <a href="golfer.html" class="navbar-brand">
-        <div class="brand-icon">&#9971;</div>
+        <div class="brand-icon"><img src="logo.png" alt="MyMatchPlayPal logo"></div>
         MyMatchPlayPal
       </a>
       <ul class="navbar-links">
@@ -167,7 +167,9 @@
       </ul>
       <div class="navbar-actions">
         <a href="login.html" class="btn btn-sm btn-primary" id="bracket-signin-btn">Sign In</a>
-        <button class="menu-toggle" onclick="document.querySelector('.navbar-links').classList.toggle('show')">&#9776;</button>
+        <button class="menu-toggle" onclick="document.querySelector('.navbar-links').classList.toggle('show')">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
       </div>
     </div>
   </nav>
@@ -175,7 +177,7 @@
   <div class="container page-content">
     <!-- Page Header -->
     <div class="dashboard-header">
-      <h1>&#127959; Digital Clubhouse Wall</h1>
+      <h1>Digital Clubhouse Wall</h1>
       <p>Live tournament brackets &mdash; follow every match in real time.</p>
     </div>
 
@@ -192,8 +194,8 @@
     <!-- Print Buttons (organiser only) -->
     <div id="print-buttons" style="display:none;margin-bottom:1rem;">
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-        <button class="btn btn-sm btn-secondary" onclick="printBracket()">&#128424; Print Bracket (A4 Landscape)</button>
-        <button class="btn btn-sm btn-secondary" onclick="printDrawNames()">&#128196; Print Draw Names</button>
+        <button class="btn btn-sm btn-secondary" onclick="printBracket()">Print Bracket (A4 Landscape)</button>
+        <button class="btn btn-sm btn-secondary" onclick="printDrawNames()">Print Draw Names</button>
       </div>
     </div>
 
@@ -227,7 +229,7 @@
     <div class="grid grid-2 mt-3">
       <div class="card">
         <div class="card-header">
-          <h3>&#128197; Round Deadlines</h3>
+          <h3>Round Deadlines</h3>
         </div>
         <div class="card-body">
           <div id="round-deadlines" style="display:flex;flex-direction:column;gap:0.75rem;">
@@ -238,7 +240,7 @@
 
       <div class="card">
         <div class="card-header">
-          <h3>&#128221; Recent Results</h3>
+          <h3>Recent Results</h3>
         </div>
         <div class="card-body">
           <div id="bracket-results" style="display:flex;flex-direction:column;gap:0.5rem;">

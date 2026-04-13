@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
 </head>
 <body>
 
@@ -14,7 +15,7 @@
   <nav class="navbar">
     <div class="navbar-inner">
       <a href="index.html" class="navbar-brand">
-        <div class="brand-icon">&#9971;</div>
+        <div class="brand-icon"><img src="logo.png" alt="MyMatchPlayPal logo"></div>
         MyMatchPlayPal
       </a>
       <ul class="navbar-links">
@@ -25,7 +26,9 @@
       </ul>
       <div class="navbar-actions">
         <a href="login.html" class="btn btn-sm btn-primary">Sign In</a>
-        <button class="menu-toggle" onclick="document.querySelector('.navbar-links').classList.toggle('show')">&#9776;</button>
+        <button class="menu-toggle" onclick="document.querySelector('.navbar-links').classList.toggle('show')">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
       </div>
     </div>
   </nav>
@@ -44,7 +47,7 @@
       <div class="hero-visual">
         <div class="hero-mockup">
           <div class="hero-mockup-header">
-            <div class="hero-mockup-avatar">&#9971;</div>
+            <div class="hero-mockup-avatar"><img src="logo.png" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
             <div class="hero-mockup-info">
               <h4>Spring Matchplay 2026</h4>
               <p>Quarter Finals &bull; 16 Players</p>
@@ -54,17 +57,17 @@
             <div class="hero-match-card">
               <div class="match-title">Quarter Final &mdash; Match 1</div>
               <div class="match-vs">J. Murphy vs P. O'Brien</div>
-              <div class="match-status">&#9989; Result: Murphy wins 3&amp;2</div>
+              <div class="match-status" style="color:var(--green-400);">&#10003; Result: Murphy wins 3&amp;2</div>
             </div>
             <div class="hero-match-card">
               <div class="match-title">Quarter Final &mdash; Match 2</div>
               <div class="match-vs">S. Walsh vs D. Kelly</div>
-              <div class="match-status">&#128197; Awaiting result...</div>
+              <div class="match-status" style="color:var(--gold-light);">&#9679; Awaiting result...</div>
             </div>
             <div class="hero-match-card">
               <div class="match-title">Quarter Final &mdash; Match 3</div>
               <div class="match-vs">M. Ryan vs T. Doyle</div>
-              <div class="match-status">&#128172; Arrange your match</div>
+              <div class="match-status" style="color:var(--green-300);">&#9654; Arrange your match</div>
             </div>
           </div>
         </div>
@@ -80,32 +83,44 @@
     </div>
     <div class="feature-grid">
       <div class="feature-card">
-        <div class="feature-icon">&#127922;</div>
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+        </div>
         <h3>Automated Draw Engine</h3>
         <p>Smart byes calculation, randomized brackets, and support for any field size. One click generates a fair draw every time.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">&#127942;</div>
+        <div class="feature-icon feature-icon-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
         <h3>Digital Clubhouse Wall</h3>
         <p>Interactive tournament brackets viewable in real-time. No more trekking to the clubhouse to check the draw sheet.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">&#128241;</div>
+        <div class="feature-icon feature-icon-wapp">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
         <h3>WhatsApp Integration</h3>
         <p>One-touch "Arrange Match" button opens a WhatsApp chat with your opponent, pre-filled with tournament details.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">&#128221;</div>
+        <div class="feature-icon feature-icon-amber">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
         <h3>Self-Service Results</h3>
         <p>Winners input their own scores. The bracket updates instantly and opponents are automatically notified.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">&#128276;</div>
+        <div class="feature-icon feature-icon-purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </div>
         <h3>Smart Notifications</h3>
         <p>Automatic alerts for new tournaments, draw announcements, match deadlines, and opponent readiness.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">&#128200;</div>
+        <div class="feature-icon feature-icon-teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
         <h3>Handicap & Stats</h3>
         <p>Track match records, win streaks, and tournament history. Future integration with national handicap systems.</p>
       </div>
@@ -120,22 +135,22 @@
     </div>
     <div class="feature-grid how-it-works-grid">
       <div class="feature-card" style="text-align:center; background: var(--white);">
-        <div class="feature-icon" style="margin: 0 auto 1rem; background: var(--green-600); color: white; font-weight: 700; font-size: 1.25rem;">1</div>
+        <div class="step-num">1</div>
         <h3>Sign Up</h3>
-        <p>Members receive a notification and enter the competition with one tap.</p>
+        <p>Members receive a notification and enter the tournament with one tap.</p>
       </div>
       <div class="feature-card" style="text-align:center; background: var(--white);">
-        <div class="feature-icon" style="margin: 0 auto 1rem; background: var(--green-600); color: white; font-weight: 700; font-size: 1.25rem;">2</div>
+        <div class="step-num">2</div>
         <h3>Draw</h3>
         <p>Secretary closes entries. The system generates randomized brackets and notifies all players.</p>
       </div>
       <div class="feature-card" style="text-align:center; background: var(--white);">
-        <div class="feature-icon" style="margin: 0 auto 1rem; background: var(--green-600); color: white; font-weight: 700; font-size: 1.25rem;">3</div>
+        <div class="step-num">3</div>
         <h3>Play</h3>
         <p>Players use the "Arrange Match" link to coordinate with opponents via WhatsApp.</p>
       </div>
       <div class="feature-card" style="text-align:center; background: var(--white);">
-        <div class="feature-icon" style="margin: 0 auto 1rem; background: var(--green-600); color: white; font-weight: 700; font-size: 1.25rem;">4</div>
+        <div class="step-num">4</div>
         <h3>Advance</h3>
         <p>Winner reports the score. The system updates the bracket and notifies the next opponent.</p>
       </div>
@@ -145,7 +160,7 @@
   <!-- CTA -->
   <section class="cta">
     <h2>Ready to Modernise Your Club?</h2>
-    <p>Join golf clubs already using MyMatchPlayPal to run stress-free matchplay competitions.</p>
+    <p>Join golf clubs already using MyMatchPlayPal to run stress-free matchplay tournaments.</p>
     <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
       <a href="login.html" class="btn btn-lg btn-primary">Get Started Free</a>
       <a href="bracket.html" class="btn btn-lg btn-outline">View Tournaments</a>
@@ -156,7 +171,7 @@
   <footer class="footer">
     <div class="footer-inner">
       <div class="footer-brand">
-        <h3>&#9971; MyMatchPlayPal</h3>
+        <h3>MyMatchPlayPal</h3>
         <p>The automated matchplay management system for golf clubs. Replacing WhatsApp chaos with digital brackets since 2026.</p>
       </div>
       <div class="footer-col">

@@ -36,6 +36,16 @@ async function getCurrentMember() {
 
   console.log('[MMP] Member lookup:', data ? data.email : 'not found', 'Error:', error);
   if (error) return null;
+
+  if (data && sessionStorage.getItem('mmpIsOrg') === null) {
+      if (data.role === 'organiser' || data.is_admin) {
+          sessionStorage.setItem('mmpIsOrg', 'true');
+      } else {
+          var isOrg = await checkIsOrganiser(data.id);
+          sessionStorage.setItem('mmpIsOrg', isOrg ? 'true' : 'false');
+      }
+  }
+
   return data;
 }
 
@@ -101,7 +111,7 @@ function updateNavForAuth(member) {
       var isAdminPage = window.location.pathname.indexOf('admin') !== -1;
       if (navLinks && !isAdminPage) {
         var adminLi = document.createElement('li');
-        adminLi.innerHTML = '<a href="admin.html" style="color:#e94560;font-weight:600;">&#128272; Admin</a>';
+        adminLi.innerHTML = '<a href="admin.html" style="color:#e94560;font-weight:600;">Admin</a>';
         navLinks.appendChild(adminLi);
       }
     }
@@ -113,20 +123,20 @@ function updateNavForAuth(member) {
       // Sidebar switcher (desktop)
       var sidebarSwitcher = document.getElementById('sidebar-role-switcher');
       if (sidebarSwitcher && hasOrgRole && !isOnOrganiserPage) {
-        sidebarSwitcher.innerHTML = '<a href="organiser.html" style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;border-radius:var(--radius);font-size:0.9rem;color:var(--gold);background:rgba(212,168,67,0.1);font-weight:600;transition:all 0.15s;"><span class="nav-icon" style="width:20px;text-align:center;">&#128274;</span> Switch to Organiser</a>';
+        sidebarSwitcher.innerHTML = '<a href="organiser.html" style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;border-radius:var(--radius);font-size:0.9rem;color:var(--gold);background:rgba(212,168,67,0.1);font-weight:600;transition:all 0.15s;"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg></span> Switch to Organiser</a>';
       } else if (sidebarSwitcher && isOnOrganiserPage) {
-        sidebarSwitcher.innerHTML = '<a href="golfer.html" style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;border-radius:var(--radius);font-size:0.9rem;color:var(--green-600);background:var(--green-50);font-weight:600;transition:all 0.15s;"><span class="nav-icon" style="width:20px;text-align:center;">&#9971;</span> Switch to Golfer</a>';
+        sidebarSwitcher.innerHTML = '<a href="golfer.html" style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;border-radius:var(--radius);font-size:0.9rem;color:var(--green-600);background:var(--green-50);font-weight:600;transition:all 0.15s;"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 7l2.55 2.4A1 1 0 0116 11H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clip-rule="evenodd"/></svg></span> Switch to Golfer</a>';
       }
 
       // Mobile nav switcher (add to hamburger menu)
       var navLinks = document.querySelector('.navbar-links');
       if (navLinks && hasOrgRole && !isOnOrganiserPage) {
         var li = document.createElement('li');
-        li.innerHTML = '<a href="organiser.html" style="color:var(--gold);font-weight:600;">&#128274; Organiser View</a>';
+        li.innerHTML = '<a href="organiser.html" style="color:var(--gold);font-weight:600;">Organiser View</a>';
         navLinks.appendChild(li);
       } else if (navLinks && isOnOrganiserPage) {
         var li = document.createElement('li');
-        li.innerHTML = '<a href="golfer.html" style="color:var(--green-400);font-weight:600;">&#9971; Golfer View</a>';
+        li.innerHTML = '<a href="golfer.html" style="color:var(--green-400);font-weight:600;">Golfer View</a>';
         navLinks.appendChild(li);
       }
     });

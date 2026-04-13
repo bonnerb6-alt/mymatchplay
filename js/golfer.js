@@ -401,7 +401,7 @@ async function loadProfile() {
 
   var clubsHTML = myClubs.map(function(c) {
     var name = c.clubs?.name || 'Golf Club';
-    var logo = clubLogos[c.club_id] ? '<img src="' + clubLogos[c.club_id] + '" style="width:20px;height:20px;border-radius:3px;object-fit:cover;">' : '&#9971;';
+    var logo = clubLogos[c.club_id] ? '<img src="' + clubLogos[c.club_id] + '" style="width:20px;height:20px;border-radius:3px;object-fit:cover;">' : '<svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style="color:var(--green-600)"><path fill-rule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 7l2.55 2.4A1 1 0 0116 11H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clip-rule="evenodd"/></svg>';
     var roleBadge = c.role === 'organiser' ? '<span class="badge badge-gold">Organiser</span>' : '<span class="badge badge-green">Golfer</span>';
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem;background:var(--gray-100);border-radius:var(--radius-sm);font-size:0.8rem;margin-bottom:0.3rem;">' +
       '<span style="display:flex;align-items:center;gap:0.4rem;">' + logo + ' <strong>' + name + '</strong> — Hcp ' + c.handicap + '</span>' + roleBadge + '</div>';

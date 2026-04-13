@@ -22,7 +22,7 @@
   <nav class="navbar admin-navbar">
     <div class="navbar-inner">
       <a href="admin.html" class="navbar-brand">
-        <div class="brand-icon" style="background:#e94560;">&#9971;</div>
+        <div class="brand-icon" style="background:#e94560;overflow:hidden;"><img src="logo.png" alt="Admin" style="width:100%;height:100%;object-fit:cover;"></div>
         <span>MyMatchPlayPal <span class="admin-badge">ADMIN</span></span>
       </a>
       <ul class="navbar-links">
@@ -32,7 +32,9 @@
       </ul>
       <div class="navbar-actions">
         <a href="#" onclick="signOut();return false;" class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:var(--white);font-size:0.75rem;">Sign Out</a>
-        <button class="menu-toggle" onclick="document.querySelector('.navbar-links').classList.toggle('show')">&#9776;</button>
+        <button class="menu-toggle" onclick="document.querySelector('.navbar-links').classList.toggle('show')">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
       </div>
     </div>
   </nav>
@@ -40,7 +42,7 @@
   <div class="container page-content">
     <div class="dashboard-header" style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:1rem;">
       <div>
-        <h1>&#128272; Admin Panel</h1>
+        <h1>Admin Panel</h1>
         <p>Manage golf clubs, subscriptions, and payments.</p>
       </div>
       <button class="btn btn-primary" onclick="document.getElementById('addClubModal').classList.add('active')">+ Add Golf Club</button>
@@ -49,27 +51,27 @@
     <!-- Stats -->
     <div class="stat-cards" style="margin-bottom:2rem;">
       <div class="stat-card">
-        <div class="stat-icon" style="background:#eff6ff;">&#9971;</div>
+        <div class="stat-icon blue"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd"/></svg></div>
         <div class="stat-value" id="admin-total-clubs">-</div>
         <div class="stat-label">Total Clubs</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon green">&#9989;</div>
+        <div class="stat-icon green"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg></div>
         <div class="stat-value" id="admin-active-clubs">-</div>
         <div class="stat-label">Active (Paid)</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background:#fef2f2;">&#9888;</div>
+        <div class="stat-icon red"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg></div>
         <div class="stat-value" id="admin-overdue-clubs">-</div>
         <div class="stat-label">Overdue</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background:#eff6ff;">&#128101;</div>
+        <div class="stat-icon blue"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg></div>
         <div class="stat-value" id="admin-total-members">-</div>
         <div class="stat-label">Total Members</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background:#fef3c7;">&#128176;</div>
+        <div class="stat-icon gold"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.028 2.353 1.118V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.028-2.354-1.118V5z" clip-rule="evenodd"/></svg></div>
         <div class="stat-value" id="admin-annual-revenue">-</div>
         <div class="stat-label">Annual Revenue</div>
       </div>
@@ -78,7 +80,7 @@
     <!-- Clubs Table -->
     <div class="card">
       <div class="card-header">
-        <h3>&#9971; Golf Clubs</h3>
+        <h3>Golf Clubs</h3>
       </div>
       <div class="table-wrap">
         <table>
@@ -106,7 +108,7 @@
   <div class="modal-overlay" id="addClubModal">
     <div class="modal">
       <div class="modal-header">
-        <h3>&#9971; Add Golf Club</h3>
+        <h3>Add Golf Club</h3>
         <button class="modal-close" onclick="document.getElementById('addClubModal').classList.remove('active')">&times;</button>
       </div>
       <div class="modal-body">
@@ -151,7 +153,7 @@
   <div class="modal-overlay" id="editClubModal">
     <div class="modal">
       <div class="modal-header">
-        <h3>&#9881; Edit Club</h3>
+        <h3>Edit Club</h3>
         <button class="modal-close" onclick="document.getElementById('editClubModal').classList.remove('active')">&times;</button>
       </div>
       <div class="modal-body">
