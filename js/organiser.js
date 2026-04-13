@@ -403,7 +403,7 @@ async function openOverrideResult(tournamentId, name) {
   modal.classList.add('active');
 
   var { data: matches } = await supabase.from('matches')
-    .select('id, round, score, status, player1:members!matches_player1_id_fkey(id, first_name, last_name), player2:members!matches_player2_id_fkey(id, first_name, last_name), winner:members!matches_winner_id_fkey(id, first_name, last_name)')
+    .select('id, round, score, status, player1_id, player2_id, winner_id, player1:members!matches_player1_id_fkey(id, first_name, last_name), player2:members!matches_player2_id_fkey(id, first_name, last_name), winner:members!matches_winner_id_fkey(id, first_name, last_name)')
     .eq('tournament_id', tournamentId)
     .neq('status', 'bye')
     .order('round').order('position');
@@ -424,15 +424,16 @@ async function openOverrideResult(tournamentId, name) {
   }
 
   var select = document.getElementById('overrideMatchSelect');
-  var validMatches = (matches || []).filter(function(m) { return m.player1 && m.player2; });
+  // Filter to matches where both players are assigned (use raw IDs as reliable fallback)
+  var validMatches = (matches || []).filter(function(m) { return m.player1_id && m.player2_id; });
   if (validMatches.length === 0) {
     select.innerHTML = '<option disabled>No matches available</option>';
     return;
   }
 
   select.innerHTML = validMatches.map(function(m) {
-    var p1 = m.player1.first_name + ' ' + m.player1.last_name;
-    var p2 = m.player2.first_name + ' ' + m.player2.last_name;
+    var p1 = m.player1 ? m.player1.first_name + ' ' + m.player1.last_name : 'Player 1';
+    var p2 = m.player2 ? m.player2.first_name + ' ' + m.player2.last_name : 'Player 2';
     var label = (rNames[m.round] || 'Round ' + m.round) + ': ' + p1 + ' vs ' + p2;
     return '<option value="' + m.id + '">' + label + '</option>';
   }).join('');
@@ -444,8 +445,11 @@ async function openOverrideResult(tournamentId, name) {
     document.getElementById('overrideScore').value = m.score || '';
     var p1Opt = document.getElementById('overrideWinnerP1');
     var p2Opt = document.getElementById('overrideWinnerP2');
-    if (m.player1) { p1Opt.value = m.player1.id; p1Opt.textContent = m.player1.first_name + ' ' + m.player1.last_name; }
-    if (m.player2) { p2Opt.value = m.player2.id; p2Opt.textContent = m.player2.first_name + ' ' + m.player2.last_name; }
+    // Use raw IDs as values (reliable even if join data is unavailable)
+    p1Opt.value = m.player1_id || (m.player1 && m.player1.id) || '';
+    p1Opt.textContent = m.player1 ? m.player1.first_name + ' ' + m.player1.last_name : 'Player 1';
+    p2Opt.value = m.player2_id || (m.player2 && m.player2.id) || '';
+    p2Opt.textContent = m.player2 ? m.player2.first_name + ' ' + m.player2.last_name : 'Player 2';
     var winnerSelect = document.getElementById('overrideWinnerSelect');
     winnerSelect.value = m.winner_id || '';
   };
